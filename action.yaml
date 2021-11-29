@@ -1,0 +1,23 @@
+name: Charmhub Upload
+description: Uploads a charm to charmhub.io
+author: Kenneth Koski
+inputs:
+  credentials:
+    description: |
+      Credentials exported from `charmcraft login --export`. See
+      https://juju.is/docs/sdk/remote-env-auth for more info
+    required: true
+  charm-path:
+    description: Path to charm directory
+    required: false
+    default: "."
+  charmcraft-channel:
+    description: Snap channel to use when installing charmcraft
+    required: false
+    default: "latest/edge"
+runs:
+  using: node12
+  main: dist/index.js
+branding:
+  icon: upload-cloud
+  color: orange
