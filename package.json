@@ -1,0 +1,21 @@
+{
+  "name": "charmhub-upload-action",
+  "version": "0.1.0",
+  "description": "Uploads a charm to charmhub.io",
+  "main": "main.js",
+  "author": "Kenneth Koski <kenneth.koski@canonical.com>",
+  "license": "GPL-3.0-only",
+  "scripts": {
+    "build": "ncc build main.js"
+  },
+  "dependencies": {
+    "@actions/core": "^1.6.0",
+    "@actions/exec": "^1.1.0",
+    "@actions/github": "^5.0.0",
+    "@actions/glob": "^0.2.0",
+    "@actions/artifact": "^0.2.0"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.32.0"
+  }
+}

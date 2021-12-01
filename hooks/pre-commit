@@ -1,0 +1,12 @@
+#!/bin/sh
+
+trap 'rm -rf "$TMPDIR"' EXIT
+
+TMPDIR=$(mktemp -d) || exit 1
+
+npm run-script build -- -o "$TMPDIR" >/dev/null
+
+diff "$TMPDIR"/index.js dist/index.js >/dev/null || {
+    echo 'You need to run "ncc build main.js" before committing!'
+    exit 1
+}
