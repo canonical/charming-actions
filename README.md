@@ -48,6 +48,8 @@ Then, run this command to ensure you don't forget to build `dist/index.js`:
 
 Finally, install node.js and install dependencies:
 
-    sudo snap install node --classic --channel 12/stable
+    # Use apt instead of snap due to:
+    # https://bugs.launchpad.net/ubuntu/+source/snapd/+bug/1849753
+    sudo apt install npm
     npm install
     npm run-script build
