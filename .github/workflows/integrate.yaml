@@ -2,8 +2,17 @@ name: Test Charmhub Upload
 
 on:
 - push
+- pull_request
 
 jobs:
+  ensure-compiled:
+    runs-on: ubuntu-latest
+    name: Ensure ncc compilation
+    steps:
+      - uses: actions/checkout@v2
+      - run: npm install
+      - run: ./hooks/pre-commit
+
   test-charmhub-upload:
     runs-on: ubuntu-latest
     name: Test charmhub upload

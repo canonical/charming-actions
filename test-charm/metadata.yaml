@@ -9,4 +9,4 @@ resources:
   noop:
     type: oci-image
     description: ''
-    upstream-source: ubuntu
+    upstream-source: ubuntu:20.04
