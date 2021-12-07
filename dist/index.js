@@ -21585,7 +21585,7 @@ const yaml = __nccwpck_require__(1917);
           return
         }
       } else {
-        core.setFailed(`Unhandled branch name: ${head_ref}`);
+        core.notice(`Unhandled branch name: ${head_ref}`);
         return
       }
     } else {
@@ -21625,6 +21625,12 @@ const yaml = __nccwpck_require__(1917);
     core.setFailed(error.message);
   } finally {
     const root = '/home/runner/snap/charmcraft/common/cache/charmcraft/log/';
+
+    if (!fs.existsSync(root)) {
+      core.info("No charmcraft logs generated, skipping artifact upload.");
+      return
+    }
+
     const globber = await glob.create(root + '*.log');
     const files = await globber.glob();
     const artifactClient = artifact.create();
