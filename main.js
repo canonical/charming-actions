@@ -112,6 +112,12 @@ import { chdir } from 'process';
     core.setFailed(error.message);
   } finally {
     const root = '/home/runner/snap/charmcraft/common/cache/charmcraft/log/';
+
+    if (!fs.existsSync(root)) {
+      core.info("No charmcraft logs generated, skipping artifact upload.");
+      return
+    }
+
     const globber = await glob.create(root + '*.log');
     const files = await globber.glob();
     const artifactClient = artifact.create();
