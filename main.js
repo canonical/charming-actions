@@ -110,6 +110,7 @@ import { chdir } from 'process';
     );
   } catch (error) {
     core.setFailed(error.message);
+    throw error;
   } finally {
     const root = '/home/runner/snap/charmcraft/common/cache/charmcraft/log/';
     const globber = await glob.create(root + '*.log');

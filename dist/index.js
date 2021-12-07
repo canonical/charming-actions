@@ -21623,6 +21623,7 @@ const yaml = __nccwpck_require__(1917);
     );
   } catch (error) {
     core.setFailed(error.message);
+    throw error;
   } finally {
     const root = '/home/runner/snap/charmcraft/common/cache/charmcraft/log/';
     const globber = await glob.create(root + '*.log');
