@@ -10799,7 +10799,7 @@ function renamed(from, to) {
 
 
 module.exports.Type = __nccwpck_require__(6073);
-module.exports.Schema = __nccwpck_require__(1895);
+module.exports.Schema = __nccwpck_require__(1082);
 module.exports.FAILSAFE_SCHEMA = __nccwpck_require__(8562);
 module.exports.JSON_SCHEMA = __nccwpck_require__(1035);
 module.exports.CORE_SCHEMA = __nccwpck_require__(2011);
@@ -13672,7 +13672,7 @@ module.exports.load    = load;
 
 /***/ }),
 
-/***/ 1895:
+/***/ 1082:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -13861,7 +13861,7 @@ module.exports = (__nccwpck_require__(2011).extend)({
 
 
 
-var Schema = __nccwpck_require__(1895);
+var Schema = __nccwpck_require__(1082);
 
 
 module.exports = new Schema({
@@ -21380,6 +21380,14 @@ module.exports = require("perf_hooks");
 
 /***/ }),
 
+/***/ 7282:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("process");
+
+/***/ }),
+
 /***/ 5477:
 /***/ ((module) => {
 
@@ -21485,17 +21493,6 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	}
 /******/ 	
 /************************************************************************/
-/******/ 	/* webpack/runtime/make namespace object */
-/******/ 	(() => {
-/******/ 		// define __esModule on exports
-/******/ 		__nccwpck_require__.r = (exports) => {
-/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 			}
-/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 		};
-/******/ 	})();
-/******/ 	
 /******/ 	/* webpack/runtime/compat */
 /******/ 	
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
@@ -21505,12 +21502,6 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be in strict mode.
 (() => {
 "use strict";
-// ESM COMPAT FLAG
-__nccwpck_require__.r(__webpack_exports__);
-
-;// CONCATENATED MODULE: external "process"
-const external_process_namespaceObject = require("process");
-;// CONCATENATED MODULE: ./main.js
 
 
 const artifact = __nccwpck_require__(2605);
@@ -21519,13 +21510,14 @@ const exec = __nccwpck_require__(1514);
 const fs = __nccwpck_require__(7147);
 const github = __nccwpck_require__(5438);
 const glob = __nccwpck_require__(8090);
+const process = __nccwpck_require__(7282);
 const yaml = __nccwpck_require__(1917);
-
 
 (async () => {
   try {
     const credentials = core.getInput('credentials');
     const charm_path = core.getInput('charm-path');
+    const bundle_path = core.getInput('bundle-path');
     const charmcraft_channel = core.getInput('charmcraft-channel');
 
     await exec.exec('sudo', [
@@ -21537,15 +21529,16 @@ const yaml = __nccwpck_require__(1917);
       charmcraft_channel,
     ]);
 
-    (0,external_process_namespaceObject.chdir)(charm_path);
+    if (bundle_path) {
+      await exec.exec('sudo', [
+        'snap',
+        'install',
+        'juju-bundle',
+        '--classic',
+      ]);
+    }
+
     core.exportVariable('CHARMCRAFT_AUTH', credentials);
-
-    const metadata = yaml.load(fs.readFileSync('metadata.yaml'));
-
-    const name = metadata.name;
-    const images = Object.entries(metadata.resources || {})
-      .filter(([_, res]) => res.type === 'oci-image')
-      .map(([name, res]) => [name, res['upstream-source']]);
 
     const ctx = github.context;
     const event = ctx.eventName;
@@ -21593,36 +21586,52 @@ const yaml = __nccwpck_require__(1917);
       return;
     }
 
-    await exec.exec('charmcraft', ['pack', '--destructive-mode', '--quiet']);
 
-    const revisions = await Promise.all(
-      images.map(async ([resource_name, resource_image]) => {
-        await exec.exec('docker', ['pull', resource_image]);
-        await exec.exec('charmcraft', [
-          'upload-resource',
-          '--quiet',
-          name,
-          resource_name,
-          '--image',
-          resource_image,
-        ]);
-        let result = await exec.getExecOutput('charmcraft', ['resource-revisions', name, resource_name]);
-        let revision = result.stdout.split('\n')[1].split(' ')[0];
+    // Publish a bundle or a charm, depending on if `bundle_path` or `charm_path` was set
+    if (bundle_path) {
+      process.chdir(bundle_path);
+      await exec.exec('juju-bundle', ['publish', '--destructive-mode', '--serial', '--release', channel]);
+    } else {
+      process.chdir(charm_path);
+      const metadata = yaml.load(fs.readFileSync('metadata.yaml'));
 
-        return `--resource=${resource_name}:${revision}`;
-      })
-    );
+      const name = metadata.name;
+      const images = Object.entries(metadata.resources || {})
+        .filter(([_, res]) => res.type === 'oci-image')
+        .map(([name, res]) => [name, res['upstream-source']]);
 
-    const globber = await glob.create('./*.charm');
-    const paths = await globber.glob();
+      await exec.exec('charmcraft', ['pack', '--destructive-mode', '--quiet']);
 
-    await Promise.all(
-      paths.map((path) =>
-        exec.exec('charmcraft', ['upload', '--quiet', '--release', channel, path].concat(revisions))
-      )
-    );
+      const revisions = await Promise.all(
+        images.map(async ([resource_name, resource_image]) => {
+          await exec.exec('docker', ['pull', resource_image]);
+          await exec.exec('charmcraft', [
+            'upload-resource',
+            '--quiet',
+            name,
+            resource_name,
+            '--image',
+            resource_image,
+          ]);
+          let result = await exec.getExecOutput('charmcraft', ['resource-revisions', name, resource_name]);
+          let revision = result.stdout.split('\n')[1].split(' ')[0];
+
+          return `--resource=${resource_name}:${revision}`;
+        })
+      );
+
+      const globber = await glob.create('./*.charm');
+      const paths = await globber.glob();
+
+      await Promise.all(
+        paths.map((path) =>
+          exec.exec('charmcraft', ['upload', '--quiet', '--release', channel, path].concat(revisions))
+        )
+      );
+    }
   } catch (error) {
     core.setFailed(error.message);
+    core.error(error.stack);
   } finally {
     const root = '/home/runner/snap/charmcraft/common/cache/charmcraft/log/';
 

@@ -1,0 +1,7 @@
+name: charmhub-upload-test-bundle
+bundle: kubernetes
+applications:
+  charmhub-upload-test:
+    charm: charmhub-upload-test
+    source: ../test-charm
+    scale: 1
