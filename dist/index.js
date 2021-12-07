@@ -21585,7 +21585,7 @@ const yaml = __nccwpck_require__(1917);
           return
         }
       } else {
-        core.setFailed(`Unhandled branch name: ${head_ref}`);
+        core.notice(`Unhandled branch name: ${head_ref}`);
         return
       }
     } else {

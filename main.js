@@ -72,7 +72,7 @@ import { chdir } from 'process';
           return
         }
       } else {
-        core.setFailed(`Unhandled branch name: ${head_ref}`);
+        core.notice(`Unhandled branch name: ${head_ref}`);
         return
       }
     } else {
