@@ -13,7 +13,10 @@ import { chdir } from 'process';
   try {
     const credentials = core.getInput('credentials');
     const charm_path = core.getInput('charm-path');
+    const bundle_path = core.getInput('bundle-path');
     const charmcraft_channel = core.getInput('charmcraft-channel');
+
+    throw new Error(bundle_path);
 
     await exec.exec('sudo', [
       'snap',
@@ -110,6 +113,8 @@ import { chdir } from 'process';
     );
   } catch (error) {
     core.setFailed(error.message);
+    core.info(error.stack);
+    throw error;
   } finally {
     const root = '/home/runner/snap/charmcraft/common/cache/charmcraft/log/';
 
