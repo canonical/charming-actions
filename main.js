@@ -30,7 +30,7 @@ import { chdir } from 'process';
     const metadata = yaml.load(fs.readFileSync('metadata.yaml'));
 
     const name = metadata.name;
-    const images = Object.entries(metadata.resources)
+    const images = Object.entries(metadata.resources || {})
       .filter(([_, res]) => res.type === 'oci-image')
       .map(([name, res]) => [name, res['upstream-source']]);
 
