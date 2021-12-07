@@ -1,0 +1,7 @@
+name: charmhub-upload-test-bundle
+bundle: kubernetes
+applications:
+  charmhub-upload-test:
+    charm: istio-ingressgateway-operator
+    source: ../test-charm
+    scale: 1
