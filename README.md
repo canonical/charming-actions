@@ -1,11 +1,14 @@
 # charmhub-upload
 
-This action allows you to easily upload a charmed operator to [charmhub.io][charmhub].
+This action allows you to easily upload a charmed operator or bundle of charmed operators to
+[charmhub.io][charmhub].
 
 [charmhub]: https://charmhub.io/
 
 
 ## Usage
+
+### Workflow
 
 To use this action, start by adding a repository secret to your Github repository. In the example
 below, it's called `CHARMCRAFT_AUTH`, but can be anything you want. Then, add a step like this to
@@ -21,8 +24,51 @@ your Github Workflow:
 
 [auth]: https://juju.is/docs/sdk/remote-env-auth
 
+If you're uploading a single charm that exists in the current directory, that's all you need.
+
+If you've got a charm at a different path, you can upload the charm like this:
+
+
+```yaml
+- uses: canonical/charmhub-upload-action@0.1.0
+  with:
+    credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
+    charm-path: my-charm/
+```
+
+If you'd like to upload a bundle instead of a charm, you can do so like this:
+
+
+```yaml
+- uses: canonical/charmhub-upload-action@0.1.0
+  with:
+    credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
+    bundle-path: my-bundle/
+```
+
+### Branch Selection
+
+This action automatically selects a Charmhub channel based on the Github branch naming. For `push`
+events, a Charmhub channel is selected. For `pull_request` events, a Charmhub branch is selected, so
+that the PR can be tested.
+
+The Charmhub channel/branch selection logic looks like this:
+
+| Event Type   | Head                   | Base/Branch          | Channel                           |
+|:------------:|:----------------------:|:--------------------:|:---------------------------------:|
+| push         |                        | `<default branch>`   | `latest/edge`                     |
+| push         |                        | `track/<track-name>` | `<track-name>/edge`               |
+| push         |                        | Any other name       | Ignored                           |
+| pull_request | `branch/<branch-name>` | `<default branch>`   | `latest/edge/<branch-name>`       |
+| pull_request | `branch/<branch-name>` | `track/<track-name>` | `<track-name>/edge/<branch-name>` |
+| pull_request | Any other name         | Any other name       | Ignored                           |
+
+### Available Inputs
+
 The list of available inputs for this action are:
 
+ - `bundle-path`
+   - Path to the bundle to be uploaded. Optional; If set, `charm-path` will be ignored.
  - `charm-path`
    - Path to the charm to be uploaded. Optional, defaults to `'.'`.
  - `charmcraft-channel`

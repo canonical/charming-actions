@@ -1,5 +1,4 @@
 name: charmhub-upload-test
-display-name: Charmhub Upload Test
 summary: Charm for testing charmhub-upload-action
 description: Charm for testing charmhub-upload-action
 containers:
