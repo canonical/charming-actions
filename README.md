@@ -15,7 +15,7 @@ below, it's called `CHARMCRAFT_AUTH`, but can be anything you want. Then, add a 
 your Github Workflow:
 
 ```yaml
-- uses: canonical/charmhub-upload-action@0.1.0
+- uses: canonical/charmhub-upload-action@0.2.0
   with:
     credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
 ```
@@ -30,7 +30,7 @@ If you've got a charm at a different path, you can upload the charm like this:
 
 
 ```yaml
-- uses: canonical/charmhub-upload-action@0.1.0
+- uses: canonical/charmhub-upload-action@0.2.0
   with:
     credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
     charm-path: my-charm/
@@ -40,7 +40,7 @@ If you'd like to upload a bundle instead of a charm, you can do so like this:
 
 
 ```yaml
-- uses: canonical/charmhub-upload-action@0.1.0
+- uses: canonical/charmhub-upload-action@0.2.0
   with:
     credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
     bundle-path: my-bundle/
