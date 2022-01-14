@@ -13,6 +13,10 @@ inputs:
     description: Snap channel to use when installing charmcraft
     required: false
     default: "latest/edge"
+  upload-image: # TODO: check whether the values are correct or not
+    description: Set to false if you don't want to update the image
+    required: false
+    default: "true"
   credentials:
     description: |
       Credentials exported from `charmcraft login --export`. See
