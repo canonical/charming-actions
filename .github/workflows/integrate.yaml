@@ -23,8 +23,14 @@ jobs:
         with:
           credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
           charm-path: test-charm/
+          upload-image: "false"
 
-      - uses: ./
+      # - uses: ./
+      #   with:
+      #     credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
+      #     bundle-path: test-bundle/
+
+      - uses: actions/upload-artifact@v2
         with:
-          credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
-          bundle-path: test-bundle/
+          name: my-logs
+          path: /home/runner/snap/charmcraft/common/cache/charmcraft/log/

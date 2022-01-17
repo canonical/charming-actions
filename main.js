@@ -15,6 +15,7 @@ const yaml = require('js-yaml');
     const charm_path = core.getInput('charm-path');
     const bundle_path = core.getInput('bundle-path');
     const charmcraft_channel = core.getInput('charmcraft-channel');
+    const upload_image = (core.getInput("upload-image") === "true");
 
     await exec.exec('sudo', [
       'snap',
@@ -101,14 +102,16 @@ const yaml = require('js-yaml');
       const revisions = await Promise.all(
         images.map(async ([resource_name, resource_image]) => {
           await exec.exec('docker', ['pull', resource_image]);
-          await exec.exec('charmcraft', [
-            'upload-resource',
-            '--quiet',
-            name,
-            resource_name,
-            '--image',
-            resource_image,
-          ]);
+          if(upload_image){
+            await exec.exec('charmcraft', [
+              'upload-resource',
+              '--quiet',
+              name,
+              resource_name,
+              '--image',
+              resource_image,
+            ]);
+          }
           let result = await exec.getExecOutput('charmcraft', ['resource-revisions', name, resource_name]);
           let revision = result.stdout.split('\n')[1].split(' ')[0];
 
