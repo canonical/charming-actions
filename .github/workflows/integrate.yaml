@@ -30,6 +30,11 @@ jobs:
       #     credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
       #     bundle-path: test-bundle/
 
+      - name: show my-logs
+        run: |
+          cd /home/runner/snap/charmcraft/common/cache/charmcraft/log/
+          find . -type f -exec cat {} \;
+
       - uses: actions/upload-artifact@v2
         with:
           name: my-logs
