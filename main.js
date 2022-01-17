@@ -102,6 +102,7 @@ const yaml = require('js-yaml');
       const revisions = await Promise.all(
         images.map(async ([resource_name, resource_image]) => {
           await exec.exec('docker', ['pull', resource_image]);
+          // TODO: Check not useful code when not uploading the OCI image
           if(upload_image){
             await exec.exec('charmcraft', [
               'upload-resource',
