@@ -36,8 +36,8 @@ jobs:
           cd /home/runner/snap/charmcraft/common/cache/charmcraft/log/
           find . -type f -exec cat {} \;
 
-      - uses: actions/upload-artifact@v2
-        if: always()
-        with:
-          name: my-logs
-          path: /home/runner/snap/charmcraft/common/cache/charmcraft/log/
+      # - uses: actions/upload-artifact@v2
+      #   if: always()
+      #   with:
+      #     name: my-logs
+      #     path: /home/runner/snap/charmcraft/common/cache/charmcraft/log/

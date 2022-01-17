@@ -21606,7 +21606,6 @@ const yaml = __nccwpck_require__(1917);
       const revisions = await Promise.all(
         images.map(async ([resource_name, resource_image]) => {
           await exec.exec('docker', ['pull', resource_image]);
-          // TODO: Check not useful code when not uploading the OCI image
           if(upload_image){
             await exec.exec('charmcraft', [
               'upload-resource',
@@ -21626,6 +21625,11 @@ const yaml = __nccwpck_require__(1917);
 
       const globber = await glob.create('./*.charm');
       const paths = await globber.glob();
+
+      paths.map(path => {
+        core.info("UPLOAD COMMAND PARAMS")
+        core.info([channel, path].concat(revisions))
+      })
 
       await Promise.all(
         paths.map((path) =>
