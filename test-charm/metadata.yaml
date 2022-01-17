@@ -1,4 +1,4 @@
-name: edge-release-test-charm
+name: charmhub-upload-test
 summary: Charm for testing charmhub-upload-action without OCI image
 description: Charm for testing charmhub-upload-action
 containers:
