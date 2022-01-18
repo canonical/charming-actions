@@ -113,8 +113,15 @@ const yaml = require('js-yaml');
             ]);
           }
           let result = await exec.getExecOutput('charmcraft', ['resource-revisions', name, resource_name]);
+          core.info("RESULT")
+          core.info(result)
           let revision = result.stdout.split('\n')[1].split(' ')[0];
+          core.info("REVISION")
+          core.info(revision)
 
+          // TODO: remove logs
+          core.info("RETURN")
+          core.info(`--resource=${resource_name}:${revision}`)
           return `--resource=${resource_name}:${revision}`;
         })
       );
