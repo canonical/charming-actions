@@ -119,7 +119,8 @@ const yaml = require('js-yaml');
           core.info("REVISION")
           core.info('REVISION:' + revision)
 
-          // TODO: remove logs, logs modified
+          // TODO: remove logs
+          // to force a change
           core.info("RETURN")
           core.info(`--resource=${resource_name}:${revision}`)
           return `--resource=${resource_name}:${revision}`;
