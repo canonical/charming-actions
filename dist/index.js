@@ -21621,7 +21621,7 @@ const yaml = __nccwpck_require__(1917);
           core.info(result)
           let revision = result.stdout.split('\n')[1].split(' ')[0];
           core.info("REVISION")
-          core.info(revision)
+          core.info('REVISION:' + revision)
 
           // TODO: remove logs
           core.info("RETURN")
