@@ -21623,7 +21623,7 @@ const yaml = __nccwpck_require__(1917);
           core.info("REVISION")
           core.info('REVISION:' + revision)
 
-          // TODO: remove logs
+          // TODO: remove logs, logs modified
           core.info("RETURN")
           core.info(`--resource=${resource_name}:${revision}`)
           return `--resource=${resource_name}:${revision}`;
