@@ -21618,7 +21618,7 @@ const yaml = __nccwpck_require__(1917);
           }
           let result = await exec.getExecOutput('charmcraft', ['resource-revisions', name, resource_name]);
           core.info("RESULT")
-          core.info(result)
+          core.info(str(result))
           let revision = result.stdout.split('\n')[1].split(' ')[0];
           core.info("REVISION")
           core.info('REVISION:' + revision)
