@@ -21,9 +21,7 @@ const yaml = require('js-yaml');
       'snap',
       'install',
       'charmcraft',
-      '--classic',
-      '--channel',
-      charmcraft_channel,
+      '--classic'
     ]);
 
     if (bundle_path) {
