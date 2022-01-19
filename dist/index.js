@@ -21525,7 +21525,9 @@ const yaml = __nccwpck_require__(1917);
       'snap',
       'install',
       'charmcraft',
-      '--classic'
+      '--classic',
+      '--channel',
+      charmcraft_channel,
     ]);
 
     if (bundle_path) {
