@@ -20,7 +20,7 @@ class EdgeReleaseTestCharmCharm(CharmBase):
         self.framework.observe(self.on.install, self.install)
 
     def install(self, event):
-        self.model.unit.status = ActiveStatus()
+        self.model.unit.status = ActiveStatus("Up and running!")
 
 
 if __name__ == "__main__":
