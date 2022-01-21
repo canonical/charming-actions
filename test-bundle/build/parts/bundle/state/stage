@@ -1,0 +1,42 @@
+directories: !!set {}
+files: !!set
+  README.md: null
+  bundle.yaml: null
+  charmcraft.yaml: null
+overlay-hash: 6554e32fa718d54160d0511b36f81458e4cb2357
+part-properties:
+  after: []
+  build-attributes: []
+  build-environment: []
+  build-packages: []
+  build-snaps: []
+  disable-parallel: false
+  organize: {}
+  overlay:
+  - '*'
+  overlay-packages: []
+  overlay-script: null
+  override-build: null
+  override-prime: null
+  override-pull: null
+  override-stage: null
+  plugin: bundle
+  prime:
+  - bundle.yaml
+  - README.md
+  source: /home/ubuntu/Canonical/charmhub-upload-action/test-bundle
+  source-branch: ''
+  source-checksum: ''
+  source-commit: ''
+  source-depth: 0
+  source-subdir: ''
+  source-tag: ''
+  source-type: ''
+  stage:
+  - '*'
+  stage-packages: []
+  stage-snaps: []
+project-options:
+  application_name: charmcraft
+  arch_triplet: aarch64-linux-gnu
+  target_arch: arm64
