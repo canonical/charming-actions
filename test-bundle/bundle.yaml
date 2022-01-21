@@ -1,7 +1,7 @@
-name: charmhub-upload-test-bundle
+name: edge-release-test-bundle
 bundle: kubernetes
 applications:
-  charmhub-upload-test:
-    charm: charmhub-upload-test
+  edge-release-test-charm:
+    charm: edge-release-test-charm
     source: ../test-charm
     scale: 1
