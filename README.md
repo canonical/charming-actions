@@ -33,6 +33,8 @@ If you don't want to upload the OCI image, add `upload-image` config and set it 
     credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
     upload-image: "false"
 ```
+**NOTE**: The `upload-image` configuration will apply to both the charm and the bundle.
+
 
 
 
