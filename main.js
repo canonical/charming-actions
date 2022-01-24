@@ -101,7 +101,9 @@ const yaml = require('js-yaml');
 
       const revisions = await Promise.all(
         images.map(async ([resource_name, resource_image]) => {
-          if(upload_image){ // TODO: remove
+          if(upload_image){
+            // TODO: remove
+            core.info("THE IMAGE IS BEING UPDATED")
             await exec.exec('docker', ['pull', resource_image]);
             await exec.exec('charmcraft', [
               'upload-resource',
