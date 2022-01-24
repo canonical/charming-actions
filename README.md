@@ -33,10 +33,6 @@ If you don't want to upload the OCI image, add `upload-image` config and set it 
     credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
     upload-image: "false"
 ```
-**NOTE**: The `upload-image` configuration will apply to both the charm and the bundle.
-
-
-
 
 If you've got a charm at a different path, you can upload the charm like this:
 
@@ -112,3 +108,4 @@ Finally, install node.js and install dependencies:
     sudo apt install npm
     npm install
     npm run-script build
+    

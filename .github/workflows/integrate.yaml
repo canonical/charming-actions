@@ -23,15 +23,9 @@ jobs:
         with:
           credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
           charm-path: test-charm/
-          upload-image: "false"
+          upload-image: "true"
 
       - uses: ./
         with:
           credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
           bundle-path: test-bundle/
-
-      - name: show charmcraft logs
-        if: always()
-        run: |
-          cd /home/runner/snap/charmcraft/common/cache/charmcraft/log/
-          find . -type f -exec cat {} \;

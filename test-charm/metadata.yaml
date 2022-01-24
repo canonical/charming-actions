@@ -1,21 +1,11 @@
-# Copyright 2022 Ubuntu
-# See LICENSE file for licensing details.
-
-# For a complete list of supported options, see:
-# https://discourse.charmhub.io/t/charm-metadata-v2/3674/15
-name: edge-release-test-charm
-
-description: |
-  Dummy charm to test automatic charms update to charmhub from the CI
-summary: |
-  Dummy charm to test automatic charms update to charmhub from the CI
-
+name: charmhub-upload-test
+summary: Charm for testing charmhub-upload-action
+description: Charm for testing charmhub-upload-action
 containers:
-  edge-release-test-charm:
-    resource: edge-release-test-charm-image
-
+  noop:
+    resource: noop
 resources:
-  edge-release-test-charm-image:
+  noop:
     type: oci-image
-    description: OCI image for edge-release-test-charm
-    upstream-source: hello-world:latest
+    description: ''
+    upstream-source: ubuntu:20.04

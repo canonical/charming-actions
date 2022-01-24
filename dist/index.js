@@ -21618,18 +21618,13 @@ const yaml = __nccwpck_require__(1917);
           }
           let result = await exec.getExecOutput('charmcraft', ['resource-revisions', name, resource_name]);
           let revision = result.stdout.split('\n')[1].split(' ')[0];
-          // to force a change, change, change, change, change, change
-          core.info(`--resource=${resource_name}:${revision}`)
+          
           return `--resource=${resource_name}:${revision}`;
         })
       );
 
       const globber = await glob.create('./*.charm');
       const paths = await globber.glob();
-
-      paths.map(path => {
-        core.info([channel, path].concat(revisions))
-      })
 
       await Promise.all(
         paths.map((path) =>

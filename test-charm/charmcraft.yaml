@@ -1,6 +1,4 @@
-# Learn more about charmcraft.yaml configuration at:
-# https://juju.is/docs/sdk/charmcraft-config
-type: "charm"
+type: charm
 bases:
   - build-on:
     - name: "ubuntu"
@@ -8,3 +6,6 @@ bases:
     run-on:
     - name: "ubuntu"
       channel: "20.04"
+parts:
+  charm:
+    charm-python-packages: [setuptools, pip]
