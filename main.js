@@ -111,6 +111,9 @@ const yaml = require('js-yaml');
               '--image',
               resource_image,
             ]);
+          } else {
+            core.warning("No resources where uploaded as part of this build. \
+                          If you wish to upload the OCI image, set 'upload-image' to true")
           }
           let result = await exec.getExecOutput('charmcraft', ['resource-revisions', name, resource_name]);
           let revision = result.stdout.split('\n')[1].split(' ')[0];
