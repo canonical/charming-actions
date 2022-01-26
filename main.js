@@ -15,7 +15,14 @@ const yaml = require('js-yaml');
     const charm_path = core.getInput('charm-path');
     const bundle_path = core.getInput('bundle-path');
     const charmcraft_channel = core.getInput('charmcraft-channel');
-    const upload_image = (core.getInput("upload-image") === "true");
+    let upload_image = core.getInput('upload-image');
+    if (!['false', 'true'].contains(upload_image.toLowerCase())) {
+      core.error(
+        `Valid values for upload-image are 'true', 'false'. Got ${upload_image}`
+      );
+      return;
+    }
+    upload_image = upload_image.toLowerCase() == 'true';
 
     await exec.exec('sudo', [
       'snap',
@@ -27,12 +34,7 @@ const yaml = require('js-yaml');
     ]);
 
     if (bundle_path) {
-      await exec.exec('sudo', [
-        'snap',
-        'install',
-        'juju-bundle',
-        '--classic',
-      ]);
+      await exec.exec('sudo', ['snap', 'install', 'juju-bundle', '--classic']);
     }
 
     core.exportVariable('CHARMCRAFT_AUTH', credentials);
@@ -42,7 +44,7 @@ const yaml = require('js-yaml');
 
     let channel;
 
-    if (event == "push") {
+    if (event == 'push') {
       if (ctx.ref.startsWith('refs/heads/')) {
         let branch = ctx.ref.replace('refs/heads/', '');
 
@@ -52,13 +54,13 @@ const yaml = require('js-yaml');
           channel = branch.replace('track/', '') + '/edge';
         } else {
           core.notice(`Unhandled branch name ${ctx.ref}`);
-          return
+          return;
         }
       } else {
         core.setFailed(`Unknown type of ref: ${github.context.ref}`);
-        return
+        return;
       }
-    } else if (event == "pull_request") {
+    } else if (event == 'pull_request') {
       const base_ref = ctx.payload.pull_request.base.ref;
       const head_ref = ctx.payload.pull_request.head.ref;
 
@@ -72,22 +74,27 @@ const yaml = require('js-yaml');
           channel = `${track}/edge/${branch}`;
         } else {
           core.setFailed(`Unhandled PR base name ${base_ref}`);
-          return
+          return;
         }
       } else {
         core.notice(`Unhandled branch name: ${head_ref}`);
-        return
+        return;
       }
     } else {
-      core.setFailed(`Unknown eventType ${event}.`)
+      core.setFailed(`Unknown eventType ${event}.`);
       return;
     }
-
 
     // Publish a bundle or a charm, depending on if `bundle_path` or `charm_path` was set
     if (bundle_path) {
       process.chdir(bundle_path);
-      await exec.exec('juju-bundle', ['publish', '--destructive-mode', '--serial', '--release', channel]);
+      await exec.exec('juju-bundle', [
+        'publish',
+        '--destructive-mode',
+        '--serial',
+        '--release',
+        channel,
+      ]);
     } else {
       process.chdir(charm_path);
       const metadata = yaml.load(fs.readFileSync('metadata.yaml'));
@@ -101,7 +108,7 @@ const yaml = require('js-yaml');
 
       const revisions = await Promise.all(
         images.map(async ([resource_name, resource_image]) => {
-          if(upload_image){
+          if (upload_image) {
             await exec.exec('docker', ['pull', resource_image]);
             await exec.exec('charmcraft', [
               'upload-resource',
@@ -112,12 +119,18 @@ const yaml = require('js-yaml');
               resource_image,
             ]);
           } else {
-            core.warning("No resources where uploaded as part of this build. \
-                          If you wish to upload the OCI image, set 'upload-image' to true")
+            core.warning(
+              "No resources where uploaded as part of this build. \
+              If you wish to upload the OCI image, set 'upload-image' to 'true'"
+            );
           }
-          let result = await exec.getExecOutput('charmcraft', ['resource-revisions', name, resource_name]);
+          let result = await exec.getExecOutput('charmcraft', [
+            'resource-revisions',
+            name,
+            resource_name,
+          ]);
           let revision = result.stdout.split('\n')[1].split(' ')[0];
-          
+
           return `--resource=${resource_name}:${revision}`;
         })
       );
@@ -127,7 +140,10 @@ const yaml = require('js-yaml');
 
       await Promise.all(
         paths.map((path) =>
-          exec.exec('charmcraft', ['upload', '--quiet', '--release', channel, path].concat(revisions))
+          exec.exec(
+            'charmcraft',
+            ['upload', '--quiet', '--release', channel, path].concat(revisions)
+          )
         )
       );
     }
@@ -138,15 +154,19 @@ const yaml = require('js-yaml');
     const root = '/home/runner/snap/charmcraft/common/cache/charmcraft/log/';
 
     if (!fs.existsSync(root)) {
-      core.info("No charmcraft logs generated, skipping artifact upload.");
-      return
+      core.info('No charmcraft logs generated, skipping artifact upload.');
+      return;
     }
 
     const globber = await glob.create(root + '*.log');
     const files = await globber.glob();
     const artifactClient = artifact.create();
 
-    const result = await artifactClient.uploadArtifact('charmcraft-logs', files, root);
+    const result = await artifactClient.uploadArtifact(
+      'charmcraft-logs',
+      files,
+      root
+    );
     core.info(`Artifact upload result: ${JSON.stringify(result)}`);
   }
 })();
