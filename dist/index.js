@@ -21520,7 +21520,7 @@ const yaml = __nccwpck_require__(1917);
     const bundle_path = core.getInput('bundle-path');
     const charmcraft_channel = core.getInput('charmcraft-channel');
     let upload_image = core.getInput('upload-image');
-    if (!['false', 'true'].contains(upload_image.toLowerCase())) {
+    if (!['false', 'true'].includes(upload_image.toLowerCase())) {
       core.error(
         `Valid values for upload-image are 'true', 'false'. Got ${upload_image}`
       );
