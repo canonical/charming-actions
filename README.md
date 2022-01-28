@@ -26,6 +26,14 @@ your Github Workflow:
 
 If you're uploading a single charm that exists in the current directory, that's all you need.
 
+If you don't want to upload the OCI image, add `upload-image` config and set it to `"false"`. This would be useful for charms whose image does not change often. Default behavior is set to `"true"`:
+```yaml
+- uses: canonical/charmhub-upload-action@0.2.0
+  with:
+    credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
+    upload-image: "false"
+```
+
 If you've got a charm at a different path, you can upload the charm like this:
 
 
@@ -78,7 +86,8 @@ The list of available inputs for this action are:
      variable.
  - `credentials`
    - Required, must be set to the credentials generated from `charmcraft login --export`.
-
+ - `upload-image`
+   - Set to false if you don't want to upload the OCI image. (Default true)
 ## Developing
 
 Start by cloning the repository:
@@ -99,3 +108,4 @@ Finally, install node.js and install dependencies:
     sudo apt install npm
     npm install
     npm run-script build
+    

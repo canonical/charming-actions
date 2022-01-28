@@ -23,6 +23,7 @@ jobs:
         with:
           credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
           charm-path: test-charm/
+          upload-image: "true"
 
       - uses: ./
         with:
