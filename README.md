@@ -15,7 +15,7 @@ below, it's called `CHARMCRAFT_AUTH`, but can be anything you want. Then, add a 
 your Github Workflow:
 
 ```yaml
-- uses: canonical/charmhub-upload-action@0.2.0
+- uses: canonical/charmhub-upload-action@0.2.1
   with:
     credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
 ```
@@ -28,7 +28,7 @@ If you're uploading a single charm that exists in the current directory, that's 
 
 If you don't want to upload the OCI image, add `upload-image` config and set it to `"false"`. This would be useful for charms whose image does not change often. Default behavior is set to `"true"`:
 ```yaml
-- uses: canonical/charmhub-upload-action@0.2.0
+- uses: canonical/charmhub-upload-action@0.2.1
   with:
     credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
     upload-image: "false"
@@ -38,7 +38,7 @@ If you've got a charm at a different path, you can upload the charm like this:
 
 
 ```yaml
-- uses: canonical/charmhub-upload-action@0.2.0
+- uses: canonical/charmhub-upload-action@0.2.1
   with:
     credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
     charm-path: my-charm/
@@ -48,7 +48,7 @@ If you'd like to upload a bundle instead of a charm, you can do so like this:
 
 
 ```yaml
-- uses: canonical/charmhub-upload-action@0.2.0
+- uses: canonical/charmhub-upload-action@0.2.1
   with:
     credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
     bundle-path: my-bundle/
