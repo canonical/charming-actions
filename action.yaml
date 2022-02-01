@@ -22,6 +22,11 @@ inputs:
       Credentials exported from `charmcraft login --export`. See
       https://juju.is/docs/sdk/remote-env-auth for more info
     required: true
+  github-token:
+    description: |
+      Github Token needed for automatic tagging when publishing
+    required: true
+
 runs:
   using: node12
   main: dist/index.js

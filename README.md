@@ -15,9 +15,10 @@ below, it's called `CHARMCRAFT_AUTH`, but can be anything you want. Then, add a 
 your Github Workflow:
 
 ```yaml
-- uses: canonical/charmhub-upload-action@0.2.1
+- uses: canonical/charmhub-upload-action@0.2.2
   with:
     credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
+    github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 [See here][auth] for how to generate the appropriate credentials.
@@ -28,9 +29,10 @@ If you're uploading a single charm that exists in the current directory, that's 
 
 If you don't want to upload the OCI image, add `upload-image` config and set it to `"false"`. This would be useful for charms whose image does not change often. Default behavior is set to `"true"`:
 ```yaml
-- uses: canonical/charmhub-upload-action@0.2.1
+- uses: canonical/charmhub-upload-action@0.2.2
   with:
     credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
+    github-token: ${{ secrets.GITHUB_TOKEN }}
     upload-image: "false"
 ```
 
@@ -38,9 +40,10 @@ If you've got a charm at a different path, you can upload the charm like this:
 
 
 ```yaml
-- uses: canonical/charmhub-upload-action@0.2.1
+- uses: canonical/charmhub-upload-action@0.2.2
   with:
     credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
+    github-token: ${{ secrets.GITHUB_TOKEN }}
     charm-path: my-charm/
 ```
 
@@ -48,9 +51,10 @@ If you'd like to upload a bundle instead of a charm, you can do so like this:
 
 
 ```yaml
-- uses: canonical/charmhub-upload-action@0.2.1
+- uses: canonical/charmhub-upload-action@0.2.2
   with:
     credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
+    github-token: ${{ secrets.GITHUB_TOKEN }}
     bundle-path: my-bundle/
 ```
 
@@ -88,6 +92,11 @@ The list of available inputs for this action are:
    - Required, must be set to the credentials generated from `charmcraft login --export`.
  - `upload-image`
    - Set to false if you don't want to upload the OCI image. (Default true)
+ - github-token
+   - This token is needed for the action to be able to tag the last commit of what has been
+     published to charmhub. No additonal secret is needed as the Github Token is provided 
+     automatically when adding `github-token: ${{ secrets.GITHUB_TOKEN }}` to you workflow yaml.
+
 ## Developing
 
 Start by cloning the repository:

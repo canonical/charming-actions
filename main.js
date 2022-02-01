@@ -43,19 +43,24 @@ const yaml = require('js-yaml');
     const event = ctx.eventName;
 
     let channel;
+    let track;
+    let resourceInfo = "resources:\n";
+    let charmRevision;
 
     if (event == 'push') {
       if (ctx.ref.startsWith('refs/heads/')) {
         let branch = ctx.ref.replace('refs/heads/', '');
 
         if (branch == ctx.payload.repository.master_branch) {
-          channel = 'latest/edge';
+	  track = 'latest';
         } else if (branch.startsWith('track/')) {
-          channel = branch.replace('track/', '') + '/edge';
+          track = branch.replace('track/', '');
         } else {
           core.notice(`Unhandled branch name ${ctx.ref}`);
           return;
         }
+	
+	channel = `${track}/edge`;
       } else {
         core.setFailed(`Unknown type of ref: ${github.context.ref}`);
         return;
@@ -131,6 +136,9 @@ const yaml = require('js-yaml');
           ]);
           let revision = result.stdout.split('\n')[1].split(' ')[0];
 
+	  resourceInfo = `${resourceInfo}  -  ${resource_name}: ${resource_image}\n`;
+	  resourceInfo = `${resourceInfo}     resource-revision: ${revision}\n`;
+
           return `--resource=${resource_name}:${revision}`;
         })
       );
@@ -139,13 +147,46 @@ const yaml = require('js-yaml');
       const paths = await globber.glob();
 
       await Promise.all(
-        paths.map((path) =>
-          exec.exec(
+        paths.map( async (path) => {
+          let result = await exec.getExecOutput(
             'charmcraft',
             ['upload', '--quiet', '--release', channel, path].concat(revisions)
-          )
-        )
+          );
+	  charmRevision = result.stdout.split(' ')[1];
+	})
       );
+
+      let githubToken = core.getInput('github-token');
+      if (!githubToken) {
+        if (process.env.GITHUB_TOKEN) {
+          githubToken = process.env.GITHUB_TOKEN;
+        } else {
+          core.setFailed(
+            'Input "github-token" is missing, and not provided in environment'
+          );
+        }
+      }
+
+      const octokit = github.getOctokit(githubToken);
+      const tagName = `${track}-rev${charmRevision}`;
+      var tagMessage = `${resourceInfo}channel: ${channel}`;
+      const { owner, repo } = github.context.repo;
+
+      const createdTag = await octokit.rest.git.createTag({
+        owner,
+        repo,
+        tag: tagName,
+        message: tagMessage,
+        object: process.env.GITHUB_SHA,
+        type: 'commit',
+      });
+
+      await octokit.rest.git.createRef({
+       owner,
+       repo,
+       ref: `refs/tags/${tagName}`,
+       sha: createdTag.data.sha,
+      });
     }
   } catch (error) {
     core.setFailed(error.message);
