@@ -22,7 +22,7 @@ const Artifact = require("./artifact");
       );
     }
 
-    const ref = Ref(github.context);
+    const ref = new Ref(github.context);
     const channel = ref.channel();
     const snap = new Snap();
     await snap.install("charmcraft", core.getInput("charmcraft-channel"));
