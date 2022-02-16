@@ -21448,7 +21448,11 @@ class Charmcraft {
       return;
     }
 
-    await exec.exec("docker", ["pull", resource_image]);
+    const pullExitCode = await exec.exec("docker", ["pull", resource_image]);
+    if (pullExitCode !== 0) {
+      throw new Error("Could not pull the docker image.");
+    }
+
     await exec.exec("charmcraft", [
       "upload-resource",
       "--quiet",
@@ -21921,7 +21925,7 @@ const Artifact = __nccwpck_require__(4472);
       );
     }
 
-    const ref = Ref(github.context);
+    const ref = new Ref(github.context);
     const channel = ref.channel();
     const snap = new Snap();
     await snap.install("charmcraft", core.getInput("charmcraft-channel"));

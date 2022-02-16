@@ -9,7 +9,9 @@
     "build": "ncc build src/main.js",
     "test": "jest",
     "lint": "eslint ./src",
-    "postlint": "prettier ./src -c"
+    "format": "prettier ./src -c",
+    "format:fix": "prettier ./src -w",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@actions/artifact": "^0.2.0",
@@ -28,6 +30,7 @@
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-import": "^2.25.4",
     "eslint-plugin-jest": "^26.1.1",
+    "husky": "^7.0.4",
     "jest": "^27.5.1",
     "prettier": "^2.5.1"
   }

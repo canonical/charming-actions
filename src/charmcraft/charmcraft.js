@@ -40,7 +40,11 @@ class Charmcraft {
       return;
     }
 
-    await exec.exec("docker", ["pull", resource_image]);
+    const pullExitCode = await exec.exec("docker", ["pull", resource_image]);
+    if (pullExitCode !== 0) {
+      throw new Error("Could not pull the docker image.");
+    }
+
     await exec.exec("charmcraft", [
       "upload-resource",
       "--quiet",
