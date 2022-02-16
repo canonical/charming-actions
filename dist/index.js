@@ -8684,6 +8684,20 @@ var isArray = Array.isArray || function (xs) {
 
 /***/ }),
 
+/***/ 7401:
+/***/ (function(module) {
+
+!function(t,e){ true?module.exports=e():0}(this,(function(){"use strict";var t=1e3,e=6e4,n=36e5,r="millisecond",i="second",s="minute",u="hour",a="day",o="week",f="month",h="quarter",c="year",d="date",$="Invalid Date",l=/^(\d{4})[-/]?(\d{1,2})?[-/]?(\d{0,2})[Tt\s]*(\d{1,2})?:?(\d{1,2})?:?(\d{1,2})?[.:]?(\d+)?$/,y=/\[([^\]]+)]|Y{1,4}|M{1,4}|D{1,2}|d{1,4}|H{1,2}|h{1,2}|a|A|m{1,2}|s{1,2}|Z{1,2}|SSS/g,M={name:"en",weekdays:"Sunday_Monday_Tuesday_Wednesday_Thursday_Friday_Saturday".split("_"),months:"January_February_March_April_May_June_July_August_September_October_November_December".split("_")},m=function(t,e,n){var r=String(t);return!r||r.length>=e?t:""+Array(e+1-r.length).join(n)+t},g={s:m,z:function(t){var e=-t.utcOffset(),n=Math.abs(e),r=Math.floor(n/60),i=n%60;return(e<=0?"+":"-")+m(r,2,"0")+":"+m(i,2,"0")},m:function t(e,n){if(e.date()<n.date())return-t(n,e);var r=12*(n.year()-e.year())+(n.month()-e.month()),i=e.clone().add(r,f),s=n-i<0,u=e.clone().add(r+(s?-1:1),f);return+(-(r+(n-i)/(s?i-u:u-i))||0)},a:function(t){return t<0?Math.ceil(t)||0:Math.floor(t)},p:function(t){return{M:f,y:c,w:o,d:a,D:d,h:u,m:s,s:i,ms:r,Q:h}[t]||String(t||"").toLowerCase().replace(/s$/,"")},u:function(t){return void 0===t}},D="en",v={};v[D]=M;var p=function(t){return t instanceof _},S=function(t,e,n){var r;if(!t)return D;if("string"==typeof t)v[t]&&(r=t),e&&(v[t]=e,r=t);else{var i=t.name;v[i]=t,r=i}return!n&&r&&(D=r),r||!n&&D},w=function(t,e){if(p(t))return t.clone();var n="object"==typeof e?e:{};return n.date=t,n.args=arguments,new _(n)},O=g;O.l=S,O.i=p,O.w=function(t,e){return w(t,{locale:e.$L,utc:e.$u,x:e.$x,$offset:e.$offset})};var _=function(){function M(t){this.$L=S(t.locale,null,!0),this.parse(t)}var m=M.prototype;return m.parse=function(t){this.$d=function(t){var e=t.date,n=t.utc;if(null===e)return new Date(NaN);if(O.u(e))return new Date;if(e instanceof Date)return new Date(e);if("string"==typeof e&&!/Z$/i.test(e)){var r=e.match(l);if(r){var i=r[2]-1||0,s=(r[7]||"0").substring(0,3);return n?new Date(Date.UTC(r[1],i,r[3]||1,r[4]||0,r[5]||0,r[6]||0,s)):new Date(r[1],i,r[3]||1,r[4]||0,r[5]||0,r[6]||0,s)}}return new Date(e)}(t),this.$x=t.x||{},this.init()},m.init=function(){var t=this.$d;this.$y=t.getFullYear(),this.$M=t.getMonth(),this.$D=t.getDate(),this.$W=t.getDay(),this.$H=t.getHours(),this.$m=t.getMinutes(),this.$s=t.getSeconds(),this.$ms=t.getMilliseconds()},m.$utils=function(){return O},m.isValid=function(){return!(this.$d.toString()===$)},m.isSame=function(t,e){var n=w(t);return this.startOf(e)<=n&&n<=this.endOf(e)},m.isAfter=function(t,e){return w(t)<this.startOf(e)},m.isBefore=function(t,e){return this.endOf(e)<w(t)},m.$g=function(t,e,n){return O.u(t)?this[e]:this.set(n,t)},m.unix=function(){return Math.floor(this.valueOf()/1e3)},m.valueOf=function(){return this.$d.getTime()},m.startOf=function(t,e){var n=this,r=!!O.u(e)||e,h=O.p(t),$=function(t,e){var i=O.w(n.$u?Date.UTC(n.$y,e,t):new Date(n.$y,e,t),n);return r?i:i.endOf(a)},l=function(t,e){return O.w(n.toDate()[t].apply(n.toDate("s"),(r?[0,0,0,0]:[23,59,59,999]).slice(e)),n)},y=this.$W,M=this.$M,m=this.$D,g="set"+(this.$u?"UTC":"");switch(h){case c:return r?$(1,0):$(31,11);case f:return r?$(1,M):$(0,M+1);case o:var D=this.$locale().weekStart||0,v=(y<D?y+7:y)-D;return $(r?m-v:m+(6-v),M);case a:case d:return l(g+"Hours",0);case u:return l(g+"Minutes",1);case s:return l(g+"Seconds",2);case i:return l(g+"Milliseconds",3);default:return this.clone()}},m.endOf=function(t){return this.startOf(t,!1)},m.$set=function(t,e){var n,o=O.p(t),h="set"+(this.$u?"UTC":""),$=(n={},n[a]=h+"Date",n[d]=h+"Date",n[f]=h+"Month",n[c]=h+"FullYear",n[u]=h+"Hours",n[s]=h+"Minutes",n[i]=h+"Seconds",n[r]=h+"Milliseconds",n)[o],l=o===a?this.$D+(e-this.$W):e;if(o===f||o===c){var y=this.clone().set(d,1);y.$d[$](l),y.init(),this.$d=y.set(d,Math.min(this.$D,y.daysInMonth())).$d}else $&&this.$d[$](l);return this.init(),this},m.set=function(t,e){return this.clone().$set(t,e)},m.get=function(t){return this[O.p(t)]()},m.add=function(r,h){var d,$=this;r=Number(r);var l=O.p(h),y=function(t){var e=w($);return O.w(e.date(e.date()+Math.round(t*r)),$)};if(l===f)return this.set(f,this.$M+r);if(l===c)return this.set(c,this.$y+r);if(l===a)return y(1);if(l===o)return y(7);var M=(d={},d[s]=e,d[u]=n,d[i]=t,d)[l]||1,m=this.$d.getTime()+r*M;return O.w(m,this)},m.subtract=function(t,e){return this.add(-1*t,e)},m.format=function(t){var e=this,n=this.$locale();if(!this.isValid())return n.invalidDate||$;var r=t||"YYYY-MM-DDTHH:mm:ssZ",i=O.z(this),s=this.$H,u=this.$m,a=this.$M,o=n.weekdays,f=n.months,h=function(t,n,i,s){return t&&(t[n]||t(e,r))||i[n].substr(0,s)},c=function(t){return O.s(s%12||12,t,"0")},d=n.meridiem||function(t,e,n){var r=t<12?"AM":"PM";return n?r.toLowerCase():r},l={YY:String(this.$y).slice(-2),YYYY:this.$y,M:a+1,MM:O.s(a+1,2,"0"),MMM:h(n.monthsShort,a,f,3),MMMM:h(f,a),D:this.$D,DD:O.s(this.$D,2,"0"),d:String(this.$W),dd:h(n.weekdaysMin,this.$W,o,2),ddd:h(n.weekdaysShort,this.$W,o,3),dddd:o[this.$W],H:String(s),HH:O.s(s,2,"0"),h:c(1),hh:c(2),a:d(s,u,!0),A:d(s,u,!1),m:String(u),mm:O.s(u,2,"0"),s:String(this.$s),ss:O.s(this.$s,2,"0"),SSS:O.s(this.$ms,3,"0"),Z:i};return r.replace(y,(function(t,e){return e||l[t]||i.replace(":","")}))},m.utcOffset=function(){return 15*-Math.round(this.$d.getTimezoneOffset()/15)},m.diff=function(r,d,$){var l,y=O.p(d),M=w(r),m=(M.utcOffset()-this.utcOffset())*e,g=this-M,D=O.m(this,M);return D=(l={},l[c]=D/12,l[f]=D,l[h]=D/3,l[o]=(g-m)/6048e5,l[a]=(g-m)/864e5,l[u]=g/n,l[s]=g/e,l[i]=g/t,l)[y]||g,$?D:O.a(D)},m.daysInMonth=function(){return this.endOf(f).$D},m.$locale=function(){return v[this.$L]},m.locale=function(t,e){if(!t)return this.$L;var n=this.clone(),r=S(t,e,!0);return r&&(n.$L=r),n},m.clone=function(){return O.w(this.$d,this)},m.toDate=function(){return new Date(this.valueOf())},m.toJSON=function(){return this.isValid()?this.toISOString():null},m.toISOString=function(){return this.$d.toISOString()},m.toString=function(){return this.$d.toUTCString()},M}(),b=_.prototype;return w.prototype=b,[["$ms",r],["$s",i],["$m",s],["$H",u],["$W",a],["$M",f],["$y",c],["$D",d]].forEach((function(t){b[t[1]]=function(e){return this.$g(e,t[0],t[1])}})),w.extend=function(t,e){return t.$i||(t(e,_,w),t.$i=!0),w},w.locale=S,w.isDayjs=p,w.unix=function(t){return w(1e3*t)},w.en=v[D],w.Ls=v,w.p={},w}));
+
+/***/ }),
+
+/***/ 4359:
+/***/ (function(module) {
+
+!function(t,i){ true?module.exports=i():0}(this,(function(){"use strict";var t="minute",i=/[+-]\d\d(?::?\d\d)?/g,e=/([+-]|\d\d)/g;return function(s,f,n){var u=f.prototype;n.utc=function(t){var i={date:t,utc:!0,args:arguments};return new f(i)},u.utc=function(i){var e=n(this.toDate(),{locale:this.$L,utc:!0});return i?e.add(this.utcOffset(),t):e},u.local=function(){return n(this.toDate(),{locale:this.$L,utc:!1})};var o=u.parse;u.parse=function(t){t.utc&&(this.$u=!0),this.$utils().u(t.$offset)||(this.$offset=t.$offset),o.call(this,t)};var r=u.init;u.init=function(){if(this.$u){var t=this.$d;this.$y=t.getUTCFullYear(),this.$M=t.getUTCMonth(),this.$D=t.getUTCDate(),this.$W=t.getUTCDay(),this.$H=t.getUTCHours(),this.$m=t.getUTCMinutes(),this.$s=t.getUTCSeconds(),this.$ms=t.getUTCMilliseconds()}else r.call(this)};var a=u.utcOffset;u.utcOffset=function(s,f){var n=this.$utils().u;if(n(s))return this.$u?0:n(this.$offset)?a.call(this):this.$offset;if("string"==typeof s&&null===(s=function(t){void 0===t&&(t="");var s=t.match(i);if(!s)return null;var f=(""+s[0]).match(e)||["-",0,0],n=f[0],u=60*+f[1]+ +f[2];return 0===u?0:"+"===n?u:-u}(s)))return this;var u=Math.abs(s)<=16?60*s:s,o=this;if(f)return o.$offset=u,o.$u=0===s,o;if(0!==s){var r=this.$u?this.toDate().getTimezoneOffset():-1*this.utcOffset();(o=this.local().add(u+r,t)).$offset=u,o.$x.$localOffset=r}else o=this.utc();return o};var h=u.format;u.format=function(t){var i=t||(this.$u?"YYYY-MM-DDTHH:mm:ss[Z]":"");return h.call(this,i)},u.valueOf=function(){var t=this.$utils().u(this.$offset)?0:this.$offset+(this.$x.$localOffset||(new Date).getTimezoneOffset());return this.$d.valueOf()-6e4*t},u.isUTC=function(){return!!this.$u},u.toISOString=function(){return this.toDate().toISOString()},u.toString=function(){return this.toDate().toUTCString()};var l=u.toDate;u.toDate=function(t){return"s"===t&&this.$offset?n(this.format("YYYY-MM-DD HH:mm:ss:SSS")).toDate():l.call(this)};var c=u.diff;u.diff=function(t,i,e){if(t&&this.$u===t.$u)return c.call(this,t,i,e);var s=this.local(),f=n(t).local();return c.call(s,f,i,e)}}}));
+
+/***/ }),
+
 /***/ 8932:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -17228,9 +17242,17 @@ AbortError.prototype = Object.create(Error.prototype);
 AbortError.prototype.constructor = AbortError;
 AbortError.prototype.name = 'AbortError';
 
+const URL$1 = Url.URL || whatwgUrl.URL;
+
 // fix an issue where "PassThrough", "resolve" aren't a named export for node <10
 const PassThrough$1 = Stream.PassThrough;
-const resolve_url = Url.resolve;
+
+const isDomainOrSubdomain = function isDomainOrSubdomain(destination, original) {
+	const orig = new URL$1(original).hostname;
+	const dest = new URL$1(destination).hostname;
+
+	return orig === dest || orig[orig.length - dest.length - 1] === '.' && orig.endsWith(dest);
+};
 
 /**
  * Fetch function
@@ -17318,7 +17340,19 @@ function fetch(url, opts) {
 				const location = headers.get('Location');
 
 				// HTTP fetch step 5.3
-				const locationURL = location === null ? null : resolve_url(request.url, location);
+				let locationURL = null;
+				try {
+					locationURL = location === null ? null : new URL$1(location, request.url).toString();
+				} catch (err) {
+					// error here can only be invalid URL in Location: header
+					// do not throw when options.redirect == manual
+					// let the user extract the errorneous redirect URL
+					if (request.redirect !== 'manual') {
+						reject(new FetchError(`uri requested responds with an invalid redirect URL: ${location}`, 'invalid-redirect'));
+						finalize();
+						return;
+					}
+				}
 
 				// HTTP fetch step 5.5
 				switch (request.redirect) {
@@ -17365,6 +17399,12 @@ function fetch(url, opts) {
 							timeout: request.timeout,
 							size: request.size
 						};
+
+						if (!isDomainOrSubdomain(request.url, locationURL)) {
+							for (const name of ['authorization', 'www-authenticate', 'cookie', 'cookie2']) {
+								requestOpts.headers.delete(name);
+							}
+						}
 
 						// HTTP-redirect fetch step 9
 						if (res.statusCode !== 303 && request.body && getTotalBytes(request) === null) {
@@ -21284,6 +21324,362 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
+/***/ 7215:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const artifact = __nccwpck_require__(2605);
+const fs = __nccwpck_require__(7147);
+const glob = __nccwpck_require__(8090);
+
+class Artifact {
+  async uploadLogs() {
+    const basePath = "/home/runner/snap/charmcraft/common/cache/charmcraft/log";
+
+    if (!fs.existsSync(basePath)) {
+      return "No charmcraft logs generated, skipping artifact upload.";
+    }
+
+    const globber = await glob.create(`${basePath}/*.log`);
+    const files = await globber.glob();
+    const artifacts = artifact.create();
+
+    const result = await artifacts.uploadArtifact(
+      "charmcraft-logs",
+      files,
+      basePath
+    );
+
+    return `Artifact upload result: ${JSON.stringify(result)}`;
+  }
+}
+
+module.exports = Artifact;
+
+
+/***/ }),
+
+/***/ 4472:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const Artifact = __nccwpck_require__(7215);
+
+module.exports = Artifact;
+
+
+/***/ }),
+
+/***/ 2618:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const core = __nccwpck_require__(2186);
+const exec = __nccwpck_require__(1514);
+
+class Bundle {
+  async publish(path, channel) {
+    core.exportVariable("CHARMCRAFT_AUTH", core.getInput("credentials"));
+    process.chdir(path);
+    await exec.exec("juju-bundle", [
+      "publish",
+      "--destructive-mode",
+      "--serial",
+      "--release",
+      channel,
+    ]);
+  }
+}
+
+module.exports = Bundle;
+
+
+/***/ }),
+
+/***/ 4252:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const Bundle = __nccwpck_require__(2618);
+
+module.exports = Bundle;
+
+
+/***/ }),
+
+/***/ 2821:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const core = __nccwpck_require__(2186);
+const exec = __nccwpck_require__(1514);
+const fs = __nccwpck_require__(7147);
+const yaml = __nccwpck_require__(1917);
+const glob = __nccwpck_require__(8090);
+
+/* eslint-disable camelcase */
+
+class Charmcraft {
+  constructor() {
+    this.uploadImage = core.getInput("upload-image").toLowerCase() === "true";
+    core.exportVariable("CHARMCRAFT_AUTH", core.getInput("credentials"));
+  }
+
+  async uploadResources() {
+    let resourceInfo = "resources:\n";
+
+    const { name, images } = this.metadata();
+    const flags = await Promise.all(
+      images.map(async ([resource_name, resource_image]) => {
+        await this.uploadResource(resource_image, name, resource_name);
+        const { flag, info } = await this.buildResourceFlag(
+          name,
+          resource_name,
+          resource_image
+        );
+        resourceInfo += info;
+        return flag;
+      })
+    );
+    return { flags, resourceInfo };
+  }
+
+  async uploadResource(resource_image, name, resource_name) {
+    if (!this.uploadImage) {
+      core.warning(
+        "No resources where uploaded as part of this build.\n" +
+          `If you wish to upload the OCI image, set 'upload-image' to 'true'`
+      );
+      return;
+    }
+
+    await exec.exec("docker", ["pull", resource_image]);
+    await exec.exec("charmcraft", [
+      "upload-resource",
+      "--quiet",
+      name,
+      resource_name,
+      "--image",
+      resource_image,
+    ]);
+  }
+
+  async buildResourceFlag(name, resource_name, resource_image) {
+    const result = await exec.getExecOutput("charmcraft", [
+      "resource-revisions",
+      name,
+      resource_name,
+    ]);
+
+    const revision = result.stdout.split("\n")[1].split(" ")[0];
+
+    return {
+      flag: `--resource=${resource_name}:${revision}`,
+      info:
+        `    -  ${resource_name}: ${resource_image}\n` +
+        `       resource-revision: ${revision}\n`,
+    };
+  }
+
+  metadata() {
+    const metadata = yaml.load(fs.readFileSync("metadata.yaml"));
+    const charmName = metadata.name;
+
+    const images = Object.entries(metadata.resources || {})
+      .filter(([, res]) => res.type === "oci-image")
+      .map(([name, res]) => [name, res["upstream-source"]]);
+    return { images, name: charmName };
+  }
+
+  async pack() {
+    await exec.exec("charmcraft", ["pack", "--destructive-mode", "--quiet"]);
+  }
+
+  async upload(channel, revisions) {
+    const globber = await glob.create("./*.charm");
+    const paths = await globber.glob();
+
+    const charmRevisions = await Promise.all(
+      paths.map(async (path) => this._upload_charm(channel, path, revisions))
+    );
+    return charmRevisions;
+  }
+
+  async _upload_charm(channel, path, revisions) {
+    const result = await exec.getExecOutput("charmcraft", [
+      "upload",
+      "--quiet",
+      "--release",
+      channel,
+      path,
+      ...revisions,
+    ]);
+    const newRevision = result.stdout.split(" ")[1];
+    return newRevision;
+  }
+}
+
+module.exports = Charmcraft;
+
+
+/***/ }),
+
+/***/ 478:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const Charmcraft = __nccwpck_require__(2821);
+
+module.exports = Charmcraft;
+
+
+/***/ }),
+
+/***/ 2234:
+/***/ ((module) => {
+
+class Ref {
+  constructor(context) {
+    this.ctx = context;
+    this.event = this.ctx.eventName;
+  }
+
+  channel() {
+    if (this.event === "push") {
+      return this._getChannelForPush();
+    }
+    if (this.event === "pull_request") {
+      return this._getChannelForPr();
+    }
+
+    throw Error(`Invalid event type: ${this.event}`);
+  }
+
+  _getChannelForPush() {
+    if (!this.ctx.ref.startsWith("refs/heads/")) {
+      throw Error(`Invalid git reference: ${this.context.ref}`);
+    }
+
+    const branch = this.ctx.ref.replace("refs/heads/", "");
+
+    if (branch === this.ctx.payload.repository.master_branch) {
+      return "latest/edge";
+    }
+    if (branch.startsWith("track/")) {
+      return `${branch.replace("track/", "")}/edge`;
+    }
+
+    throw Error(`Unsupported branch name ${this.ctx.ref}`);
+  }
+
+  _getChannelForPr() {
+    const { base, head } = this.ctx.payload.pull_request;
+
+    if (!head.ref.startsWith("branch/")) {
+      throw Error(`Unsupported branch name: ${head.ref}`);
+    }
+
+    const branch = head.ref.replace("branch/", "");
+
+    if (base.ref === base.repo.default_branch) {
+      return `latest/edge/${branch}`;
+    }
+    if (base.ref.startsWith("track/")) {
+      return `${base.ref.replace("track/", "")}/edge/${branch}`;
+    }
+
+    throw Error(`Unhandled PR base name ${base.ref}`);
+  }
+}
+
+module.exports = Ref;
+
+
+/***/ }),
+
+/***/ 823:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const exec = __nccwpck_require__(1514);
+
+class Snap {
+  async install(snap, channel) {
+    await exec.exec("sudo", [
+      "snap",
+      "install",
+      snap,
+      "--classic",
+      ...(channel ? ["--channel", channel] : []),
+    ]);
+  }
+}
+
+module.exports = Snap;
+
+
+/***/ }),
+
+/***/ 7240:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const Tagger = __nccwpck_require__(3268);
+
+module.exports = Tagger;
+
+
+/***/ }),
+
+/***/ 3268:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const github = __nccwpck_require__(5438);
+const utc = __nccwpck_require__(4359);
+const dayjs = __nccwpck_require__(7401);
+
+dayjs.extend(utc);
+
+class Tagger {
+  constructor(token) {
+    this.kit = github.getOctokit(token);
+  }
+
+  async tag(revision, channel, resources) {
+    const { owner, repo } = github.context.repo;
+
+    const content = this._build(
+      owner,
+      repo,
+      process.env.GITHUB_SHA,
+      revision,
+      channel,
+      resources
+    );
+
+    await this.kit.rest.repos.createRelease(content);
+  }
+
+  _build(owner, repo, hash, revision, channel, resources) {
+    const name = `rev${revision}`;
+    const message = `${resources} Released to '${channel}' at ${this._get_date_text()}`;
+
+    return {
+      owner,
+      repo,
+      name: `Revision ${revision}`,
+      tag_name: name,
+      body: message,
+      draft: false,
+      prerelease: false,
+      generate_release_notes: true,
+      target_commitish: hash,
+    };
+  }
+
+  _get_date_text() {
+    // 12:00 UTC on 10 Feb 2022
+    return dayjs().utc().format("HH:mm UTC on D MMM YYYY");
+  }
+}
+
+module.exports = Tagger;
+
+
+/***/ }),
+
 /***/ 2877:
 /***/ ((module) => {
 
@@ -21499,221 +21895,63 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be in strict mode.
+// This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
-"use strict";
-
-
-const artifact = __nccwpck_require__(2605);
 const core = __nccwpck_require__(2186);
-const exec = __nccwpck_require__(1514);
-const fs = __nccwpck_require__(7147);
 const github = __nccwpck_require__(5438);
-const glob = __nccwpck_require__(8090);
 const process = __nccwpck_require__(7282);
-const yaml = __nccwpck_require__(1917);
+
+const Tagger = __nccwpck_require__(7240);
+const Snap = __nccwpck_require__(823);
+const Charmcraft = __nccwpck_require__(478);
+const Bundle = __nccwpck_require__(4252);
+const Ref = __nccwpck_require__(2234);
+const Artifact = __nccwpck_require__(4472);
 
 (async () => {
   try {
-    const credentials = core.getInput('credentials');
-    const charm_path = core.getInput('charm-path');
-    const bundle_path = core.getInput('bundle-path');
-    const charmcraft_channel = core.getInput('charmcraft-channel');
-    let upload_image = core.getInput('upload-image');
-    if (!['false', 'true'].includes(upload_image.toLowerCase())) {
-      core.error(
-        `Valid values for upload-image are 'true', 'false'. Got ${upload_image}`
+    const charmPath = core.getInput("charm-path");
+    const bundlePath = core.getInput("bundle-path");
+    const githubToken =
+      core.getInput("github-token") || process.env.GITHUB_TOKEN;
+
+    if (!githubToken) {
+      throw Error(
+        `Input 'github-token' is missing, and not provided in environment`
       );
-      return;
-    }
-    upload_image = upload_image.toLowerCase() == 'true';
-
-    await exec.exec('sudo', [
-      'snap',
-      'install',
-      'charmcraft',
-      '--classic',
-      '--channel',
-      charmcraft_channel,
-    ]);
-
-    if (bundle_path) {
-      await exec.exec('sudo', ['snap', 'install', 'juju-bundle', '--classic']);
     }
 
-    core.exportVariable('CHARMCRAFT_AUTH', credentials);
-
-    const ctx = github.context;
-    const event = ctx.eventName;
-
-    let channel;
-    let track;
-    let resourceInfo = "resources:\n";
-    let charmRevision;
-
-    if (event == 'push') {
-      if (ctx.ref.startsWith('refs/heads/')) {
-        let branch = ctx.ref.replace('refs/heads/', '');
-
-        if (branch == ctx.payload.repository.master_branch) {
-	  track = 'latest';
-        } else if (branch.startsWith('track/')) {
-          track = branch.replace('track/', '');
-        } else {
-          core.notice(`Unhandled branch name ${ctx.ref}`);
-          return;
-        }
-	
-	channel = `${track}/edge`;
-      } else {
-        core.setFailed(`Unknown type of ref: ${github.context.ref}`);
-        return;
-      }
-    } else if (event == 'pull_request') {
-      const base_ref = ctx.payload.pull_request.base.ref;
-      const head_ref = ctx.payload.pull_request.head.ref;
-
-      if (head_ref.startsWith('branch/')) {
-        const branch = head_ref.replace('branch/', '');
-
-        if (base_ref == ctx.payload.pull_request.base.repo.default_branch) {
-          channel = `latest/edge/${branch}`;
-        } else if (base_ref.startsWith('track/')) {
-          const track = base_ref.replace('track/', '');
-          channel = `${track}/edge/${branch}`;
-        } else {
-          core.setFailed(`Unhandled PR base name ${base_ref}`);
-          return;
-        }
-      } else {
-        core.notice(`Unhandled branch name: ${head_ref}`);
-        return;
-      }
-    } else {
-      core.setFailed(`Unknown eventType ${event}.`);
-      return;
-    }
+    const ref = Ref(github.context);
+    const channel = ref.channel();
+    const snap = new Snap();
+    await snap.install("charmcraft", core.getInput("charmcraft-channel"));
 
     // Publish a bundle or a charm, depending on if `bundle_path` or `charm_path` was set
-    if (bundle_path) {
-      process.chdir(bundle_path);
-      await exec.exec('juju-bundle', [
-        'publish',
-        '--destructive-mode',
-        '--serial',
-        '--release',
-        channel,
-      ]);
-    } else {
-      process.chdir(charm_path);
-      const metadata = yaml.load(fs.readFileSync('metadata.yaml'));
-
-      const name = metadata.name;
-      const images = Object.entries(metadata.resources || {})
-        .filter(([_, res]) => res.type === 'oci-image')
-        .map(([name, res]) => [name, res['upstream-source']]);
-
-      await exec.exec('charmcraft', ['pack', '--destructive-mode', '--quiet']);
-
-      const revisions = await Promise.all(
-        images.map(async ([resource_name, resource_image]) => {
-          if (upload_image) {
-            await exec.exec('docker', ['pull', resource_image]);
-            await exec.exec('charmcraft', [
-              'upload-resource',
-              '--quiet',
-              name,
-              resource_name,
-              '--image',
-              resource_image,
-            ]);
-          } else {
-            core.warning(
-              "No resources where uploaded as part of this build. \
-              If you wish to upload the OCI image, set 'upload-image' to 'true'"
-            );
-          }
-          let result = await exec.getExecOutput('charmcraft', [
-            'resource-revisions',
-            name,
-            resource_name,
-          ]);
-          let revision = result.stdout.split('\n')[1].split(' ')[0];
-
-	  resourceInfo = `${resourceInfo}  -  ${resource_name}: ${resource_image}\n`;
-	  resourceInfo = `${resourceInfo}     resource-revision: ${revision}\n`;
-
-          return `--resource=${resource_name}:${revision}`;
-        })
-      );
-
-      const globber = await glob.create('./*.charm');
-      const paths = await globber.glob();
-
-      await Promise.all(
-        paths.map( async (path) => {
-          let result = await exec.getExecOutput(
-            'charmcraft',
-            ['upload', '--quiet', '--release', channel, path].concat(revisions)
-          );
-	  charmRevision = result.stdout.split(' ')[1];
-	})
-      );
-
-      let githubToken = core.getInput('github-token');
-      if (!githubToken) {
-        if (process.env.GITHUB_TOKEN) {
-          githubToken = process.env.GITHUB_TOKEN;
-        } else {
-          core.setFailed(
-            'Input "github-token" is missing, and not provided in environment'
-          );
-        }
-      }
-
-      const octokit = github.getOctokit(githubToken);
-      const tagName = `${track}-rev${charmRevision}`;
-      var tagMessage = `${resourceInfo}channel: ${channel}`;
-      const { owner, repo } = github.context.repo;
-
-      const createdTag = await octokit.rest.git.createTag({
-        owner,
-        repo,
-        tag: tagName,
-        message: tagMessage,
-        object: process.env.GITHUB_SHA,
-        type: 'commit',
-      });
-
-      await octokit.rest.git.createRef({
-       owner,
-       repo,
-       ref: `refs/tags/${tagName}`,
-       sha: createdTag.data.sha,
-      });
+    if (bundlePath) {
+      await snap.install("juju-bundle");
+      await new Bundle().publish(bundlePath, channel);
+      // TODO: Needs to tag bundles as well
+      return;
     }
+
+    process.chdir(charmPath);
+
+    const charmcraft = new Charmcraft();
+    await charmcraft.pack();
+
+    const { flags, resourceInfo } = await charmcraft.uploadResources();
+    const charmRevisions = await charmcraft.upload(channel, flags);
+
+    // TODO: Needs to prefix the tag with the charm name
+    const tagger = new Tagger(githubToken);
+    await tagger.tag(charmRevisions, channel, resourceInfo);
   } catch (error) {
     core.setFailed(error.message);
     core.error(error.stack);
-  } finally {
-    const root = '/home/runner/snap/charmcraft/common/cache/charmcraft/log/';
-
-    if (!fs.existsSync(root)) {
-      core.info('No charmcraft logs generated, skipping artifact upload.');
-      return;
-    }
-
-    const globber = await glob.create(root + '*.log');
-    const files = await globber.glob();
-    const artifactClient = artifact.create();
-
-    const result = await artifactClient.uploadArtifact(
-      'charmcraft-logs',
-      files,
-      root
-    );
-    core.info(`Artifact upload result: ${JSON.stringify(result)}`);
   }
+
+  const result = await Artifact.uploadLogs();
+  core.info(result);
 })();
 
 })();

@@ -6,7 +6,10 @@
   "author": "Kenneth Koski <kenneth.koski@canonical.com>",
   "license": "GPL-3.0-only",
   "scripts": {
-    "build": "ncc build main.js"
+    "build": "ncc build src/main.js",
+    "test": "jest",
+    "lint": "eslint ./src",
+    "postlint": "prettier ./src -c"
   },
   "dependencies": {
     "@actions/artifact": "^0.2.0",
@@ -14,9 +17,18 @@
     "@actions/exec": "^1.1.0",
     "@actions/github": "^5.0.0",
     "@actions/glob": "^0.2.0",
+    "dayjs": "^1.10.7",
+    "dayjs-plugin-utc": "^0.1.2",
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {
-    "@vercel/ncc": "^0.32.0"
+    "@vercel/ncc": "^0.32.0",
+    "eslint": "^8.9.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.25.4",
+    "eslint-plugin-jest": "^26.1.1",
+    "jest": "^27.5.1",
+    "prettier": "^2.5.1"
   }
 }
