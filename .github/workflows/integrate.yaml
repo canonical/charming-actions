@@ -24,8 +24,9 @@ jobs:
           credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
           charm-path: test-charm/
           upload-image: "true"
-
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: ./
         with:
           credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
           bundle-path: test-bundle/
+          github-token: ${{ secrets.GITHUB_TOKEN }}
