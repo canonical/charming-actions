@@ -21470,6 +21470,12 @@ class Charmcraft {
       resource_name,
     ]);
 
+    /*
+    ❯ charmcraft resource-revisions prometheus-k8s prometheus-image
+      Revision    Created at    Size                                                                                                                                                                                                                                                                
+      1           2021-07-19    512B
+      ^-- This value
+    */
     const revision = result.stdout.split("\n")[1].split(" ")[0];
 
     return {
