@@ -1,3 +1,4 @@
+import { info } from '@actions/core';
 import { Context } from '@actions/github/lib/context';
 import { PullRequestMetadata } from '../types';
 
@@ -49,7 +50,7 @@ export class Ref {
     }
 
     const { base, head } = metadata;
-    console.log(`base: ${base}`, `head: ${head}`);
+    info(`metadata: ${metadata}`);
     if (!head.ref.startsWith('branch/')) {
       throw new Error(`Unsupported branch name: ${head.ref}`);
     }
