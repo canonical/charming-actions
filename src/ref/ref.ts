@@ -49,7 +49,7 @@ export class Ref {
     }
 
     const { base, head } = metadata;
-
+    console.log(`base: ${base}`, `head: ${head}`);
     if (!head.ref.startsWith('branch/')) {
       throw new Error(`Unsupported branch name: ${head.ref}`);
     }
