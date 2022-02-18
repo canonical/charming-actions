@@ -1,5 +1,5 @@
-const core = require('@actions/core');
-const exec = require('@actions/exec');
+import * as core from '@actions/core';
+import * as exec from '@actions/exec';
 
 class Bundle {
   async publish(path: string, channel: string) {

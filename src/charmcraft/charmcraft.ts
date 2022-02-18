@@ -1,8 +1,9 @@
-import core from '@actions/core';
-import exec from '@actions/exec';
-import glob from '@actions/glob';
-import fs from 'fs';
-import yaml from 'js-yaml';
+import * as core from '@actions/core';
+import * as exec from '@actions/exec';
+import * as glob from '@actions/glob';
+import * as fs from 'fs';
+import * as yaml from 'js-yaml';
+
 import { Metadata } from '../types';
 
 /* eslint-disable camelcase */

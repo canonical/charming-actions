@@ -1,6 +1,6 @@
-import artifact from '@actions/artifact';
-import fs from 'fs';
-import glob from '@actions/glob';
+import * as artifact from '@actions/artifact';
+import * as fs from 'fs';
+import * as glob from '@actions/glob';
 
 class Artifact {
   async uploadLogs() {

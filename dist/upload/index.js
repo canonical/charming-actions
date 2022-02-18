@@ -21428,6 +21428,25 @@ class UploadAction {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -21437,24 +21456,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Artifact = void 0;
-const artifact_1 = __importDefault(__nccwpck_require__(2605));
-const fs_1 = __importDefault(__nccwpck_require__(7147));
-const glob_1 = __importDefault(__nccwpck_require__(8090));
+const artifact = __importStar(__nccwpck_require__(2605));
+const fs = __importStar(__nccwpck_require__(7147));
+const glob = __importStar(__nccwpck_require__(8090));
 class Artifact {
     uploadLogs() {
         return __awaiter(this, void 0, void 0, function* () {
             const basePath = '/home/runner/snap/charmcraft/common/cache/charmcraft/log';
-            if (!fs_1.default.existsSync(basePath)) {
+            if (!fs.existsSync(basePath)) {
                 return 'No charmcraft logs generated, skipping artifact upload.';
             }
-            const globber = yield glob_1.default.create(`${basePath}/*.log`);
+            const globber = yield glob.create(`${basePath}/*.log`);
             const files = yield globber.glob();
-            const artifacts = artifact_1.default.create();
+            const artifacts = artifact.create();
             const result = yield artifacts.uploadArtifact('charmcraft-logs', files, basePath);
             return `Artifact upload result: ${JSON.stringify(result)}`;
         });
@@ -21491,6 +21507,25 @@ __exportStar(__nccwpck_require__(9829), exports);
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -21502,8 +21537,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Bundle = void 0;
-const core = __nccwpck_require__(2186);
-const exec = __nccwpck_require__(1514);
+const core = __importStar(__nccwpck_require__(2186));
+const exec = __importStar(__nccwpck_require__(1514));
 class Bundle {
     publish(path, channel) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -21550,6 +21585,25 @@ __exportStar(__nccwpck_require__(363), exports);
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -21559,21 +21613,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Charmcraft = void 0;
-const core_1 = __importDefault(__nccwpck_require__(2186));
-const exec_1 = __importDefault(__nccwpck_require__(1514));
-const glob_1 = __importDefault(__nccwpck_require__(8090));
-const fs_1 = __importDefault(__nccwpck_require__(7147));
-const js_yaml_1 = __importDefault(__nccwpck_require__(1917));
+const core = __importStar(__nccwpck_require__(2186));
+const exec = __importStar(__nccwpck_require__(1514));
+const glob = __importStar(__nccwpck_require__(8090));
+const fs = __importStar(__nccwpck_require__(7147));
+const yaml = __importStar(__nccwpck_require__(1917));
 /* eslint-disable camelcase */
 class Charmcraft {
     constructor() {
-        this.uploadImage = core_1.default.getInput('upload-image').toLowerCase() === 'true';
-        core_1.default.exportVariable('CHARMCRAFT_AUTH', core_1.default.getInput('credentials'));
+        this.uploadImage = core.getInput('upload-image').toLowerCase() === 'true';
+        core.exportVariable('CHARMCRAFT_AUTH', core.getInput('credentials'));
     }
     uploadResources() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -21581,7 +21632,7 @@ class Charmcraft {
             if (!this.uploadImage) {
                 const msg = `No resources where uploaded as part of this build.\n` +
                     `If you wish to upload the OCI image, set 'upload-image' to 'true'`;
-                core_1.default.warning(msg);
+                core.warning(msg);
                 return { flags: [''], resourceInfo: '' };
             }
             const { name, images } = this.metadata();
@@ -21596,11 +21647,11 @@ class Charmcraft {
     }
     uploadResource(resource_image, name, resource_name) {
         return __awaiter(this, void 0, void 0, function* () {
-            const pullExitCode = yield exec_1.default.exec('docker', ['pull', resource_image]);
+            const pullExitCode = yield exec.exec('docker', ['pull', resource_image]);
             if (pullExitCode !== 0) {
                 throw new Error('Could not pull the docker image.');
             }
-            yield exec_1.default.exec('charmcraft', [
+            yield exec.exec('charmcraft', [
                 'upload-resource',
                 '--quiet',
                 name,
@@ -21612,7 +21663,7 @@ class Charmcraft {
     }
     buildResourceFlag(name, resource_name, resource_image) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield exec_1.default.getExecOutput('charmcraft', [
+            const result = yield exec.getExecOutput('charmcraft', [
                 'resource-revisions',
                 name,
                 resource_name,
@@ -21632,8 +21683,8 @@ class Charmcraft {
         });
     }
     metadata() {
-        const buff = fs_1.default.readFileSync('metadata.yaml');
-        const metadata = js_yaml_1.default.load(buff.toString());
+        const buff = fs.readFileSync('metadata.yaml');
+        const metadata = yaml.load(buff.toString());
         const charmName = metadata.name;
         const images = Object.entries(metadata.resources || {})
             .filter(([, res]) => res.type === 'oci-image')
@@ -21642,16 +21693,16 @@ class Charmcraft {
     }
     pack() {
         return __awaiter(this, void 0, void 0, function* () {
-            yield exec_1.default.exec('charmcraft', ['pack', '--destructive-mode', '--quiet']);
+            yield exec.exec('charmcraft', ['pack', '--destructive-mode', '--quiet']);
         });
     }
     upload(channel, flags) {
         return __awaiter(this, void 0, void 0, function* () {
             // as we don't know the name of the name of the charm file output, we'll need to glob for it.
             // however, we expect charmcraft pack to always output one charm file.
-            const globber = yield glob_1.default.create('./*.charm');
+            const globber = yield glob.create('./*.charm');
             const paths = yield globber.glob();
-            const result = yield exec_1.default.getExecOutput('charmcraft', [
+            const result = yield exec.getExecOutput('charmcraft', [
                 'upload',
                 '--quiet',
                 '--release',
