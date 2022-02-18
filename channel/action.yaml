@@ -4,7 +4,7 @@ description: |
 author: Simon Aronsson
 runs:
   using: node12
-  main: dist/channel/index.js
+  main: ../dist/channel/index.js
 branding:
   icon: upload-cloud
   color: orange

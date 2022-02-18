@@ -41,7 +41,7 @@ inputs:
       Github Token needed for automatic tagging when publishing
 runs:
   using: node12
-  main: dist/upload/index.js
+  main: ../dist/upload/index.js
 branding:
   icon: upload-cloud
   color: orange
