@@ -1,0 +1,10 @@
+name: Charmhub Channel Selection
+description: |
+  Selects which channel a charm should be uploaded to based on git context
+author: Simon Aronsson
+runs:
+  using: node12
+  main: ../dist/channel/index.js
+branding:
+  icon: upload-cloud
+  color: orange

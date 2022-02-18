@@ -5,27 +5,32 @@ on:
 - pull_request
 
 jobs:
-  ensure-compiled:
+  test-charmhub-channel-selection:
     runs-on: ubuntu-latest
-    name: Ensure ncc compilation
+    name: Test Channel Selection
     steps:
       - uses: actions/checkout@v2
-      - run: npm install
-      - run: ./hooks/pre-commit
-
+      - uses: ./channel
+        id: channel
+      - name: Verify channel is set
+        run: |
+          export CHANNEL=${{ steps.channel.outputs.name }}
+          [[ $CHANNEL ]]
+        shell: bash
   test-charmhub-upload:
     runs-on: ubuntu-latest
     name: Test charmhub upload
     steps:
       - uses: actions/checkout@v2
 
-      - uses: ./
+      - uses: ./upload
         with:
           credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
           charm-path: test-charm/
           upload-image: "true"
-
-      - uses: ./
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: ./upload
         with:
           credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
           bundle-path: test-bundle/
+          github-token: ${{ secrets.GITHUB_TOKEN }}
