@@ -8923,13 +8923,12 @@ Object.defineProperty(exports, "Ref", ({ enumerable: true, get: function () { re
 /***/ }),
 
 /***/ 675:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Ref = void 0;
-const core_1 = __nccwpck_require__(2186);
 class Ref {
     constructor(context) {
         this.ctx = context;
@@ -8964,10 +8963,6 @@ class Ref {
             throw new Error('Pull request metadata missing in the actions context');
         }
         const { base, head } = metadata;
-        (0, core_1.info)(`metadata: ${metadata}`);
-        if (!head.ref.startsWith('branch/')) {
-            throw new Error(`Unsupported branch name: ${head.ref}`);
-        }
         const branch = head.ref.replace('branch/', '');
         if (base.ref === base.repo.default_branch) {
             return `latest/edge/${branch}`;
