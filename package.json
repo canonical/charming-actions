@@ -6,8 +6,9 @@
   "author": "Kenneth Koski <kenneth.koski@canonical.com>",
   "license": "GPL-3.0-only",
   "scripts": {
-    "build": "npm run build:upload && npm run build:channel",
-    "build:upload": "ncc build src/actions/upload.ts -o dist/upload",
+    "build": "npm run build:upload-charm && npm run build:upload-bundle && npm run build:channel",
+    "build:upload-bundle": "ncc build src/actions/upload-bundle.ts -o dist/upload-bundle",
+    "build:upload-charm": "ncc build src/actions/upload-charm.ts -o dist/upload-charm",
     "build:channel": "ncc build src/actions/channel.ts -o dist/channel",
     "test": "jest",
     "lint": "eslint ./src --ext .js,.ts",

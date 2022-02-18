@@ -4,15 +4,14 @@ import * as process from 'process';
 import { Tagger } from '../tagging';
 import { Snap } from '../snap';
 import { Charmcraft } from '../charmcraft';
-import { Bundle } from '../bundle';
 import { Artifact } from '../artifact';
 
 class UploadAction {
   private artifacts: Artifact;
   private snap: Snap;
   private tagger: Tagger;
+  private charmcraft: Charmcraft;
 
-  private bundlePath?: string;
   private channel: string;
   private charmcraftChannel: string;
   private charmPath: string;
@@ -20,7 +19,6 @@ class UploadAction {
   private token: string;
 
   constructor() {
-    this.bundlePath = core.getInput('bundle-path');
     this.channel = core.getInput('channel');
     this.charmcraftChannel = core.getInput('charmcraft-channel');
     this.charmPath = core.getInput('charm-path');
@@ -35,16 +33,19 @@ class UploadAction {
     this.artifacts = new Artifact();
     this.snap = new Snap();
     this.tagger = new Tagger(this.token);
+    this.charmcraft = new Charmcraft();
   }
 
   async run() {
     try {
       await this.snap.install('charmcraft', this.charmcraftChannel);
-      if (this.bundlePath) {
-        await this.uploadBundle();
-      } else {
-        await this.uploadCharm();
-      }
+      process.chdir(this.charmPath!);
+      await this.charmcraft.pack();
+
+      const { flags, resourceInfo } = await this.charmcraft.uploadResources();
+      const rev = await this.charmcraft.upload(this.channel, flags);
+
+      await this.tagger.tag(rev, this.channel, resourceInfo, this.tagPrefix);
     } catch (error: any) {
       core.setFailed(error.message);
       core.error(error.stack);
@@ -52,22 +53,6 @@ class UploadAction {
 
     const result = await this.artifacts.uploadLogs();
     core.info(result);
-  }
-
-  private async uploadBundle() {
-    await this.snap.install('juju-bundle');
-    await new Bundle().publish(this.bundlePath!, this.channel);
-  }
-
-  private async uploadCharm() {
-    process.chdir(this.charmPath!);
-    const charmcraft = new Charmcraft();
-    await charmcraft.pack();
-
-    const { flags, resourceInfo } = await charmcraft.uploadResources();
-    const rev = await charmcraft.upload(this.channel, flags);
-
-    await this.tagger.tag(rev, this.channel, resourceInfo, this.tagPrefix);
   }
 }
 

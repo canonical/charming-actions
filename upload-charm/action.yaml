@@ -1,0 +1,47 @@
+name: Charmhub Upload
+description: Uploads a charm to charmhub.io
+author: Kenneth Koski
+inputs:
+  bundle-path:
+    description: |
+      Path to bundle.yaml
+    required: false
+  channel:
+    required: false
+    default: latest/edge
+    description: |
+      Channel to publish the charm in
+  tag-prefix:
+    required: false
+    description: |
+      Tag prefix, useful when bundling multiple charms in the same repo using a matrix.
+  charm-path:
+    required: false
+    default: '.'
+    description: |
+      Path to charm directory
+  charmcraft-channel:
+    required: false
+    default: 'latest/edge'
+    description: |
+      Snap channel to use when installing charmcraft
+  upload-image:
+    required: false
+    default: 'true'
+    description: |
+      Set to false if you don't want to update the OCI image
+  credentials:
+    required: true
+    description: |
+      Credentials exported from `charmcraft login --export`. See
+      https://juju.is/docs/sdk/remote-env-auth for more info
+  github-token:
+    required: true
+    description: |
+      Github Token needed for automatic tagging when publishing
+runs:
+  using: node12
+  main: ../dist/upload-charm/index.js
+branding:
+  icon: upload-cloud
+  color: orange

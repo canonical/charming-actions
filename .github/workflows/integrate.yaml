@@ -5,31 +5,23 @@ on:
 - pull_request
 
 jobs:
-  test-charmhub-channel-selection:
-    runs-on: ubuntu-latest
-    name: Test Channel Selection
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./channel
-        id: channel
-      - name: Verify channel is set
-        run: |
-          export CHANNEL=${{ steps.channel.outputs.name }}
-          [[ $CHANNEL ]]
-        shell: bash
   test-charmhub-upload:
     runs-on: ubuntu-latest
     name: Test charmhub upload
     steps:
       - uses: actions/checkout@v2
-
-      - uses: ./upload
+      - name: Select charmhub channel
+        uses: ./channel
+        id: channel
+      - name: Upload charm to charmhub
+        uses: ./upload-charm
         with:
           credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
           charm-path: test-charm/
           upload-image: "true"
+          channel: ${{ steps.channel.outputs.name }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: ./upload
+      - uses: ./upload-bundle
         with:
           credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
           bundle-path: test-bundle/
