@@ -21324,368 +21324,504 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 7215:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+/***/ 9474:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
-const artifact = __nccwpck_require__(2605);
-const fs = __nccwpck_require__(7147);
-const glob = __nccwpck_require__(8090);
+"use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core = __importStar(__nccwpck_require__(2186));
+const process = __importStar(__nccwpck_require__(7282));
+const tagging_1 = __nccwpck_require__(1021);
+const snap_1 = __nccwpck_require__(9885);
+const charmcraft_1 = __nccwpck_require__(8709);
+const bundle_1 = __nccwpck_require__(2873);
+const artifact_1 = __nccwpck_require__(1166);
+class UploadAction {
+    constructor() {
+        this.bundlePath = core.getInput('bundle-path');
+        this.channel = core.getInput('channel');
+        this.charmcraftChannel = core.getInput('charmcraft-channel');
+        this.charmPath = core.getInput('charm-path');
+        this.tagPrefix = core.getInput('tag-prefix');
+        this.token = core.getInput('github-token');
+        if (!this.token) {
+            throw new Error(`Input 'github-token' is missing, and not provided in environment`);
+        }
+        this.artifacts = new artifact_1.Artifact();
+        this.snap = new snap_1.Snap();
+        this.tagger = new tagging_1.Tagger(this.token);
+    }
+    run() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                yield this.snap.install('charmcraft', this.charmcraftChannel);
+                if (this.bundlePath) {
+                    yield this.uploadBundle();
+                }
+                else {
+                    yield this.uploadCharm();
+                }
+            }
+            catch (error) {
+                core.setFailed(error.message);
+                core.error(error.stack);
+            }
+            const result = yield this.artifacts.uploadLogs();
+            core.info(result);
+        });
+    }
+    uploadBundle() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.snap.install('juju-bundle');
+            yield new bundle_1.Bundle().publish(this.bundlePath, this.channel);
+        });
+    }
+    uploadCharm() {
+        return __awaiter(this, void 0, void 0, function* () {
+            process.chdir(this.charmPath);
+            const charmcraft = new charmcraft_1.Charmcraft();
+            yield charmcraft.pack();
+            const { flags, resourceInfo } = yield charmcraft.uploadResources();
+            const rev = yield charmcraft.upload(this.channel, flags);
+            yield this.tagger.tag(rev, this.channel, resourceInfo, this.tagPrefix);
+        });
+    }
+}
+(() => __awaiter(void 0, void 0, void 0, function* () {
+    yield new UploadAction().run();
+}))();
+
+
+/***/ }),
+
+/***/ 9829:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Artifact = void 0;
+const artifact_1 = __importDefault(__nccwpck_require__(2605));
+const fs_1 = __importDefault(__nccwpck_require__(7147));
+const glob_1 = __importDefault(__nccwpck_require__(8090));
 class Artifact {
-  async uploadLogs() {
-    const basePath = "/home/runner/snap/charmcraft/common/cache/charmcraft/log";
-
-    if (!fs.existsSync(basePath)) {
-      return "No charmcraft logs generated, skipping artifact upload.";
+    uploadLogs() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const basePath = '/home/runner/snap/charmcraft/common/cache/charmcraft/log';
+            if (!fs_1.default.existsSync(basePath)) {
+                return 'No charmcraft logs generated, skipping artifact upload.';
+            }
+            const globber = yield glob_1.default.create(`${basePath}/*.log`);
+            const files = yield globber.glob();
+            const artifacts = artifact_1.default.create();
+            const result = yield artifacts.uploadArtifact('charmcraft-logs', files, basePath);
+            return `Artifact upload result: ${JSON.stringify(result)}`;
+        });
     }
-
-    const globber = await glob.create(`${basePath}/*.log`);
-    const files = await globber.glob();
-    const artifacts = artifact.create();
-
-    const result = await artifacts.uploadArtifact(
-      "charmcraft-logs",
-      files,
-      basePath
-    );
-
-    return `Artifact upload result: ${JSON.stringify(result)}`;
-  }
 }
-
-module.exports = Artifact;
-
-
-/***/ }),
-
-/***/ 4472:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-const Artifact = __nccwpck_require__(7215);
-
-module.exports = Artifact;
+exports.Artifact = Artifact;
 
 
 /***/ }),
 
-/***/ 2618:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+/***/ 1166:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__nccwpck_require__(9829), exports);
+
+
+/***/ }),
+
+/***/ 363:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Bundle = void 0;
 const core = __nccwpck_require__(2186);
 const exec = __nccwpck_require__(1514);
-
 class Bundle {
-  async publish(path, channel) {
-    core.exportVariable("CHARMCRAFT_AUTH", core.getInput("credentials"));
-    process.chdir(path);
-    await exec.exec("juju-bundle", [
-      "publish",
-      "--destructive-mode",
-      "--serial",
-      "--release",
-      channel,
-    ]);
-  }
+    publish(path, channel) {
+        return __awaiter(this, void 0, void 0, function* () {
+            core.exportVariable('CHARMCRAFT_AUTH', core.getInput('credentials'));
+            process.chdir(path);
+            yield exec.exec('juju-bundle', [
+                'publish',
+                '--destructive-mode',
+                '--serial',
+                '--release',
+                channel,
+            ]);
+        });
+    }
 }
-
-module.exports = Bundle;
-
-
-/***/ }),
-
-/***/ 4252:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-const Bundle = __nccwpck_require__(2618);
-
-module.exports = Bundle;
+exports.Bundle = Bundle;
 
 
 /***/ }),
 
-/***/ 2821:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+/***/ 2873:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
-const core = __nccwpck_require__(2186);
-const exec = __nccwpck_require__(1514);
-const fs = __nccwpck_require__(7147);
-const yaml = __nccwpck_require__(1917);
-const glob = __nccwpck_require__(8090);
+"use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__nccwpck_require__(363), exports);
+
+
+/***/ }),
+
+/***/ 4116:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Charmcraft = void 0;
+const core_1 = __importDefault(__nccwpck_require__(2186));
+const exec_1 = __importDefault(__nccwpck_require__(1514));
+const glob_1 = __importDefault(__nccwpck_require__(8090));
+const fs_1 = __importDefault(__nccwpck_require__(7147));
+const js_yaml_1 = __importDefault(__nccwpck_require__(1917));
 /* eslint-disable camelcase */
-
 class Charmcraft {
-  constructor() {
-    this.uploadImage = core.getInput("upload-image").toLowerCase() === "true";
-    core.exportVariable("CHARMCRAFT_AUTH", core.getInput("credentials"));
-  }
-
-  async uploadResources() {
-    let resourceInfo = "resources:\n";
-
-    const { name, images } = this.metadata();
-    const flags = await Promise.all(
-      images.map(async ([resource_name, resource_image]) => {
-        await this.uploadResource(resource_image, name, resource_name);
-        const { flag, info } = await this.buildResourceFlag(
-          name,
-          resource_name,
-          resource_image
-        );
-        resourceInfo += info;
-        return flag;
-      })
-    );
-    return { flags, resourceInfo };
-  }
-
-  async uploadResource(resource_image, name, resource_name) {
-    if (!this.uploadImage) {
-      core.warning(
-        "No resources where uploaded as part of this build.\n" +
-          `If you wish to upload the OCI image, set 'upload-image' to 'true'`
-      );
-      return;
+    constructor() {
+        this.uploadImage = core_1.default.getInput('upload-image').toLowerCase() === 'true';
+        core_1.default.exportVariable('CHARMCRAFT_AUTH', core_1.default.getInput('credentials'));
     }
-
-    const pullExitCode = await exec.exec("docker", ["pull", resource_image]);
-    if (pullExitCode !== 0) {
-      throw new Error("Could not pull the docker image.");
+    uploadResources() {
+        return __awaiter(this, void 0, void 0, function* () {
+            let resourceInfo = 'resources:\n';
+            if (!this.uploadImage) {
+                const msg = `No resources where uploaded as part of this build.\n` +
+                    `If you wish to upload the OCI image, set 'upload-image' to 'true'`;
+                core_1.default.warning(msg);
+                return { flags: [''], resourceInfo: '' };
+            }
+            const { name, images } = this.metadata();
+            const flags = yield Promise.all(images.map(([resource_name, resource_image]) => __awaiter(this, void 0, void 0, function* () {
+                yield this.uploadResource(resource_image, name, resource_name);
+                const { flag, info } = yield this.buildResourceFlag(name, resource_name, resource_image);
+                resourceInfo += info;
+                return flag;
+            })));
+            return { flags, resourceInfo };
+        });
     }
-
-    await exec.exec("charmcraft", [
-      "upload-resource",
-      "--quiet",
-      name,
-      resource_name,
-      "--image",
-      resource_image,
-    ]);
-  }
-
-  async buildResourceFlag(name, resource_name, resource_image) {
-    const result = await exec.getExecOutput("charmcraft", [
-      "resource-revisions",
-      name,
-      resource_name,
-    ]);
-
-    /*
-    ❯ charmcraft resource-revisions prometheus-k8s prometheus-image
-      Revision    Created at    Size                                                                                                                                                                                                                                                                
-      1           2021-07-19    512B
-      ^-- This value
-    */
-    const revision = result.stdout.split("\n")[1].split(" ")[0];
-
-    return {
-      flag: `--resource=${resource_name}:${revision}`,
-      info:
-        `    -  ${resource_name}: ${resource_image}\n` +
-        `       resource-revision: ${revision}\n`,
-    };
-  }
-
-  metadata() {
-    const metadata = yaml.load(fs.readFileSync("metadata.yaml"));
-    const charmName = metadata.name;
-
-    const images = Object.entries(metadata.resources || {})
-      .filter(([, res]) => res.type === "oci-image")
-      .map(([name, res]) => [name, res["upstream-source"]]);
-    return { images, name: charmName };
-  }
-
-  async pack() {
-    await exec.exec("charmcraft", ["pack", "--destructive-mode", "--quiet"]);
-  }
-
-  async upload(channel, revisions) {
-    const globber = await glob.create("./*.charm");
-    const paths = await globber.glob();
-
-    const charmRevisions = await Promise.all(
-      paths.map(async (path) => this._upload_charm(channel, path, revisions))
-    );
-    return charmRevisions;
-  }
-
-  async _upload_charm(channel, path, revisions) {
-    const result = await exec.getExecOutput("charmcraft", [
-      "upload",
-      "--quiet",
-      "--release",
-      channel,
-      path,
-      ...revisions,
-    ]);
-    const newRevision = result.stdout.split(" ")[1];
-    return newRevision;
-  }
+    uploadResource(resource_image, name, resource_name) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const pullExitCode = yield exec_1.default.exec('docker', ['pull', resource_image]);
+            if (pullExitCode !== 0) {
+                throw new Error('Could not pull the docker image.');
+            }
+            yield exec_1.default.exec('charmcraft', [
+                'upload-resource',
+                '--quiet',
+                name,
+                resource_name,
+                '--image',
+                resource_image,
+            ]);
+        });
+    }
+    buildResourceFlag(name, resource_name, resource_image) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const result = yield exec_1.default.getExecOutput('charmcraft', [
+                'resource-revisions',
+                name,
+                resource_name,
+            ]);
+            /*
+            ❯ charmcraft resource-revisions prometheus-k8s prometheus-image
+              Revision    Created at    Size
+              1           2021-07-19    512B
+              ^-- This value
+            */
+            const revision = result.stdout.split('\n')[1].split(' ')[0];
+            return {
+                flag: `--resource=${resource_name}:${revision}`,
+                info: `    -  ${resource_name}: ${resource_image}\n` +
+                    `       resource-revision: ${revision}\n`,
+            };
+        });
+    }
+    metadata() {
+        const buff = fs_1.default.readFileSync('metadata.yaml');
+        const metadata = js_yaml_1.default.load(buff.toString());
+        const charmName = metadata.name;
+        const images = Object.entries(metadata.resources || {})
+            .filter(([, res]) => res.type === 'oci-image')
+            .map(([name, res]) => [name, res['upstream-source']]);
+        return { images, name: charmName };
+    }
+    pack() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield exec_1.default.exec('charmcraft', ['pack', '--destructive-mode', '--quiet']);
+        });
+    }
+    upload(channel, flags) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // as we don't know the name of the name of the charm file output, we'll need to glob for it.
+            // however, we expect charmcraft pack to always output one charm file.
+            const globber = yield glob_1.default.create('./*.charm');
+            const paths = yield globber.glob();
+            const result = yield exec_1.default.getExecOutput('charmcraft', [
+                'upload',
+                '--quiet',
+                '--release',
+                channel,
+                paths[0],
+                ...flags,
+            ]);
+            const newRevision = result.stdout.split(' ')[1];
+            return newRevision;
+        });
+    }
 }
-
-module.exports = Charmcraft;
-
-
-/***/ }),
-
-/***/ 478:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-const Charmcraft = __nccwpck_require__(2821);
-
-module.exports = Charmcraft;
+exports.Charmcraft = Charmcraft;
 
 
 /***/ }),
 
-/***/ 2234:
-/***/ ((module) => {
+/***/ 8709:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
-class Ref {
-  constructor(context) {
-    this.ctx = context;
-    this.event = this.ctx.eventName;
-  }
+"use strict";
 
-  channel() {
-    if (this.event === "push") {
-      return this._getChannelForPush();
-    }
-    if (this.event === "pull_request") {
-      return this._getChannelForPr();
-    }
-
-    throw Error(`Invalid event type: ${this.event}`);
-  }
-
-  _getChannelForPush() {
-    if (!this.ctx.ref.startsWith("refs/heads/")) {
-      throw Error(`Invalid git reference: ${this.context.ref}`);
-    }
-
-    const branch = this.ctx.ref.replace("refs/heads/", "");
-
-    if (branch === this.ctx.payload.repository.master_branch) {
-      return "latest/edge";
-    }
-    if (branch.startsWith("track/")) {
-      return `${branch.replace("track/", "")}/edge`;
-    }
-
-    throw Error(`Unsupported branch name ${this.ctx.ref}`);
-  }
-
-  _getChannelForPr() {
-    const { base, head } = this.ctx.payload.pull_request;
-
-    if (!head.ref.startsWith("branch/")) {
-      throw Error(`Unsupported branch name: ${head.ref}`);
-    }
-
-    const branch = head.ref.replace("branch/", "");
-
-    if (base.ref === base.repo.default_branch) {
-      return `latest/edge/${branch}`;
-    }
-    if (base.ref.startsWith("track/")) {
-      return `${base.ref.replace("track/", "")}/edge/${branch}`;
-    }
-
-    throw Error(`Unhandled PR base name ${base.ref}`);
-  }
-}
-
-module.exports = Ref;
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__nccwpck_require__(4116), exports);
 
 
 /***/ }),
 
-/***/ 823:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+/***/ 9885:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
-const exec = __nccwpck_require__(1514);
+"use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__nccwpck_require__(1785), exports);
+
+
+/***/ }),
+
+/***/ 1785:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Snap = void 0;
+const exec_1 = __nccwpck_require__(1514);
 class Snap {
-  async install(snap, channel) {
-    await exec.exec("sudo", [
-      "snap",
-      "install",
-      snap,
-      "--classic",
-      ...(channel ? ["--channel", channel] : []),
-    ]);
-  }
+    install(snap, channel) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield (0, exec_1.exec)('sudo', [
+                'snap',
+                'install',
+                snap,
+                '--classic',
+                ...(channel ? ['--channel', channel] : []),
+            ]);
+        });
+    }
 }
-
-module.exports = Snap;
-
-
-/***/ }),
-
-/***/ 7240:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-const Tagger = __nccwpck_require__(3268);
-
-module.exports = Tagger;
+exports.Snap = Snap;
 
 
 /***/ }),
 
-/***/ 3268:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+/***/ 1021:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
-const github = __nccwpck_require__(5438);
-const utc = __nccwpck_require__(4359);
-const dayjs = __nccwpck_require__(7401);
+"use strict";
 
-dayjs.extend(utc);
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__nccwpck_require__(9434), exports);
 
+
+/***/ }),
+
+/***/ 9434:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Tagger = void 0;
+const github_1 = __nccwpck_require__(5438);
+const utc_1 = __importDefault(__nccwpck_require__(4359));
+const dayjs_1 = __importDefault(__nccwpck_require__(7401));
+dayjs_1.default.extend(utc_1.default);
 class Tagger {
-  constructor(token) {
-    this.kit = github.getOctokit(token);
-  }
-
-  async tag(revision, channel, resources) {
-    const { owner, repo } = github.context.repo;
-
-    const content = this._build(
-      owner,
-      repo,
-      process.env.GITHUB_SHA,
-      revision,
-      channel,
-      resources
-    );
-
-    await this.kit.rest.repos.createRelease(content);
-  }
-
-  _build(owner, repo, hash, revision, channel, resources) {
-    const name = `rev${revision}`;
-    const message = `${resources} Released to '${channel}' at ${this._get_date_text()}`;
-
-    return {
-      owner,
-      repo,
-      name: `Revision ${revision}`,
-      tag_name: name,
-      body: message,
-      draft: false,
-      prerelease: false,
-      generate_release_notes: true,
-      target_commitish: hash,
-    };
-  }
-
-  _get_date_text() {
-    // 12:00 UTC on 10 Feb 2022
-    return dayjs().utc().format("HH:mm UTC on D MMM YYYY");
-  }
+    constructor(token) {
+        this.kit = (0, github_1.getOctokit)(token);
+    }
+    tag(revision, channel, resources, tagPrefix) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { owner, repo } = github_1.context.repo;
+            const content = this._build(owner, repo, process.env['GITHUB_SHA'], revision, channel, resources, tagPrefix);
+            yield this.kit.rest.repos.createRelease(content);
+        });
+    }
+    _build(owner, repo, hash, revision, channel, resources, tagPrefix) {
+        const name = `${tagPrefix ? `${tagPrefix}-` : ''}rev${revision}`;
+        const message = `${resources} Released to '${channel}' at ${this._get_date_text()}`;
+        return {
+            owner,
+            repo,
+            name: `Revision ${revision}`,
+            tag_name: name,
+            body: message,
+            draft: false,
+            prerelease: false,
+            generate_release_notes: true,
+            target_commitish: hash,
+        };
+    }
+    _get_date_text() {
+        // 12:00 UTC on 10 Feb 2022
+        return (0, dayjs_1.default)().utc().format('HH:mm UTC on D MMM YYYY');
+    }
 }
-
-module.exports = Tagger;
+exports.Tagger = Tagger;
 
 
 /***/ }),
@@ -21904,68 +22040,12 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
 /******/ 	
 /************************************************************************/
-var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
-(() => {
-const core = __nccwpck_require__(2186);
-const github = __nccwpck_require__(5438);
-const process = __nccwpck_require__(7282);
-
-const Tagger = __nccwpck_require__(7240);
-const Snap = __nccwpck_require__(823);
-const Charmcraft = __nccwpck_require__(478);
-const Bundle = __nccwpck_require__(4252);
-const Ref = __nccwpck_require__(2234);
-const Artifact = __nccwpck_require__(4472);
-
-(async () => {
-  try {
-    const charmPath = core.getInput("charm-path");
-    const bundlePath = core.getInput("bundle-path");
-    const githubToken =
-      core.getInput("github-token") || process.env.GITHUB_TOKEN;
-
-    if (!githubToken) {
-      throw Error(
-        `Input 'github-token' is missing, and not provided in environment`
-      );
-    }
-
-    const ref = new Ref(github.context);
-    const channel = ref.channel();
-    const snap = new Snap();
-    await snap.install("charmcraft", core.getInput("charmcraft-channel"));
-
-    // Publish a bundle or a charm, depending on if `bundle_path` or `charm_path` was set
-    if (bundlePath) {
-      await snap.install("juju-bundle");
-      await new Bundle().publish(bundlePath, channel);
-      // TODO: Needs to tag bundles as well
-      return;
-    }
-
-    process.chdir(charmPath);
-
-    const charmcraft = new Charmcraft();
-    await charmcraft.pack();
-
-    const { flags, resourceInfo } = await charmcraft.uploadResources();
-    const charmRevisions = await charmcraft.upload(channel, flags);
-
-    // TODO: Needs to prefix the tag with the charm name
-    const tagger = new Tagger(githubToken);
-    await tagger.tag(charmRevisions, channel, resourceInfo);
-  } catch (error) {
-    core.setFailed(error.message);
-    core.error(error.stack);
-  }
-
-  const result = await Artifact.uploadLogs();
-  core.info(result);
-})();
-
-})();
-
-module.exports = __webpack_exports__;
+/******/ 	
+/******/ 	// startup
+/******/ 	// Load entry module and return exports
+/******/ 	// This entry module is referenced by other modules so it can't be inlined
+/******/ 	var __webpack_exports__ = __nccwpck_require__(9474);
+/******/ 	module.exports = __webpack_exports__;
+/******/ 	
 /******/ })()
 ;

@@ -1,13 +1,13 @@
-const artifact = require("@actions/artifact");
-const fs = require("fs");
-const glob = require("@actions/glob");
+import artifact from '@actions/artifact';
+import fs from 'fs';
+import glob from '@actions/glob';
 
 class Artifact {
   async uploadLogs() {
-    const basePath = "/home/runner/snap/charmcraft/common/cache/charmcraft/log";
+    const basePath = '/home/runner/snap/charmcraft/common/cache/charmcraft/log';
 
     if (!fs.existsSync(basePath)) {
-      return "No charmcraft logs generated, skipping artifact upload.";
+      return 'No charmcraft logs generated, skipping artifact upload.';
     }
 
     const globber = await glob.create(`${basePath}/*.log`);
@@ -15,7 +15,7 @@ class Artifact {
     const artifacts = artifact.create();
 
     const result = await artifacts.uploadArtifact(
-      "charmcraft-logs",
+      'charmcraft-logs',
       files,
       basePath
     );
@@ -24,4 +24,4 @@ class Artifact {
   }
 }
 
-module.exports = Artifact;
+export { Artifact };
