@@ -21,6 +21,7 @@ jobs:
 
       - uses: ./
         with:
+          tag-prefix: test-charm
           credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
           charm-path: test-charm/
           upload-image: "true"
