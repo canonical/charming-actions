@@ -3,9 +3,12 @@ name: Test Charmhub Upload
 on:
   - push:
       branches:
-        - track/*
-        - master
-  - pull_request
+        - "track/*"
+        - "master"
+  - pull_request:
+      branches:
+        - "track/*"
+        - "master"
 
 jobs:
   test-charmhub-upload:
