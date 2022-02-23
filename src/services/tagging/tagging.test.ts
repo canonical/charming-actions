@@ -21,10 +21,11 @@ describe('the tagging helper', () => {
 
   describe('when calling the tag function', () => {
     it('should call the github rest api with the expected parameters', async () => {
+      const { repos } = tagger.kit.rest;
       jest
         .spyOn(context, 'repo', 'get')
         .mockReturnValue({ owner: 'test-owner', repo: 'test-repo' });
-      tagger.kit.rest.repos.createRelease = jest.fn();
+      jest.spyOn(repos, 'createRelease').mockReturnValue({} as any);
 
       const expected = expect.objectContaining({
         draft: false,
@@ -36,9 +37,7 @@ describe('the tagging helper', () => {
       });
 
       await tagger.tag('12', 'edge', 'SOME-RESOURCES-STRING');
-      expect(tagger.kit.rest.repos.createRelease).toHaveBeenCalledWith(
-        expected
-      );
+      expect(repos.createRelease).toHaveBeenCalledWith(expected);
     });
   });
 });

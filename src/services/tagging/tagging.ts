@@ -1,11 +1,12 @@
 import { context, getOctokit } from '@actions/github';
+import { GitHub } from '@actions/github/lib/utils';
 import utc from 'dayjs/plugin/utc';
 import dayjs from 'dayjs';
 
 dayjs.extend(utc);
 
 class Tagger {
-  kit: any;
+  kit: InstanceType<typeof GitHub>;
 
   constructor(token: string) {
     this.kit = getOctokit(token);

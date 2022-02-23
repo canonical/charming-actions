@@ -3,16 +3,18 @@ import { context, getOctokit } from '@actions/github';
 import { Context } from '@actions/github/lib/context';
 import { GitHub } from '@actions/github/lib/utils';
 
-import { Charmcraft, LibStatus } from '../../services';
+import { Charmcraft, LibStatus, Snap } from '../../services';
 import { Outcomes, Tokens } from '../../types';
 
 export class CheckLibrariesAction {
   private tokens: Tokens;
   private charmcraft: Charmcraft;
+  private channel: string;
   private github: InstanceType<typeof GitHub>;
   private outcomes: Outcomes;
   private context: Context;
   private charmPath: string;
+  private snap: Snap;
 
   constructor() {
     this.tokens = {
@@ -20,21 +22,25 @@ export class CheckLibrariesAction {
       charmhub: getInput('credentials'),
     };
     if (!this.tokens.github) throw new Error(`Input 'github-token' is missing`);
+
     this.charmPath = getInput('charm-path');
+    this.channel = getInput('charmcraft-channel');
 
     this.outcomes = {
       fail: getInput('fail-build').toLowerCase() === 'true',
       comment: getInput('comment-on-pr').toLowerCase() === 'true',
     };
 
-    this.github = getOctokit(this.tokens.github);
     this.context = context;
+    this.github = getOctokit(this.tokens.github);
     this.charmcraft = new Charmcraft(this.tokens.charmhub);
+    this.snap = new Snap();
   }
 
   async run() {
     try {
       process.chdir(this.charmPath!);
+      await this.snap.install('charmcraft', this.channel);
       const status = await this.charmcraft.hasDriftingLibs();
       // we do this using includes to catch both `pull_request` and `pull_request_target`
       if (!status.ok && this.shouldPostComment) {

@@ -20718,18 +20718,21 @@ to your PR branch.
         if (!this.tokens.github)
             throw new Error(`Input 'github-token' is missing`);
         this.charmPath = (0, core_1.getInput)('charm-path');
+        this.channel = (0, core_1.getInput)('charmcraft-channel');
         this.outcomes = {
             fail: (0, core_1.getInput)('fail-build').toLowerCase() === 'true',
             comment: (0, core_1.getInput)('comment-on-pr').toLowerCase() === 'true',
         };
-        this.github = (0, github_1.getOctokit)(this.tokens.github);
         this.context = github_1.context;
+        this.github = (0, github_1.getOctokit)(this.tokens.github);
         this.charmcraft = new services_1.Charmcraft(this.tokens.charmhub);
+        this.snap = new services_1.Snap();
     }
     run() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 process.chdir(this.charmPath);
+                yield this.snap.install('charmcraft', this.channel);
                 const status = yield this.charmcraft.hasDriftingLibs();
                 // we do this using includes to catch both `pull_request` and `pull_request_target`
                 if (!status.ok && this.shouldPostComment) {
