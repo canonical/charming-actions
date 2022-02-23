@@ -17,6 +17,7 @@ class Charmcraft {
     this.token = token || core.getInput('credentials');
     this.execOptions = {
       env: {
+        ...process.env,
         CHARMCRAFT_AUTH: this.token,
       },
     };

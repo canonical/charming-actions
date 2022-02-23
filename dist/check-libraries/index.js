@@ -21009,9 +21009,7 @@ class Charmcraft {
         this.uploadImage = core.getInput('upload-image').toLowerCase() === 'true';
         this.token = token || core.getInput('credentials');
         this.execOptions = {
-            env: {
-                CHARMCRAFT_AUTH: this.token,
-            },
+            env: Object.assign(Object.assign({}, process.env), { CHARMCRAFT_AUTH: this.token }),
         };
     }
     uploadResources() {
