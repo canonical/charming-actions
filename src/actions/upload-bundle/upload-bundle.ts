@@ -1,9 +1,7 @@
 import * as core from '@actions/core';
-import { Snap } from '../snap';
-import { Bundle } from '../bundle';
-import { Artifact } from '../artifact';
+import { Snap, Bundle, Artifact } from '../../services';
 
-class UploadCharmAction {
+export class UploadBundleAction {
   private artifacts: Artifact;
   private snap: Snap;
   private bundle: Bundle;
@@ -45,7 +43,3 @@ class UploadCharmAction {
     core.info(result);
   }
 }
-
-(async () => {
-  await new UploadCharmAction().run();
-})();

@@ -8733,7 +8733,7 @@ var globSync = __nccwpck_require__(9010)
 var common = __nccwpck_require__(7625)
 var setopts = common.setopts
 var ownProp = common.ownProp
-var inflight = __nccwpck_require__(2492)
+var inflight = __nccwpck_require__(3591)
 var util = __nccwpck_require__(3837)
 var childrenIgnored = common.childrenIgnored
 var isIgnored = common.isIgnored
@@ -9960,7 +9960,7 @@ GlobSync.prototype._makeAbs = function (f) {
 
 /***/ }),
 
-/***/ 2492:
+/***/ 3591:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 var wrappy = __nccwpck_require__(2940)
@@ -20672,7 +20672,94 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 51:
+/***/ 754:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CheckLibrariesAction = void 0;
+const core_1 = __nccwpck_require__(2186);
+const github_1 = __nccwpck_require__(5438);
+const services_1 = __nccwpck_require__(720);
+class CheckLibrariesAction {
+    constructor() {
+        this.getCommentBody = (status) => `
+Libraries are not up to date with their remote counterparts. If this was 
+not intentional, run \`charmcraft fetch-libs\` and commit the updated libs 
+to your PR branch.
+
+<details>
+  <summary>stdout</summary>\n
+  \`\`\`
+  ${status.out}
+  \`\`\`\n
+</details>\n
+
+<details>
+  <summary>stderr</summary>\n
+  \`\`\`
+  ${status.err}
+  \`\`\`\n
+</details>`;
+        this.tokens = {
+            github: (0, core_1.getInput)('github-token'),
+            charmhub: (0, core_1.getInput)('credentials'),
+        };
+        if (!this.tokens.github)
+            throw new Error(`Input 'github-token' is missing`);
+        this.charmPath = (0, core_1.getInput)('charm-path');
+        this.outcomes = {
+            fail: (0, core_1.getInput)('fail-build').toLowerCase() === 'true',
+            comment: (0, core_1.getInput)('comment-on-pr').toLowerCase() === 'true',
+        };
+        this.github = (0, github_1.getOctokit)(this.tokens.github);
+        this.context = github_1.context;
+        this.charmcraft = new services_1.Charmcraft(this.tokens.charmhub);
+    }
+    run() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const status = yield this.charmcraft.hasDriftingLibs();
+                process.chdir(this.charmPath);
+                // we do this using includes to catch both `pull_request` and `pull_request_target`
+                if (!status.ok && this.shouldPostComment) {
+                    this.github.rest.issues.createComment({
+                        issue_number: this.context.issue.number,
+                        owner: this.context.repo.owner,
+                        repo: this.context.repo.repo,
+                        body: this.getCommentBody(status),
+                    });
+                }
+                if (!status.ok && this.outcomes.fail) {
+                    (0, core_1.setFailed)('Charmcraft libraries are not up to date.');
+                }
+            }
+            catch (e) {
+                (0, core_1.setFailed)(e.message);
+                (0, core_1.error)(e.stack);
+            }
+        });
+    }
+    get shouldPostComment() {
+        return (this.outcomes.comment && this.context.eventName.includes('pull_request'));
+    }
+}
+exports.CheckLibrariesAction = CheckLibrariesAction;
+
+
+/***/ }),
+
+/***/ 4875:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -20684,72 +20771,16 @@ var __createBinding = (this && this.__createBinding) || (Object.create ? (functi
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
 }));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UploadCharmAction = void 0;
-const core = __importStar(__nccwpck_require__(2186));
-const process = __importStar(__nccwpck_require__(7282));
-const services_1 = __nccwpck_require__(720);
-class UploadCharmAction {
-    constructor() {
-        this.channel = core.getInput('channel');
-        this.charmcraftChannel = core.getInput('charmcraft-channel');
-        this.charmPath = core.getInput('charm-path');
-        this.tagPrefix = core.getInput('tag-prefix');
-        this.token = core.getInput('github-token');
-        if (!this.token) {
-            throw new Error(`Input 'github-token' is missing, and not provided in environment`);
-        }
-        this.artifacts = new services_1.Artifact();
-        this.snap = new services_1.Snap();
-        this.tagger = new services_1.Tagger(this.token);
-        this.charmcraft = new services_1.Charmcraft();
-    }
-    run() {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                yield this.snap.install('charmcraft', this.charmcraftChannel);
-                process.chdir(this.charmPath);
-                yield this.charmcraft.pack();
-                const { flags, resourceInfo } = yield this.charmcraft.uploadResources();
-                const rev = yield this.charmcraft.upload(this.channel, flags);
-                yield this.tagger.tag(rev, this.channel, resourceInfo, this.tagPrefix);
-            }
-            catch (error) {
-                core.setFailed(error.message);
-                core.error(error.stack);
-            }
-            const result = yield this.artifacts.uploadLogs();
-            core.info(result);
-        });
-    }
-}
-exports.UploadCharmAction = UploadCharmAction;
+__exportStar(__nccwpck_require__(754), exports);
 
 
 /***/ }),
 
-/***/ 1018:
+/***/ 2492:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -20764,9 +20795,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const upload_charm_1 = __nccwpck_require__(51);
+const check_libraries_1 = __nccwpck_require__(4875);
 (() => __awaiter(void 0, void 0, void 0, function* () {
-    yield new upload_charm_1.UploadCharmAction().run();
+    yield new check_libraries_1.CheckLibrariesAction().run();
 }))();
 
 
@@ -21435,14 +21466,6 @@ module.exports = require("perf_hooks");
 
 /***/ }),
 
-/***/ 7282:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("process");
-
-/***/ }),
-
 /***/ 5477:
 /***/ ((module) => {
 
@@ -21557,7 +21580,7 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(1018);
+/******/ 	var __webpack_exports__ = __nccwpck_require__(2492);
 /******/ 	module.exports = __webpack_exports__;
 /******/ 	
 /******/ })()

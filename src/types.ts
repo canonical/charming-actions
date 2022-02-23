@@ -23,3 +23,13 @@ export type Metadata = {
   name: string;
   resources: { [key: string]: Resource };
 };
+
+export interface Tokens {
+  charmhub: string;
+  github: string;
+}
+
+export interface Outcomes {
+  fail: boolean;
+  comment: boolean;
+}

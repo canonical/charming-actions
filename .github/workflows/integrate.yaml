@@ -16,6 +16,12 @@ jobs:
     name: Test charmhub upload
     steps:
       - uses: actions/checkout@v2
+      - name: Check libraries
+        uses: ./check-libraries
+        with:
+          credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Select charmhub channel
         uses: ./channel
         id: channel

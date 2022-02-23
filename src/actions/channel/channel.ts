@@ -1,9 +1,9 @@
 import { setOutput } from '@actions/core';
 import { context } from '@actions/github';
 import { Context } from '@actions/github/lib/context';
-import { Ref } from '../ref';
+import { Ref } from '../../services';
 
-class ChannelSelection {
+export class ChannelSelection {
   private context: Context;
   private ref: Ref;
 
@@ -17,5 +17,3 @@ class ChannelSelection {
     setOutput('name', channel);
   }
 }
-
-new ChannelSelection().run();

@@ -1,5 +1,5 @@
 import { Context } from '@actions/github/lib/context';
-import { PullRequestMetadata } from '../types';
+import { PullRequestMetadata } from '../../types';
 
 export class Ref {
   ctx: Context;

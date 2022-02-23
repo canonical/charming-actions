@@ -2,12 +2,7 @@ import core from '@actions/core';
 import github from '@actions/github';
 import process from 'process';
 
-import { Tagger } from './tagging';
-import { Snap } from './snap';
-import { Charmcraft } from './charmcraft';
-import { Bundle } from './bundle';
-import { Ref } from './ref';
-import { Artifact } from './artifact';
+import { Tagger, Snap, Charmcraft, Bundle, Ref, Artifact } from './services';
 
 (async () => {
   try {

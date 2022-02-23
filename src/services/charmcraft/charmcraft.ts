@@ -1,19 +1,20 @@
 import * as core from '@actions/core';
-import * as exec from '@actions/exec';
+import { exec, getExecOutput } from '@actions/exec';
 import * as glob from '@actions/glob';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 
-import { Metadata } from '../types';
+import { Metadata } from '../../types';
 
 /* eslint-disable camelcase */
 
 class Charmcraft {
-  uploadImage: boolean;
+  private uploadImage: boolean;
+  private token: string;
 
-  constructor() {
+  constructor(token?: string) {
     this.uploadImage = core.getInput('upload-image').toLowerCase() === 'true';
-    core.exportVariable('CHARMCRAFT_AUTH', core.getInput('credentials'));
+    this.token = token || core.getInput('credentials');
   }
 
   async uploadResources() {
@@ -47,19 +48,27 @@ class Charmcraft {
     name: string,
     resource_name: string
   ) {
-    const pullExitCode = await exec.exec('docker', ['pull', resource_image]);
+    const pullExitCode = await exec('docker', ['pull', resource_image]);
     if (pullExitCode !== 0) {
       throw new Error('Could not pull the docker image.');
     }
 
-    await exec.exec('charmcraft', [
-      'upload-resource',
-      '--quiet',
-      name,
-      resource_name,
-      '--image',
-      resource_image,
-    ]);
+    await exec(
+      'charmcraft',
+      [
+        'upload-resource',
+        '--quiet',
+        name,
+        resource_name,
+        '--image',
+        resource_image,
+      ],
+      {
+        env: {
+          CHARMCRAFT_AUTH: this.token,
+        },
+      }
+    );
   }
 
   async buildResourceFlag(
@@ -67,7 +76,7 @@ class Charmcraft {
     resource_name: string,
     resource_image: string
   ) {
-    const result = await exec.getExecOutput('charmcraft', [
+    const result = await getExecOutput('charmcraft', [
       'resource-revisions',
       name,
       resource_name,
@@ -101,7 +110,7 @@ class Charmcraft {
   }
 
   async pack() {
-    await exec.exec('charmcraft', ['pack', '--destructive-mode', '--quiet']);
+    await exec('charmcraft', ['pack', '--destructive-mode', '--quiet']);
   }
 
   async upload(channel: string, flags: string[]): Promise<string> {
@@ -109,7 +118,7 @@ class Charmcraft {
     // however, we expect charmcraft pack to always output one charm file.
     const globber = await glob.create('./*.charm');
     const paths = await globber.glob();
-    const result = await exec.getExecOutput('charmcraft', [
+    const result = await getExecOutput('charmcraft', [
       'upload',
       '--quiet',
       '--release',
@@ -120,6 +129,29 @@ class Charmcraft {
     const newRevision = result.stdout.split(' ')[1];
     return newRevision;
   }
+
+  async hasDriftingLibs(): Promise<LibStatus> {
+    const { name } = this.metadata();
+    const result = await getExecOutput('charmcraft', ['fetch-lib']);
+    const re = new RegExp(`${name}`);
+    const lines = result.stderr
+      .concat(result.stdout)
+      .split('\n')
+      .filter((x) => !re.test(x))
+      .filter((x) =>
+        /(updated to version|not found in Charmhub|has local changes)/.test(x)
+      );
+
+    const { stdout: out, stderr: err } = result;
+
+    return { ok: lines.length <= 0, out, err };
+  }
+}
+
+export interface LibStatus {
+  ok: boolean;
+  out: string;
+  err: string;
 }
 
 export { Charmcraft };

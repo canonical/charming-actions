@@ -1,12 +1,9 @@
 import * as core from '@actions/core';
 import * as process from 'process';
 
-import { Tagger } from '../tagging';
-import { Snap } from '../snap';
-import { Charmcraft } from '../charmcraft';
-import { Artifact } from '../artifact';
+import { Tagger, Snap, Charmcraft, Artifact } from '../../services';
 
-class UploadAction {
+export class UploadCharmAction {
   private artifacts: Artifact;
   private snap: Snap;
   private tagger: Tagger;
@@ -55,7 +52,3 @@ class UploadAction {
     core.info(result);
   }
 }
-
-(async () => {
-  await new UploadAction().run();
-})();
