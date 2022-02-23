@@ -1,5 +1,5 @@
 import * as core from '@actions/core';
-import { exec, getExecOutput } from '@actions/exec';
+import { exec, ExecOptions, getExecOutput } from '@actions/exec';
 import * as glob from '@actions/glob';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
@@ -11,10 +11,15 @@ import { Metadata } from '../../types';
 class Charmcraft {
   private uploadImage: boolean;
   private token: string;
-
+  private execOptions: ExecOptions;
   constructor(token?: string) {
     this.uploadImage = core.getInput('upload-image').toLowerCase() === 'true';
     this.token = token || core.getInput('credentials');
+    this.execOptions = {
+      env: {
+        CHARMCRAFT_AUTH: this.token,
+      },
+    };
   }
 
   async uploadResources() {
@@ -48,27 +53,24 @@ class Charmcraft {
     name: string,
     resource_name: string
   ) {
-    const pullExitCode = await exec('docker', ['pull', resource_image]);
+    const pullExitCode = await exec(
+      'docker',
+      ['pull', resource_image],
+      this.execOptions
+    );
     if (pullExitCode !== 0) {
       throw new Error('Could not pull the docker image.');
     }
 
-    await exec(
-      'charmcraft',
-      [
-        'upload-resource',
-        '--quiet',
-        name,
-        resource_name,
-        '--image',
-        resource_image,
-      ],
-      {
-        env: {
-          CHARMCRAFT_AUTH: this.token,
-        },
-      }
-    );
+    const args = [
+      'upload-resource',
+      '--quiet',
+      name,
+      resource_name,
+      '--image',
+      resource_image,
+    ];
+    await exec('charmcraft', args, this.execOptions);
   }
 
   async buildResourceFlag(
@@ -76,11 +78,8 @@ class Charmcraft {
     resource_name: string,
     resource_image: string
   ) {
-    const result = await getExecOutput('charmcraft', [
-      'resource-revisions',
-      name,
-      resource_name,
-    ]);
+    const args = ['resource-revisions', name, resource_name];
+    const result = await getExecOutput('charmcraft', args, this.execOptions);
 
     /*
     ❯ charmcraft resource-revisions prometheus-k8s prometheus-image
@@ -110,7 +109,8 @@ class Charmcraft {
   }
 
   async pack() {
-    await exec('charmcraft', ['pack', '--destructive-mode', '--quiet']);
+    const args = ['pack', '--destructive-mode', '--quiet'];
+    await exec('charmcraft', args, this.execOptions);
   }
 
   async upload(channel: string, flags: string[]): Promise<string> {
@@ -118,21 +118,23 @@ class Charmcraft {
     // however, we expect charmcraft pack to always output one charm file.
     const globber = await glob.create('./*.charm');
     const paths = await globber.glob();
-    const result = await getExecOutput('charmcraft', [
+    const args = [
       'upload',
       '--quiet',
       '--release',
       channel,
       paths[0],
       ...flags,
-    ]);
+    ];
+    const result = await getExecOutput('charmcraft', args, this.execOptions);
     const newRevision = result.stdout.split(' ')[1];
     return newRevision;
   }
 
   async hasDriftingLibs(): Promise<LibStatus> {
     const { name } = this.metadata();
-    const result = await getExecOutput('charmcraft', ['fetch-lib']);
+    const args = ['fetch-lib'];
+    const result = await getExecOutput('charmcraft', args, this.execOptions);
     const re = new RegExp(`${name}`);
     const lines = result.stderr
       .concat(result.stdout)

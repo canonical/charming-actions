@@ -20974,6 +20974,11 @@ class Charmcraft {
     constructor(token) {
         this.uploadImage = core.getInput('upload-image').toLowerCase() === 'true';
         this.token = token || core.getInput('credentials');
+        this.execOptions = {
+            env: {
+                CHARMCRAFT_AUTH: this.token,
+            },
+        };
     }
     uploadResources() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -20996,31 +21001,25 @@ class Charmcraft {
     }
     uploadResource(resource_image, name, resource_name) {
         return __awaiter(this, void 0, void 0, function* () {
-            const pullExitCode = yield (0, exec_1.exec)('docker', ['pull', resource_image]);
+            const pullExitCode = yield (0, exec_1.exec)('docker', ['pull', resource_image], this.execOptions);
             if (pullExitCode !== 0) {
                 throw new Error('Could not pull the docker image.');
             }
-            yield (0, exec_1.exec)('charmcraft', [
+            const args = [
                 'upload-resource',
                 '--quiet',
                 name,
                 resource_name,
                 '--image',
                 resource_image,
-            ], {
-                env: {
-                    CHARMCRAFT_AUTH: this.token,
-                },
-            });
+            ];
+            yield (0, exec_1.exec)('charmcraft', args, this.execOptions);
         });
     }
     buildResourceFlag(name, resource_name, resource_image) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield (0, exec_1.getExecOutput)('charmcraft', [
-                'resource-revisions',
-                name,
-                resource_name,
-            ]);
+            const args = ['resource-revisions', name, resource_name];
+            const result = yield (0, exec_1.getExecOutput)('charmcraft', args, this.execOptions);
             /*
             ❯ charmcraft resource-revisions prometheus-k8s prometheus-image
               Revision    Created at    Size
@@ -21046,7 +21045,8 @@ class Charmcraft {
     }
     pack() {
         return __awaiter(this, void 0, void 0, function* () {
-            yield (0, exec_1.exec)('charmcraft', ['pack', '--destructive-mode', '--quiet']);
+            const args = ['pack', '--destructive-mode', '--quiet'];
+            yield (0, exec_1.exec)('charmcraft', args, this.execOptions);
         });
     }
     upload(channel, flags) {
@@ -21055,14 +21055,15 @@ class Charmcraft {
             // however, we expect charmcraft pack to always output one charm file.
             const globber = yield glob.create('./*.charm');
             const paths = yield globber.glob();
-            const result = yield (0, exec_1.getExecOutput)('charmcraft', [
+            const args = [
                 'upload',
                 '--quiet',
                 '--release',
                 channel,
                 paths[0],
                 ...flags,
-            ]);
+            ];
+            const result = yield (0, exec_1.getExecOutput)('charmcraft', args, this.execOptions);
             const newRevision = result.stdout.split(' ')[1];
             return newRevision;
         });
@@ -21070,7 +21071,8 @@ class Charmcraft {
     hasDriftingLibs() {
         return __awaiter(this, void 0, void 0, function* () {
             const { name } = this.metadata();
-            const result = yield (0, exec_1.getExecOutput)('charmcraft', ['fetch-lib']);
+            const args = ['fetch-lib'];
+            const result = yield (0, exec_1.getExecOutput)('charmcraft', args, this.execOptions);
             const re = new RegExp(`${name}`);
             const lines = result.stderr
                 .concat(result.stdout)
