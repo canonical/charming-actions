@@ -35,11 +35,11 @@ that the PR can be tested.
 
 The Charmhub channel/branch selection logic looks like this:
 
-| Event Type   | Head                   | Base/Branch          | Channel                           |
-|:------------:|:----------------------:|:--------------------:|:---------------------------------:|
-| push         |                        | `<default branch>`   | `latest/edge`                     |
-| push         |                        | `track/<track-name>` | `<track-name>/edge`               |
-| push         |                        | Any other name       | Ignored                           |
-| pull_request | `branch/<branch-name>` | `<default branch>`   | `latest/edge/<branch-name>`       |
-| pull_request | `branch/<branch-name>` | `track/<track-name>` | `<track-name>/edge/<branch-name>` |
-| pull_request | Any other name         | Any other name       | Ignored                           |
+| Event Type   | Head            | Base/Branch          | Channel                           |
+|:------------:|:---------------:|:--------------------:|:---------------------------------:|
+| push         |                 | `<default branch>`   | `latest/edge`                     |
+| push         |                 | `track/<track-name>` | `<track-name>/edge`               |
+| push         |                 | Any other name       | Ignored                           |
+| pull_request | `<branch-name>` | `<default branch>`   | `latest/edge/<branch-name>`       |
+| pull_request | `<branch-name>` | `track/<track-name>` | `<track-name>/edge/<branch-name>` |
+| pull_request | Any other name  | Any other name       | Ignored                           |

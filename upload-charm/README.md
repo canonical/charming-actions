@@ -1,6 +1,6 @@
 # canonical/charming-actions/upload-charm
 
-This action is used to upload a bundle to charmhub.io.
+This action is used to upload a charm to charmhub.io.
 
 ## Usage
 

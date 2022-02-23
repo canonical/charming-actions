@@ -9,14 +9,6 @@ of the following actions:
 - [canonical/charming-actions/upload-charm](upload-charm/README.md)
 - [canonical/charming-actions/upload-bundle](upload-bundle/README.md)
 
-# charmhub-upload
-
-This action allows you to easily upload a charmed operator or bundle of charmed operators to
-[charmhub.io][charmhub].
-
-[charmhub]: https://charmhub.io/
-
-
 ## Usage
 
 > #### ⚠️ Prerequisites
@@ -40,7 +32,7 @@ on:
 
 jobs:
   build:
-    name: Check libraries
+    name: Release to edge
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -62,10 +54,6 @@ jobs:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
           upload-image: "true"
           channel: "${{ steps.channel.outputs.name }}"
-      - name: Upload to edge channel
-        uses: canonical/charmhub-upload-action@0.2.0
-        with:
-          credentials: "${{ secrets.CHARMHUB_TOKEN }}"
 ```
 
 ## Development
