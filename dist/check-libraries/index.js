@@ -20729,8 +20729,8 @@ to your PR branch.
     run() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const status = yield this.charmcraft.hasDriftingLibs();
                 process.chdir(this.charmPath);
+                const status = yield this.charmcraft.hasDriftingLibs();
                 // we do this using includes to catch both `pull_request` and `pull_request_target`
                 if (!status.ok && this.shouldPostComment) {
                     this.github.rest.issues.createComment({

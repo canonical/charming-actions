@@ -34,8 +34,8 @@ export class CheckLibrariesAction {
 
   async run() {
     try {
-      const status = await this.charmcraft.hasDriftingLibs();
       process.chdir(this.charmPath!);
+      const status = await this.charmcraft.hasDriftingLibs();
       // we do this using includes to catch both `pull_request` and `pull_request_target`
       if (!status.ok && this.shouldPostComment) {
         this.github.rest.issues.createComment({
