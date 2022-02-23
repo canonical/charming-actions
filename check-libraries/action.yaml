@@ -1,0 +1,42 @@
+name: Charmhub Library Checker
+author: Simon Aronsson
+description: |
+  Check whether charmhub libraries are up to date with their remote counterparts.
+
+branding:
+  icon: eye
+  color: orange
+
+runs:
+  using: node12
+  main: ../dist/check-libraries/index.js
+
+inputs:
+  charm-path:
+    default: "."
+    description: >
+      Path to the charm we want to fetch libs for. Defaults to the current working directory.
+  credentials:
+    required: true
+    description: >
+      Charmhub token used to fetch remote libraries through charmcraft
+  github-token:
+    required: true
+    description: >
+      GitHub token used to post to the pull request that is being checked.
+  comment-on-pr:
+    required: false
+    default: true
+    description: >
+      Whether to post a warning as a comment when drift is detected as part of checking a PR.
+  fail-build:
+    required: false
+    default: false
+    description: >
+      Whether to fail the entire build if there are any drift between the libraries
+      checked in and their remote counterparts.
+  charmcraft-channel:
+    required: false
+    default: 'latest/edge'
+    description: |
+      Snap channel to use when installing charmcraft

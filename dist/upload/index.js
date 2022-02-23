@@ -8684,6 +8684,20 @@ var isArray = Array.isArray || function (xs) {
 
 /***/ }),
 
+/***/ 7401:
+/***/ (function(module) {
+
+!function(t,e){ true?module.exports=e():0}(this,(function(){"use strict";var t=1e3,e=6e4,n=36e5,r="millisecond",i="second",s="minute",u="hour",a="day",o="week",f="month",h="quarter",c="year",d="date",$="Invalid Date",l=/^(\d{4})[-/]?(\d{1,2})?[-/]?(\d{0,2})[Tt\s]*(\d{1,2})?:?(\d{1,2})?:?(\d{1,2})?[.:]?(\d+)?$/,y=/\[([^\]]+)]|Y{1,4}|M{1,4}|D{1,2}|d{1,4}|H{1,2}|h{1,2}|a|A|m{1,2}|s{1,2}|Z{1,2}|SSS/g,M={name:"en",weekdays:"Sunday_Monday_Tuesday_Wednesday_Thursday_Friday_Saturday".split("_"),months:"January_February_March_April_May_June_July_August_September_October_November_December".split("_")},m=function(t,e,n){var r=String(t);return!r||r.length>=e?t:""+Array(e+1-r.length).join(n)+t},g={s:m,z:function(t){var e=-t.utcOffset(),n=Math.abs(e),r=Math.floor(n/60),i=n%60;return(e<=0?"+":"-")+m(r,2,"0")+":"+m(i,2,"0")},m:function t(e,n){if(e.date()<n.date())return-t(n,e);var r=12*(n.year()-e.year())+(n.month()-e.month()),i=e.clone().add(r,f),s=n-i<0,u=e.clone().add(r+(s?-1:1),f);return+(-(r+(n-i)/(s?i-u:u-i))||0)},a:function(t){return t<0?Math.ceil(t)||0:Math.floor(t)},p:function(t){return{M:f,y:c,w:o,d:a,D:d,h:u,m:s,s:i,ms:r,Q:h}[t]||String(t||"").toLowerCase().replace(/s$/,"")},u:function(t){return void 0===t}},D="en",v={};v[D]=M;var p=function(t){return t instanceof _},S=function(t,e,n){var r;if(!t)return D;if("string"==typeof t)v[t]&&(r=t),e&&(v[t]=e,r=t);else{var i=t.name;v[i]=t,r=i}return!n&&r&&(D=r),r||!n&&D},w=function(t,e){if(p(t))return t.clone();var n="object"==typeof e?e:{};return n.date=t,n.args=arguments,new _(n)},O=g;O.l=S,O.i=p,O.w=function(t,e){return w(t,{locale:e.$L,utc:e.$u,x:e.$x,$offset:e.$offset})};var _=function(){function M(t){this.$L=S(t.locale,null,!0),this.parse(t)}var m=M.prototype;return m.parse=function(t){this.$d=function(t){var e=t.date,n=t.utc;if(null===e)return new Date(NaN);if(O.u(e))return new Date;if(e instanceof Date)return new Date(e);if("string"==typeof e&&!/Z$/i.test(e)){var r=e.match(l);if(r){var i=r[2]-1||0,s=(r[7]||"0").substring(0,3);return n?new Date(Date.UTC(r[1],i,r[3]||1,r[4]||0,r[5]||0,r[6]||0,s)):new Date(r[1],i,r[3]||1,r[4]||0,r[5]||0,r[6]||0,s)}}return new Date(e)}(t),this.$x=t.x||{},this.init()},m.init=function(){var t=this.$d;this.$y=t.getFullYear(),this.$M=t.getMonth(),this.$D=t.getDate(),this.$W=t.getDay(),this.$H=t.getHours(),this.$m=t.getMinutes(),this.$s=t.getSeconds(),this.$ms=t.getMilliseconds()},m.$utils=function(){return O},m.isValid=function(){return!(this.$d.toString()===$)},m.isSame=function(t,e){var n=w(t);return this.startOf(e)<=n&&n<=this.endOf(e)},m.isAfter=function(t,e){return w(t)<this.startOf(e)},m.isBefore=function(t,e){return this.endOf(e)<w(t)},m.$g=function(t,e,n){return O.u(t)?this[e]:this.set(n,t)},m.unix=function(){return Math.floor(this.valueOf()/1e3)},m.valueOf=function(){return this.$d.getTime()},m.startOf=function(t,e){var n=this,r=!!O.u(e)||e,h=O.p(t),$=function(t,e){var i=O.w(n.$u?Date.UTC(n.$y,e,t):new Date(n.$y,e,t),n);return r?i:i.endOf(a)},l=function(t,e){return O.w(n.toDate()[t].apply(n.toDate("s"),(r?[0,0,0,0]:[23,59,59,999]).slice(e)),n)},y=this.$W,M=this.$M,m=this.$D,g="set"+(this.$u?"UTC":"");switch(h){case c:return r?$(1,0):$(31,11);case f:return r?$(1,M):$(0,M+1);case o:var D=this.$locale().weekStart||0,v=(y<D?y+7:y)-D;return $(r?m-v:m+(6-v),M);case a:case d:return l(g+"Hours",0);case u:return l(g+"Minutes",1);case s:return l(g+"Seconds",2);case i:return l(g+"Milliseconds",3);default:return this.clone()}},m.endOf=function(t){return this.startOf(t,!1)},m.$set=function(t,e){var n,o=O.p(t),h="set"+(this.$u?"UTC":""),$=(n={},n[a]=h+"Date",n[d]=h+"Date",n[f]=h+"Month",n[c]=h+"FullYear",n[u]=h+"Hours",n[s]=h+"Minutes",n[i]=h+"Seconds",n[r]=h+"Milliseconds",n)[o],l=o===a?this.$D+(e-this.$W):e;if(o===f||o===c){var y=this.clone().set(d,1);y.$d[$](l),y.init(),this.$d=y.set(d,Math.min(this.$D,y.daysInMonth())).$d}else $&&this.$d[$](l);return this.init(),this},m.set=function(t,e){return this.clone().$set(t,e)},m.get=function(t){return this[O.p(t)]()},m.add=function(r,h){var d,$=this;r=Number(r);var l=O.p(h),y=function(t){var e=w($);return O.w(e.date(e.date()+Math.round(t*r)),$)};if(l===f)return this.set(f,this.$M+r);if(l===c)return this.set(c,this.$y+r);if(l===a)return y(1);if(l===o)return y(7);var M=(d={},d[s]=e,d[u]=n,d[i]=t,d)[l]||1,m=this.$d.getTime()+r*M;return O.w(m,this)},m.subtract=function(t,e){return this.add(-1*t,e)},m.format=function(t){var e=this,n=this.$locale();if(!this.isValid())return n.invalidDate||$;var r=t||"YYYY-MM-DDTHH:mm:ssZ",i=O.z(this),s=this.$H,u=this.$m,a=this.$M,o=n.weekdays,f=n.months,h=function(t,n,i,s){return t&&(t[n]||t(e,r))||i[n].substr(0,s)},c=function(t){return O.s(s%12||12,t,"0")},d=n.meridiem||function(t,e,n){var r=t<12?"AM":"PM";return n?r.toLowerCase():r},l={YY:String(this.$y).slice(-2),YYYY:this.$y,M:a+1,MM:O.s(a+1,2,"0"),MMM:h(n.monthsShort,a,f,3),MMMM:h(f,a),D:this.$D,DD:O.s(this.$D,2,"0"),d:String(this.$W),dd:h(n.weekdaysMin,this.$W,o,2),ddd:h(n.weekdaysShort,this.$W,o,3),dddd:o[this.$W],H:String(s),HH:O.s(s,2,"0"),h:c(1),hh:c(2),a:d(s,u,!0),A:d(s,u,!1),m:String(u),mm:O.s(u,2,"0"),s:String(this.$s),ss:O.s(this.$s,2,"0"),SSS:O.s(this.$ms,3,"0"),Z:i};return r.replace(y,(function(t,e){return e||l[t]||i.replace(":","")}))},m.utcOffset=function(){return 15*-Math.round(this.$d.getTimezoneOffset()/15)},m.diff=function(r,d,$){var l,y=O.p(d),M=w(r),m=(M.utcOffset()-this.utcOffset())*e,g=this-M,D=O.m(this,M);return D=(l={},l[c]=D/12,l[f]=D,l[h]=D/3,l[o]=(g-m)/6048e5,l[a]=(g-m)/864e5,l[u]=g/n,l[s]=g/e,l[i]=g/t,l)[y]||g,$?D:O.a(D)},m.daysInMonth=function(){return this.endOf(f).$D},m.$locale=function(){return v[this.$L]},m.locale=function(t,e){if(!t)return this.$L;var n=this.clone(),r=S(t,e,!0);return r&&(n.$L=r),n},m.clone=function(){return O.w(this.$d,this)},m.toDate=function(){return new Date(this.valueOf())},m.toJSON=function(){return this.isValid()?this.toISOString():null},m.toISOString=function(){return this.$d.toISOString()},m.toString=function(){return this.$d.toUTCString()},M}(),b=_.prototype;return w.prototype=b,[["$ms",r],["$s",i],["$m",s],["$H",u],["$W",a],["$M",f],["$y",c],["$D",d]].forEach((function(t){b[t[1]]=function(e){return this.$g(e,t[0],t[1])}})),w.extend=function(t,e){return t.$i||(t(e,_,w),t.$i=!0),w},w.locale=S,w.isDayjs=p,w.unix=function(t){return w(1e3*t)},w.en=v[D],w.Ls=v,w.p={},w}));
+
+/***/ }),
+
+/***/ 4359:
+/***/ (function(module) {
+
+!function(t,i){ true?module.exports=i():0}(this,(function(){"use strict";var t="minute",i=/[+-]\d\d(?::?\d\d)?/g,e=/([+-]|\d\d)/g;return function(s,f,n){var u=f.prototype;n.utc=function(t){var i={date:t,utc:!0,args:arguments};return new f(i)},u.utc=function(i){var e=n(this.toDate(),{locale:this.$L,utc:!0});return i?e.add(this.utcOffset(),t):e},u.local=function(){return n(this.toDate(),{locale:this.$L,utc:!1})};var o=u.parse;u.parse=function(t){t.utc&&(this.$u=!0),this.$utils().u(t.$offset)||(this.$offset=t.$offset),o.call(this,t)};var r=u.init;u.init=function(){if(this.$u){var t=this.$d;this.$y=t.getUTCFullYear(),this.$M=t.getUTCMonth(),this.$D=t.getUTCDate(),this.$W=t.getUTCDay(),this.$H=t.getUTCHours(),this.$m=t.getUTCMinutes(),this.$s=t.getUTCSeconds(),this.$ms=t.getUTCMilliseconds()}else r.call(this)};var a=u.utcOffset;u.utcOffset=function(s,f){var n=this.$utils().u;if(n(s))return this.$u?0:n(this.$offset)?a.call(this):this.$offset;if("string"==typeof s&&null===(s=function(t){void 0===t&&(t="");var s=t.match(i);if(!s)return null;var f=(""+s[0]).match(e)||["-",0,0],n=f[0],u=60*+f[1]+ +f[2];return 0===u?0:"+"===n?u:-u}(s)))return this;var u=Math.abs(s)<=16?60*s:s,o=this;if(f)return o.$offset=u,o.$u=0===s,o;if(0!==s){var r=this.$u?this.toDate().getTimezoneOffset():-1*this.utcOffset();(o=this.local().add(u+r,t)).$offset=u,o.$x.$localOffset=r}else o=this.utc();return o};var h=u.format;u.format=function(t){var i=t||(this.$u?"YYYY-MM-DDTHH:mm:ss[Z]":"");return h.call(this,i)},u.valueOf=function(){var t=this.$utils().u(this.$offset)?0:this.$offset+(this.$x.$localOffset||(new Date).getTimezoneOffset());return this.$d.valueOf()-6e4*t},u.isUTC=function(){return!!this.$u},u.toISOString=function(){return this.toDate().toISOString()},u.toString=function(){return this.toDate().toUTCString()};var l=u.toDate;u.toDate=function(t){return"s"===t&&this.$offset?n(this.format("YYYY-MM-DD HH:mm:ss:SSS")).toDate():l.call(this)};var c=u.diff;u.diff=function(t,i,e){if(t&&this.$u===t.$u)return c.call(this,t,i,e);var s=this.local(),f=n(t).local();return c.call(s,f,i,e)}}}));
+
+/***/ }),
+
 /***/ 8932:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -17228,9 +17242,17 @@ AbortError.prototype = Object.create(Error.prototype);
 AbortError.prototype.constructor = AbortError;
 AbortError.prototype.name = 'AbortError';
 
+const URL$1 = Url.URL || whatwgUrl.URL;
+
 // fix an issue where "PassThrough", "resolve" aren't a named export for node <10
 const PassThrough$1 = Stream.PassThrough;
-const resolve_url = Url.resolve;
+
+const isDomainOrSubdomain = function isDomainOrSubdomain(destination, original) {
+	const orig = new URL$1(original).hostname;
+	const dest = new URL$1(destination).hostname;
+
+	return orig === dest || orig[orig.length - dest.length - 1] === '.' && orig.endsWith(dest);
+};
 
 /**
  * Fetch function
@@ -17318,7 +17340,19 @@ function fetch(url, opts) {
 				const location = headers.get('Location');
 
 				// HTTP fetch step 5.3
-				const locationURL = location === null ? null : resolve_url(request.url, location);
+				let locationURL = null;
+				try {
+					locationURL = location === null ? null : new URL$1(location, request.url).toString();
+				} catch (err) {
+					// error here can only be invalid URL in Location: header
+					// do not throw when options.redirect == manual
+					// let the user extract the errorneous redirect URL
+					if (request.redirect !== 'manual') {
+						reject(new FetchError(`uri requested responds with an invalid redirect URL: ${location}`, 'invalid-redirect'));
+						finalize();
+						return;
+					}
+				}
 
 				// HTTP fetch step 5.5
 				switch (request.redirect) {
@@ -17365,6 +17399,12 @@ function fetch(url, opts) {
 							timeout: request.timeout,
 							size: request.size
 						};
+
+						if (!isDomainOrSubdomain(request.url, locationURL)) {
+							for (const name of ['authorization', 'www-authenticate', 'cookie', 'cookie2']) {
+								requestOpts.headers.delete(name);
+							}
+						}
 
 						// HTTP-redirect fetch step 9
 						if (res.statusCode !== 303 && request.body && getTotalBytes(request) === null) {
@@ -21284,6 +21324,559 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
+/***/ 9474:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core = __importStar(__nccwpck_require__(2186));
+const process = __importStar(__nccwpck_require__(7282));
+const tagging_1 = __nccwpck_require__(1021);
+const snap_1 = __nccwpck_require__(9885);
+const charmcraft_1 = __nccwpck_require__(8709);
+const bundle_1 = __nccwpck_require__(2873);
+const artifact_1 = __nccwpck_require__(1166);
+class UploadAction {
+    constructor() {
+        this.bundlePath = core.getInput('bundle-path');
+        this.channel = core.getInput('channel');
+        this.charmcraftChannel = core.getInput('charmcraft-channel');
+        this.charmPath = core.getInput('charm-path');
+        this.tagPrefix = core.getInput('tag-prefix');
+        this.token = core.getInput('github-token');
+        if (!this.token) {
+            throw new Error(`Input 'github-token' is missing, and not provided in environment`);
+        }
+        this.artifacts = new artifact_1.Artifact();
+        this.snap = new snap_1.Snap();
+        this.tagger = new tagging_1.Tagger(this.token);
+    }
+    run() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                yield this.snap.install('charmcraft', this.charmcraftChannel);
+                if (this.bundlePath) {
+                    yield this.uploadBundle();
+                }
+                else {
+                    yield this.uploadCharm();
+                }
+            }
+            catch (error) {
+                core.setFailed(error.message);
+                core.error(error.stack);
+            }
+            const result = yield this.artifacts.uploadLogs();
+            core.info(result);
+        });
+    }
+    uploadBundle() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.snap.install('juju-bundle');
+            yield new bundle_1.Bundle().publish(this.bundlePath, this.channel);
+        });
+    }
+    uploadCharm() {
+        return __awaiter(this, void 0, void 0, function* () {
+            process.chdir(this.charmPath);
+            const charmcraft = new charmcraft_1.Charmcraft();
+            yield charmcraft.pack();
+            const { flags, resourceInfo } = yield charmcraft.uploadResources();
+            const rev = yield charmcraft.upload(this.channel, flags);
+            yield this.tagger.tag(rev, this.channel, resourceInfo, this.tagPrefix);
+        });
+    }
+}
+(() => __awaiter(void 0, void 0, void 0, function* () {
+    yield new UploadAction().run();
+}))();
+
+
+/***/ }),
+
+/***/ 9829:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Artifact = void 0;
+const artifact = __importStar(__nccwpck_require__(2605));
+const fs = __importStar(__nccwpck_require__(7147));
+const glob = __importStar(__nccwpck_require__(8090));
+class Artifact {
+    uploadLogs() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const basePath = '/home/runner/snap/charmcraft/common/cache/charmcraft/log';
+            if (!fs.existsSync(basePath)) {
+                return 'No charmcraft logs generated, skipping artifact upload.';
+            }
+            const globber = yield glob.create(`${basePath}/*.log`);
+            const files = yield globber.glob();
+            const artifacts = artifact.create();
+            const result = yield artifacts.uploadArtifact('charmcraft-logs', files, basePath);
+            return `Artifact upload result: ${JSON.stringify(result)}`;
+        });
+    }
+}
+exports.Artifact = Artifact;
+
+
+/***/ }),
+
+/***/ 1166:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__nccwpck_require__(9829), exports);
+
+
+/***/ }),
+
+/***/ 363:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Bundle = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const exec = __importStar(__nccwpck_require__(1514));
+class Bundle {
+    publish(path, channel) {
+        return __awaiter(this, void 0, void 0, function* () {
+            core.exportVariable('CHARMCRAFT_AUTH', core.getInput('credentials'));
+            process.chdir(path);
+            yield exec.exec('juju-bundle', [
+                'publish',
+                '--destructive-mode',
+                '--serial',
+                '--release',
+                channel,
+            ]);
+        });
+    }
+}
+exports.Bundle = Bundle;
+
+
+/***/ }),
+
+/***/ 2873:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__nccwpck_require__(363), exports);
+
+
+/***/ }),
+
+/***/ 4116:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Charmcraft = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const exec = __importStar(__nccwpck_require__(1514));
+const glob = __importStar(__nccwpck_require__(8090));
+const fs = __importStar(__nccwpck_require__(7147));
+const yaml = __importStar(__nccwpck_require__(1917));
+/* eslint-disable camelcase */
+class Charmcraft {
+    constructor() {
+        this.uploadImage = core.getInput('upload-image').toLowerCase() === 'true';
+        core.exportVariable('CHARMCRAFT_AUTH', core.getInput('credentials'));
+    }
+    uploadResources() {
+        return __awaiter(this, void 0, void 0, function* () {
+            let resourceInfo = 'resources:\n';
+            if (!this.uploadImage) {
+                const msg = `No resources where uploaded as part of this build.\n` +
+                    `If you wish to upload the OCI image, set 'upload-image' to 'true'`;
+                core.warning(msg);
+                return { flags: [''], resourceInfo: '' };
+            }
+            const { name, images } = this.metadata();
+            const flags = yield Promise.all(images.map(([resource_name, resource_image]) => __awaiter(this, void 0, void 0, function* () {
+                yield this.uploadResource(resource_image, name, resource_name);
+                const { flag, info } = yield this.buildResourceFlag(name, resource_name, resource_image);
+                resourceInfo += info;
+                return flag;
+            })));
+            return { flags, resourceInfo };
+        });
+    }
+    uploadResource(resource_image, name, resource_name) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const pullExitCode = yield exec.exec('docker', ['pull', resource_image]);
+            if (pullExitCode !== 0) {
+                throw new Error('Could not pull the docker image.');
+            }
+            yield exec.exec('charmcraft', [
+                'upload-resource',
+                '--quiet',
+                name,
+                resource_name,
+                '--image',
+                resource_image,
+            ]);
+        });
+    }
+    buildResourceFlag(name, resource_name, resource_image) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const result = yield exec.getExecOutput('charmcraft', [
+                'resource-revisions',
+                name,
+                resource_name,
+            ]);
+            /*
+            ❯ charmcraft resource-revisions prometheus-k8s prometheus-image
+              Revision    Created at    Size
+              1           2021-07-19    512B
+              ^-- This value
+            */
+            const revision = result.stdout.split('\n')[1].split(' ')[0];
+            return {
+                flag: `--resource=${resource_name}:${revision}`,
+                info: `    -  ${resource_name}: ${resource_image}\n` +
+                    `       resource-revision: ${revision}\n`,
+            };
+        });
+    }
+    metadata() {
+        const buff = fs.readFileSync('metadata.yaml');
+        const metadata = yaml.load(buff.toString());
+        const charmName = metadata.name;
+        const images = Object.entries(metadata.resources || {})
+            .filter(([, res]) => res.type === 'oci-image')
+            .map(([name, res]) => [name, res['upstream-source']]);
+        return { images, name: charmName };
+    }
+    pack() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield exec.exec('charmcraft', ['pack', '--destructive-mode', '--quiet']);
+        });
+    }
+    upload(channel, flags) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // as we don't know the name of the name of the charm file output, we'll need to glob for it.
+            // however, we expect charmcraft pack to always output one charm file.
+            const globber = yield glob.create('./*.charm');
+            const paths = yield globber.glob();
+            const result = yield exec.getExecOutput('charmcraft', [
+                'upload',
+                '--quiet',
+                '--release',
+                channel,
+                paths[0],
+                ...flags,
+            ]);
+            const newRevision = result.stdout.split(' ')[1];
+            return newRevision;
+        });
+    }
+}
+exports.Charmcraft = Charmcraft;
+
+
+/***/ }),
+
+/***/ 8709:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__nccwpck_require__(4116), exports);
+
+
+/***/ }),
+
+/***/ 9885:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__nccwpck_require__(1785), exports);
+
+
+/***/ }),
+
+/***/ 1785:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Snap = void 0;
+const exec_1 = __nccwpck_require__(1514);
+class Snap {
+    install(snap, channel) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield (0, exec_1.exec)('sudo', [
+                'snap',
+                'install',
+                snap,
+                '--classic',
+                ...(channel ? ['--channel', channel] : []),
+            ]);
+        });
+    }
+}
+exports.Snap = Snap;
+
+
+/***/ }),
+
+/***/ 1021:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__nccwpck_require__(9434), exports);
+
+
+/***/ }),
+
+/***/ 9434:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Tagger = void 0;
+const github_1 = __nccwpck_require__(5438);
+const utc_1 = __importDefault(__nccwpck_require__(4359));
+const dayjs_1 = __importDefault(__nccwpck_require__(7401));
+dayjs_1.default.extend(utc_1.default);
+class Tagger {
+    constructor(token) {
+        this.kit = (0, github_1.getOctokit)(token);
+    }
+    tag(revision, channel, resources, tagPrefix) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { owner, repo } = github_1.context.repo;
+            const content = this._build(owner, repo, process.env['GITHUB_SHA'], revision, channel, resources, tagPrefix);
+            yield this.kit.rest.repos.createRelease(content);
+        });
+    }
+    _build(owner, repo, hash, revision, channel, resources, tagPrefix) {
+        const name = `${tagPrefix ? `${tagPrefix}-` : ''}rev${revision}`;
+        const message = `${resources} Released to '${channel}' at ${this._get_date_text()}`;
+        return {
+            owner,
+            repo,
+            name: `Revision ${revision}`,
+            tag_name: name,
+            body: message,
+            draft: false,
+            prerelease: false,
+            generate_release_notes: true,
+            target_commitish: hash,
+        };
+    }
+    _get_date_text() {
+        // 12:00 UTC on 10 Feb 2022
+        return (0, dayjs_1.default)().utc().format('HH:mm UTC on D MMM YYYY');
+    }
+}
+exports.Tagger = Tagger;
+
+
+/***/ }),
+
 /***/ 2877:
 /***/ ((module) => {
 
@@ -21498,185 +22091,12 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
 /******/ 	
 /************************************************************************/
-var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be in strict mode.
-(() => {
-"use strict";
-
-
-const artifact = __nccwpck_require__(2605);
-const core = __nccwpck_require__(2186);
-const exec = __nccwpck_require__(1514);
-const fs = __nccwpck_require__(7147);
-const github = __nccwpck_require__(5438);
-const glob = __nccwpck_require__(8090);
-const process = __nccwpck_require__(7282);
-const yaml = __nccwpck_require__(1917);
-
-(async () => {
-  try {
-    const credentials = core.getInput('credentials');
-    const charm_path = core.getInput('charm-path');
-    const bundle_path = core.getInput('bundle-path');
-    const charmcraft_channel = core.getInput('charmcraft-channel');
-    let upload_image = core.getInput('upload-image');
-    if (!['false', 'true'].includes(upload_image.toLowerCase())) {
-      core.error(
-        `Valid values for upload-image are 'true', 'false'. Got ${upload_image}`
-      );
-      return;
-    }
-    upload_image = upload_image.toLowerCase() == 'true';
-
-    await exec.exec('sudo', [
-      'snap',
-      'install',
-      'charmcraft',
-      '--classic',
-      '--channel',
-      charmcraft_channel,
-    ]);
-
-    if (bundle_path) {
-      await exec.exec('sudo', ['snap', 'install', 'juju-bundle', '--classic']);
-    }
-
-    core.exportVariable('CHARMCRAFT_AUTH', credentials);
-
-    const ctx = github.context;
-    const event = ctx.eventName;
-
-    let channel;
-
-    if (event == 'push') {
-      if (ctx.ref.startsWith('refs/heads/')) {
-        let branch = ctx.ref.replace('refs/heads/', '');
-
-        if (branch == ctx.payload.repository.master_branch) {
-          channel = 'latest/edge';
-        } else if (branch.startsWith('track/')) {
-          channel = branch.replace('track/', '') + '/edge';
-        } else {
-          core.notice(`Unhandled branch name ${ctx.ref}`);
-          return;
-        }
-      } else {
-        core.setFailed(`Unknown type of ref: ${github.context.ref}`);
-        return;
-      }
-    } else if (event == 'pull_request') {
-      const base_ref = ctx.payload.pull_request.base.ref;
-      const head_ref = ctx.payload.pull_request.head.ref;
-
-      if (head_ref.startsWith('branch/')) {
-        const branch = head_ref.replace('branch/', '');
-
-        if (base_ref == ctx.payload.pull_request.base.repo.default_branch) {
-          channel = `latest/edge/${branch}`;
-        } else if (base_ref.startsWith('track/')) {
-          const track = base_ref.replace('track/', '');
-          channel = `${track}/edge/${branch}`;
-        } else {
-          core.setFailed(`Unhandled PR base name ${base_ref}`);
-          return;
-        }
-      } else {
-        core.notice(`Unhandled branch name: ${head_ref}`);
-        return;
-      }
-    } else {
-      core.setFailed(`Unknown eventType ${event}.`);
-      return;
-    }
-
-    // Publish a bundle or a charm, depending on if `bundle_path` or `charm_path` was set
-    if (bundle_path) {
-      process.chdir(bundle_path);
-      await exec.exec('juju-bundle', [
-        'publish',
-        '--destructive-mode',
-        '--serial',
-        '--release',
-        channel,
-      ]);
-    } else {
-      process.chdir(charm_path);
-      const metadata = yaml.load(fs.readFileSync('metadata.yaml'));
-
-      const name = metadata.name;
-      const images = Object.entries(metadata.resources || {})
-        .filter(([_, res]) => res.type === 'oci-image')
-        .map(([name, res]) => [name, res['upstream-source']]);
-
-      await exec.exec('charmcraft', ['pack', '--destructive-mode', '--quiet']);
-
-      const revisions = await Promise.all(
-        images.map(async ([resource_name, resource_image]) => {
-          if (upload_image) {
-            await exec.exec('docker', ['pull', resource_image]);
-            await exec.exec('charmcraft', [
-              'upload-resource',
-              '--quiet',
-              name,
-              resource_name,
-              '--image',
-              resource_image,
-            ]);
-          } else {
-            core.warning(
-              "No resources where uploaded as part of this build. \
-              If you wish to upload the OCI image, set 'upload-image' to 'true'"
-            );
-          }
-          let result = await exec.getExecOutput('charmcraft', [
-            'resource-revisions',
-            name,
-            resource_name,
-          ]);
-          let revision = result.stdout.split('\n')[1].split(' ')[0];
-
-          return `--resource=${resource_name}:${revision}`;
-        })
-      );
-
-      const globber = await glob.create('./*.charm');
-      const paths = await globber.glob();
-
-      await Promise.all(
-        paths.map((path) =>
-          exec.exec(
-            'charmcraft',
-            ['upload', '--quiet', '--release', channel, path].concat(revisions)
-          )
-        )
-      );
-    }
-  } catch (error) {
-    core.setFailed(error.message);
-    core.error(error.stack);
-  } finally {
-    const root = '/home/runner/snap/charmcraft/common/cache/charmcraft/log/';
-
-    if (!fs.existsSync(root)) {
-      core.info('No charmcraft logs generated, skipping artifact upload.');
-      return;
-    }
-
-    const globber = await glob.create(root + '*.log');
-    const files = await globber.glob();
-    const artifactClient = artifact.create();
-
-    const result = await artifactClient.uploadArtifact(
-      'charmcraft-logs',
-      files,
-      root
-    );
-    core.info(`Artifact upload result: ${JSON.stringify(result)}`);
-  }
-})();
-
-})();
-
-module.exports = __webpack_exports__;
+/******/ 	
+/******/ 	// startup
+/******/ 	// Load entry module and return exports
+/******/ 	// This entry module is referenced by other modules so it can't be inlined
+/******/ 	var __webpack_exports__ = __nccwpck_require__(9474);
+/******/ 	module.exports = __webpack_exports__;
+/******/ 	
 /******/ })()
 ;

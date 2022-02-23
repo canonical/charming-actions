@@ -1,12 +1,21 @@
 {
   "name": "charmhub-upload-action",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Uploads a charm to charmhub.io",
   "main": "main.js",
   "author": "Kenneth Koski <kenneth.koski@canonical.com>",
   "license": "GPL-3.0-only",
   "scripts": {
-    "build": "ncc build main.js"
+    "build": "npm run build:upload-charm && npm run build:upload-bundle && npm run build:channel && npm run build:check-libraries",
+    "build:upload-bundle": "ncc build src/entries/upload-bundle.ts -o dist/upload-bundle",
+    "build:upload-charm": "ncc build src/entries/upload-charm.ts -o dist/upload-charm",
+    "build:channel": "ncc build src/entries/channel.ts -o dist/channel",
+    "build:check-libraries": "ncc build src/entries/check-libraries.ts -o dist/check-libraries",
+    "test": "jest",
+    "lint": "eslint ./src --ext .js,.ts",
+    "format": "prettier ./src -c",
+    "format:fix": "prettier ./src -w",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@actions/artifact": "^0.2.0",
@@ -14,9 +23,27 @@
     "@actions/exec": "^1.1.0",
     "@actions/github": "^5.0.0",
     "@actions/glob": "^0.2.0",
+    "dayjs": "^1.10.7",
+    "dayjs-plugin-utc": "^0.1.2",
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {
-    "@vercel/ncc": "^0.32.0"
+    "@octokit/types": "^6.34.0",
+    "@types/jest": "^27.4.0",
+    "@types/js-yaml": "^4.0.5",
+    "@typescript-eslint/eslint-plugin": "^5.12.0",
+    "@typescript-eslint/parser": "^5.12.0",
+    "@vercel/ncc": "^0.32.0",
+    "eslint": "^8.9.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^16.1.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.25.4",
+    "eslint-plugin-jest": "^26.1.1",
+    "husky": "^7.0.4",
+    "jest": "^27.5.1",
+    "prettier": "^2.5.1",
+    "ts-jest": "^27.1.3",
+    "typescript": "^4.5.5"
   }
 }

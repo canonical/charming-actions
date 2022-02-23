@@ -1,0 +1,39 @@
+name: Charmhub Bundle Upload
+description: Uploads a bundle to charmhub.io
+author: Simon Aronsson
+inputs:
+  bundle-path:
+    description: |
+      Path to bundle.yaml
+    default: '.'
+    required: false
+  channel:
+    required: false
+    default: latest/edge
+    description: |
+      Channel to publish the bundle in
+  tag-prefix:
+    required: false
+    description: |
+      Tag prefix, useful when bundling multiple bundles in the same repo using a matrix.
+      Currently, tagging bundles is not supported, so this property is a noop.
+  charmcraft-channel:
+    required: false
+    default: 'latest/edge'
+    description: |
+      Snap channel to use when installing charmcraft
+  credentials:
+    required: true
+    description: |
+      Credentials exported from `charmcraft login --export`. See
+      https://juju.is/docs/sdk/remote-env-auth for more info
+  github-token:
+    required: true
+    description: |
+      Github Token needed for automatic tagging when publishing
+runs:
+  using: node12
+  main: ../dist/upload-bundle/index.js
+branding:
+  icon: upload-cloud
+  color: orange
