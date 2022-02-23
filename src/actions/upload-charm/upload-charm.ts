@@ -23,9 +23,7 @@ export class UploadCharmAction {
     this.token = core.getInput('github-token');
 
     if (!this.token) {
-      throw new Error(
-        `Input 'github-token' is missing, and not provided in environment`
-      );
+      throw new Error(`Input 'github-token' is missing`);
     }
     this.artifacts = new Artifact();
     this.snap = new Snap();

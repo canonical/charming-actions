@@ -21235,6 +21235,9 @@ class Tagger {
     tag(revision, channel, resources, tagPrefix) {
         return __awaiter(this, void 0, void 0, function* () {
             const { owner, repo } = github_1.context.repo;
+            if (github_1.context.eventName.includes('pull_request')) {
+                return;
+            }
             const content = this._build(owner, repo, process.env['GITHUB_SHA'], revision, channel, resources, tagPrefix);
             yield this.kit.rest.repos.createRelease(content);
         });

@@ -20718,7 +20718,7 @@ class UploadCharmAction {
         this.tagPrefix = core.getInput('tag-prefix');
         this.token = core.getInput('github-token');
         if (!this.token) {
-            throw new Error(`Input 'github-token' is missing, and not provided in environment`);
+            throw new Error(`Input 'github-token' is missing`);
         }
         this.artifacts = new services_1.Artifact();
         this.snap = new services_1.Snap();
@@ -21310,6 +21310,9 @@ class Tagger {
     tag(revision, channel, resources, tagPrefix) {
         return __awaiter(this, void 0, void 0, function* () {
             const { owner, repo } = github_1.context.repo;
+            if (github_1.context.eventName.includes('pull_request')) {
+                return;
+            }
             const content = this._build(owner, repo, process.env['GITHUB_SHA'], revision, channel, resources, tagPrefix);
             yield this.kit.rest.repos.createRelease(content);
         });
