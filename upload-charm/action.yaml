@@ -2,10 +2,6 @@ name: Charmhub Upload
 description: Uploads a charm to charmhub.io
 author: Kenneth Koski
 inputs:
-  bundle-path:
-    description: |
-      Path to bundle.yaml
-    required: false
   channel:
     required: false
     default: latest/edge
