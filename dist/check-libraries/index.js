@@ -20709,6 +20709,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CheckLibrariesAction = void 0;
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
+const fs = __importStar(__nccwpck_require__(7147));
 const exec = __importStar(__nccwpck_require__(1514));
 const services_1 = __nccwpck_require__(720);
 class CheckLibrariesAction {
@@ -20752,6 +20753,10 @@ to your PR branch.
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 process.chdir(this.charmPath);
+                if (!fs.existsSync('./lib')) {
+                    (0, core_1.warning)('No lib folder detected. Skipping action.');
+                    return;
+                }
                 yield this.snap.install('charmcraft', this.channel);
                 const status = yield this.charmcraft.hasDriftingLibs();
                 // we do this using includes to catch both `pull_request` and `pull_request_target`
