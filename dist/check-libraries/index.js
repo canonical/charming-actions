@@ -20677,6 +20677,25 @@ function wrappy (fn, cb) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -20690,6 +20709,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CheckLibrariesAction = void 0;
 const core_1 = __nccwpck_require__(2186);
 const github_1 = __nccwpck_require__(5438);
+const exec = __importStar(__nccwpck_require__(1514));
 const services_1 = __nccwpck_require__(720);
 class CheckLibrariesAction {
     constructor() {
@@ -20743,6 +20763,7 @@ to your PR branch.
                         body: this.getCommentBody(status),
                     });
                 }
+                yield exec.exec('git', ['checkout', 'HEAD', '--', 'lib']);
                 if (!status.ok && this.outcomes.fail) {
                     (0, core_1.setFailed)('Charmcraft libraries are not up to date.');
                 }
@@ -21344,7 +21365,7 @@ class Tagger {
     tag(revision, channel, resources, tagPrefix) {
         return __awaiter(this, void 0, void 0, function* () {
             const { owner, repo } = github_1.context.repo;
-            if (github_1.context.eventName.includes('pull_request')) {
+            if (github_1.context.eventName && github_1.context.eventName.includes('pull_request')) {
                 return;
             }
             const content = this._build(owner, repo, process.env['GITHUB_SHA'], revision, channel, resources, tagPrefix);

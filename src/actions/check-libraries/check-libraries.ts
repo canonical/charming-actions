@@ -3,6 +3,8 @@ import { context, getOctokit } from '@actions/github';
 import { Context } from '@actions/github/lib/context';
 import { GitHub } from '@actions/github/lib/utils';
 
+import * as exec from '@actions/exec';
+
 import { Charmcraft, LibStatus, Snap } from '../../services';
 import { Outcomes, Tokens } from '../../types';
 
@@ -51,6 +53,9 @@ export class CheckLibrariesAction {
           body: this.getCommentBody(status),
         });
       }
+
+      await exec.exec('git', ['checkout', 'HEAD', '--', 'lib']);
+
       if (!status.ok && this.outcomes.fail) {
         setFailed('Charmcraft libraries are not up to date.');
       }
