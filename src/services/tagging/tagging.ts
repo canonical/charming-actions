@@ -19,7 +19,7 @@ class Tagger {
     tagPrefix?: string
   ) {
     const { owner, repo } = context.repo;
-    if (context.eventName.includes('pull_request')) {
+    if (context.eventName?.includes('pull_request')) {
       return;
     }
     const content = this._build(
