@@ -37,13 +37,18 @@ class Charmcraft {
     const flags = await Promise.all(
       images.map(async ([resource_name, resource_image]) => {
         await this.uploadResource(resource_image, name, resource_name);
-        const { flag, info } = await this.buildResourceFlag(
+        const resourceFlag = await this.buildResourceFlag(
           name,
           resource_name,
           resource_image
         );
-        resourceInfo += info;
-        return flag;
+
+        if (resourceFlag) {
+          resourceInfo += resourceFlag.info;
+          return resourceFlag.flag;
+        }
+
+        return undefined;
       })
     );
     return { flags, resourceInfo };
@@ -84,11 +89,24 @@ class Charmcraft {
 
     /*
     ❯ charmcraft resource-revisions prometheus-k8s prometheus-image
-      Revision    Created at    Size                                                                                                                                                                                                                                                                
+      Revision    Created at    Size
       1           2021-07-19    512B
+      2           2022-01-20    1024B
       ^-- This value
     */
-    const revision = result.stdout.split('\n')[1].split(' ')[0];
+    const lines = result.stdout
+      .split('\n')
+      .filter((line) => line.length > 0 && !!line.trim());
+
+    // Discard headers
+    lines.shift();
+
+    if (!lines.length) {
+      return undefined;
+    }
+
+    const lastLine = lines[lines.length - 1];
+    const revision = lastLine.split(/\s+/).filter((token) => !!token.trim())[0];
 
     return {
       flag: `--resource=${resource_name}:${revision}`,
@@ -103,10 +121,13 @@ class Charmcraft {
     const metadata = yaml.load(buff.toString()) as Metadata;
     const charmName = metadata.name;
 
-    const images = Object.entries(metadata.resources || {})
+    const files = Object.entries(metadata.resources || {})
       .filter(([, res]) => res.type === 'oci-image')
+      .map(([name, _]) => name);
+    const images = Object.entries(metadata.resources || {})
+      .filter(([, res]) => res.type === 'file')
       .map(([name, res]) => [name, res['upstream-source']]);
-    return { images, name: charmName };
+    return { images, files, name: charmName };
   }
 
   async pack() {
@@ -119,12 +140,38 @@ class Charmcraft {
     // however, we expect charmcraft pack to always output one charm file.
     const globber = await glob.create('./*.charm');
     const paths = await globber.glob();
+    const { name, files } = this.metadata();
+    const charmName = name;
+
+    const filesNotDuplicated = files
+      // Drop files that are explicitly provided as resource via a flag
+      // FIXME: This matching works only if the `--resource=...` syntax is used.
+      //        Does not support `--resource ...`, which would be provided as two
+      //        consecutive flags.
+      .filter(
+        ([name, _]) =>
+          !flags.find((flag) => flag.startsWith(`--resource=${name}`))
+      );
+
+    // Always upload the latest version of a file resource
+
+    const resourceFlags = (
+      await Promise.all(
+        filesNotDuplicated.map(async ([resourceName]) => {
+          return this.buildResourceFlag(charmName, resourceName, '');
+        })
+      )
+    )
+      .filter((resource) => !!resource)
+      .map((resource) => resource?.flag as string);
+
     const args = [
       'upload',
       '--quiet',
       '--release',
       channel,
       paths[0],
+      ...resourceFlags,
       ...flags,
     ];
     const result = await getExecOutput('charmcraft', args, this.execOptions);

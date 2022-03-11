@@ -9,3 +9,5 @@ resources:
     type: oci-image
     description: ''
     upstream-source: ubuntu:20.04
+  myfile:
+    type: file
