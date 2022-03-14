@@ -31,7 +31,6 @@ class Charmcraft {
         `No resources where uploaded as part of this build.\n` +
         `If you wish to upload the OCI image, set 'upload-image' to 'true'`;
       core.warning(msg);
-      return { flags: [''], resourceInfo: '' };
     }
 
     const { name: charmName, images } = this.metadata();
@@ -45,7 +44,9 @@ class Charmcraft {
           ([name]) => !overrides || !Object.keys(overrides).includes(name)
         )
         .map(async ([name, image]) => {
-          await this.uploadResource(image, charmName, name);
+          if (this.uploadImage) {
+            await this.uploadResource(image, charmName, name);
+          }
           const resourceFlag = await this.buildResourceFlag(
             charmName,
             name,
