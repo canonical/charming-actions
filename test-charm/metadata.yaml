@@ -11,3 +11,4 @@ resources:
     upstream-source: ubuntu:20.04
   myfile:
     type: file
+    filename: myfile.txt
