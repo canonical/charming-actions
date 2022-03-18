@@ -1777,8 +1777,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.OidcClient = void 0;
-const http_client_1 = __nccwpck_require__(3059);
-const auth_1 = __nccwpck_require__(2402);
+const http_client_1 = __nccwpck_require__(9925);
+const auth_1 = __nccwpck_require__(3702);
 const core_1 = __nccwpck_require__(2186);
 class OidcClient {
     static createHttpClient(allowRetry = true, maxRetry = 10) {
@@ -1889,682 +1889,6 @@ function toCommandProperties(annotationProperties) {
 }
 exports.toCommandProperties = toCommandProperties;
 //# sourceMappingURL=utils.js.map
-
-/***/ }),
-
-/***/ 2402:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-class BasicCredentialHandler {
-    constructor(username, password) {
-        this.username = username;
-        this.password = password;
-    }
-    prepareRequest(options) {
-        options.headers['Authorization'] =
-            'Basic ' +
-                Buffer.from(this.username + ':' + this.password).toString('base64');
-    }
-    // This handler cannot handle 401
-    canHandleAuthentication(response) {
-        return false;
-    }
-    handleAuthentication(httpClient, requestInfo, objs) {
-        return null;
-    }
-}
-exports.BasicCredentialHandler = BasicCredentialHandler;
-class BearerCredentialHandler {
-    constructor(token) {
-        this.token = token;
-    }
-    // currently implements pre-authorization
-    // TODO: support preAuth = false where it hooks on 401
-    prepareRequest(options) {
-        options.headers['Authorization'] = 'Bearer ' + this.token;
-    }
-    // This handler cannot handle 401
-    canHandleAuthentication(response) {
-        return false;
-    }
-    handleAuthentication(httpClient, requestInfo, objs) {
-        return null;
-    }
-}
-exports.BearerCredentialHandler = BearerCredentialHandler;
-class PersonalAccessTokenCredentialHandler {
-    constructor(token) {
-        this.token = token;
-    }
-    // currently implements pre-authorization
-    // TODO: support preAuth = false where it hooks on 401
-    prepareRequest(options) {
-        options.headers['Authorization'] =
-            'Basic ' + Buffer.from('PAT:' + this.token).toString('base64');
-    }
-    // This handler cannot handle 401
-    canHandleAuthentication(response) {
-        return false;
-    }
-    handleAuthentication(httpClient, requestInfo, objs) {
-        return null;
-    }
-}
-exports.PersonalAccessTokenCredentialHandler = PersonalAccessTokenCredentialHandler;
-
-
-/***/ }),
-
-/***/ 3059:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const http = __nccwpck_require__(3685);
-const https = __nccwpck_require__(5687);
-const pm = __nccwpck_require__(4437);
-let tunnel;
-var HttpCodes;
-(function (HttpCodes) {
-    HttpCodes[HttpCodes["OK"] = 200] = "OK";
-    HttpCodes[HttpCodes["MultipleChoices"] = 300] = "MultipleChoices";
-    HttpCodes[HttpCodes["MovedPermanently"] = 301] = "MovedPermanently";
-    HttpCodes[HttpCodes["ResourceMoved"] = 302] = "ResourceMoved";
-    HttpCodes[HttpCodes["SeeOther"] = 303] = "SeeOther";
-    HttpCodes[HttpCodes["NotModified"] = 304] = "NotModified";
-    HttpCodes[HttpCodes["UseProxy"] = 305] = "UseProxy";
-    HttpCodes[HttpCodes["SwitchProxy"] = 306] = "SwitchProxy";
-    HttpCodes[HttpCodes["TemporaryRedirect"] = 307] = "TemporaryRedirect";
-    HttpCodes[HttpCodes["PermanentRedirect"] = 308] = "PermanentRedirect";
-    HttpCodes[HttpCodes["BadRequest"] = 400] = "BadRequest";
-    HttpCodes[HttpCodes["Unauthorized"] = 401] = "Unauthorized";
-    HttpCodes[HttpCodes["PaymentRequired"] = 402] = "PaymentRequired";
-    HttpCodes[HttpCodes["Forbidden"] = 403] = "Forbidden";
-    HttpCodes[HttpCodes["NotFound"] = 404] = "NotFound";
-    HttpCodes[HttpCodes["MethodNotAllowed"] = 405] = "MethodNotAllowed";
-    HttpCodes[HttpCodes["NotAcceptable"] = 406] = "NotAcceptable";
-    HttpCodes[HttpCodes["ProxyAuthenticationRequired"] = 407] = "ProxyAuthenticationRequired";
-    HttpCodes[HttpCodes["RequestTimeout"] = 408] = "RequestTimeout";
-    HttpCodes[HttpCodes["Conflict"] = 409] = "Conflict";
-    HttpCodes[HttpCodes["Gone"] = 410] = "Gone";
-    HttpCodes[HttpCodes["TooManyRequests"] = 429] = "TooManyRequests";
-    HttpCodes[HttpCodes["InternalServerError"] = 500] = "InternalServerError";
-    HttpCodes[HttpCodes["NotImplemented"] = 501] = "NotImplemented";
-    HttpCodes[HttpCodes["BadGateway"] = 502] = "BadGateway";
-    HttpCodes[HttpCodes["ServiceUnavailable"] = 503] = "ServiceUnavailable";
-    HttpCodes[HttpCodes["GatewayTimeout"] = 504] = "GatewayTimeout";
-})(HttpCodes = exports.HttpCodes || (exports.HttpCodes = {}));
-var Headers;
-(function (Headers) {
-    Headers["Accept"] = "accept";
-    Headers["ContentType"] = "content-type";
-})(Headers = exports.Headers || (exports.Headers = {}));
-var MediaTypes;
-(function (MediaTypes) {
-    MediaTypes["ApplicationJson"] = "application/json";
-})(MediaTypes = exports.MediaTypes || (exports.MediaTypes = {}));
-/**
- * Returns the proxy URL, depending upon the supplied url and proxy environment variables.
- * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
- */
-function getProxyUrl(serverUrl) {
-    let proxyUrl = pm.getProxyUrl(new URL(serverUrl));
-    return proxyUrl ? proxyUrl.href : '';
-}
-exports.getProxyUrl = getProxyUrl;
-const HttpRedirectCodes = [
-    HttpCodes.MovedPermanently,
-    HttpCodes.ResourceMoved,
-    HttpCodes.SeeOther,
-    HttpCodes.TemporaryRedirect,
-    HttpCodes.PermanentRedirect
-];
-const HttpResponseRetryCodes = [
-    HttpCodes.BadGateway,
-    HttpCodes.ServiceUnavailable,
-    HttpCodes.GatewayTimeout
-];
-const RetryableHttpVerbs = ['OPTIONS', 'GET', 'DELETE', 'HEAD'];
-const ExponentialBackoffCeiling = 10;
-const ExponentialBackoffTimeSlice = 5;
-class HttpClientError extends Error {
-    constructor(message, statusCode) {
-        super(message);
-        this.name = 'HttpClientError';
-        this.statusCode = statusCode;
-        Object.setPrototypeOf(this, HttpClientError.prototype);
-    }
-}
-exports.HttpClientError = HttpClientError;
-class HttpClientResponse {
-    constructor(message) {
-        this.message = message;
-    }
-    readBody() {
-        return new Promise(async (resolve, reject) => {
-            let output = Buffer.alloc(0);
-            this.message.on('data', (chunk) => {
-                output = Buffer.concat([output, chunk]);
-            });
-            this.message.on('end', () => {
-                resolve(output.toString());
-            });
-        });
-    }
-}
-exports.HttpClientResponse = HttpClientResponse;
-function isHttps(requestUrl) {
-    let parsedUrl = new URL(requestUrl);
-    return parsedUrl.protocol === 'https:';
-}
-exports.isHttps = isHttps;
-class HttpClient {
-    constructor(userAgent, handlers, requestOptions) {
-        this._ignoreSslError = false;
-        this._allowRedirects = true;
-        this._allowRedirectDowngrade = false;
-        this._maxRedirects = 50;
-        this._allowRetries = false;
-        this._maxRetries = 1;
-        this._keepAlive = false;
-        this._disposed = false;
-        this.userAgent = userAgent;
-        this.handlers = handlers || [];
-        this.requestOptions = requestOptions;
-        if (requestOptions) {
-            if (requestOptions.ignoreSslError != null) {
-                this._ignoreSslError = requestOptions.ignoreSslError;
-            }
-            this._socketTimeout = requestOptions.socketTimeout;
-            if (requestOptions.allowRedirects != null) {
-                this._allowRedirects = requestOptions.allowRedirects;
-            }
-            if (requestOptions.allowRedirectDowngrade != null) {
-                this._allowRedirectDowngrade = requestOptions.allowRedirectDowngrade;
-            }
-            if (requestOptions.maxRedirects != null) {
-                this._maxRedirects = Math.max(requestOptions.maxRedirects, 0);
-            }
-            if (requestOptions.keepAlive != null) {
-                this._keepAlive = requestOptions.keepAlive;
-            }
-            if (requestOptions.allowRetries != null) {
-                this._allowRetries = requestOptions.allowRetries;
-            }
-            if (requestOptions.maxRetries != null) {
-                this._maxRetries = requestOptions.maxRetries;
-            }
-        }
-    }
-    options(requestUrl, additionalHeaders) {
-        return this.request('OPTIONS', requestUrl, null, additionalHeaders || {});
-    }
-    get(requestUrl, additionalHeaders) {
-        return this.request('GET', requestUrl, null, additionalHeaders || {});
-    }
-    del(requestUrl, additionalHeaders) {
-        return this.request('DELETE', requestUrl, null, additionalHeaders || {});
-    }
-    post(requestUrl, data, additionalHeaders) {
-        return this.request('POST', requestUrl, data, additionalHeaders || {});
-    }
-    patch(requestUrl, data, additionalHeaders) {
-        return this.request('PATCH', requestUrl, data, additionalHeaders || {});
-    }
-    put(requestUrl, data, additionalHeaders) {
-        return this.request('PUT', requestUrl, data, additionalHeaders || {});
-    }
-    head(requestUrl, additionalHeaders) {
-        return this.request('HEAD', requestUrl, null, additionalHeaders || {});
-    }
-    sendStream(verb, requestUrl, stream, additionalHeaders) {
-        return this.request(verb, requestUrl, stream, additionalHeaders);
-    }
-    /**
-     * Gets a typed object from an endpoint
-     * Be aware that not found returns a null.  Other errors (4xx, 5xx) reject the promise
-     */
-    async getJson(requestUrl, additionalHeaders = {}) {
-        additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
-        let res = await this.get(requestUrl, additionalHeaders);
-        return this._processResponse(res, this.requestOptions);
-    }
-    async postJson(requestUrl, obj, additionalHeaders = {}) {
-        let data = JSON.stringify(obj, null, 2);
-        additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
-        additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
-        let res = await this.post(requestUrl, data, additionalHeaders);
-        return this._processResponse(res, this.requestOptions);
-    }
-    async putJson(requestUrl, obj, additionalHeaders = {}) {
-        let data = JSON.stringify(obj, null, 2);
-        additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
-        additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
-        let res = await this.put(requestUrl, data, additionalHeaders);
-        return this._processResponse(res, this.requestOptions);
-    }
-    async patchJson(requestUrl, obj, additionalHeaders = {}) {
-        let data = JSON.stringify(obj, null, 2);
-        additionalHeaders[Headers.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.Accept, MediaTypes.ApplicationJson);
-        additionalHeaders[Headers.ContentType] = this._getExistingOrDefaultHeader(additionalHeaders, Headers.ContentType, MediaTypes.ApplicationJson);
-        let res = await this.patch(requestUrl, data, additionalHeaders);
-        return this._processResponse(res, this.requestOptions);
-    }
-    /**
-     * Makes a raw http request.
-     * All other methods such as get, post, patch, and request ultimately call this.
-     * Prefer get, del, post and patch
-     */
-    async request(verb, requestUrl, data, headers) {
-        if (this._disposed) {
-            throw new Error('Client has already been disposed.');
-        }
-        let parsedUrl = new URL(requestUrl);
-        let info = this._prepareRequest(verb, parsedUrl, headers);
-        // Only perform retries on reads since writes may not be idempotent.
-        let maxTries = this._allowRetries && RetryableHttpVerbs.indexOf(verb) != -1
-            ? this._maxRetries + 1
-            : 1;
-        let numTries = 0;
-        let response;
-        while (numTries < maxTries) {
-            response = await this.requestRaw(info, data);
-            // Check if it's an authentication challenge
-            if (response &&
-                response.message &&
-                response.message.statusCode === HttpCodes.Unauthorized) {
-                let authenticationHandler;
-                for (let i = 0; i < this.handlers.length; i++) {
-                    if (this.handlers[i].canHandleAuthentication(response)) {
-                        authenticationHandler = this.handlers[i];
-                        break;
-                    }
-                }
-                if (authenticationHandler) {
-                    return authenticationHandler.handleAuthentication(this, info, data);
-                }
-                else {
-                    // We have received an unauthorized response but have no handlers to handle it.
-                    // Let the response return to the caller.
-                    return response;
-                }
-            }
-            let redirectsRemaining = this._maxRedirects;
-            while (HttpRedirectCodes.indexOf(response.message.statusCode) != -1 &&
-                this._allowRedirects &&
-                redirectsRemaining > 0) {
-                const redirectUrl = response.message.headers['location'];
-                if (!redirectUrl) {
-                    // if there's no location to redirect to, we won't
-                    break;
-                }
-                let parsedRedirectUrl = new URL(redirectUrl);
-                if (parsedUrl.protocol == 'https:' &&
-                    parsedUrl.protocol != parsedRedirectUrl.protocol &&
-                    !this._allowRedirectDowngrade) {
-                    throw new Error('Redirect from HTTPS to HTTP protocol. This downgrade is not allowed for security reasons. If you want to allow this behavior, set the allowRedirectDowngrade option to true.');
-                }
-                // we need to finish reading the response before reassigning response
-                // which will leak the open socket.
-                await response.readBody();
-                // strip authorization header if redirected to a different hostname
-                if (parsedRedirectUrl.hostname !== parsedUrl.hostname) {
-                    for (let header in headers) {
-                        // header names are case insensitive
-                        if (header.toLowerCase() === 'authorization') {
-                            delete headers[header];
-                        }
-                    }
-                }
-                // let's make the request with the new redirectUrl
-                info = this._prepareRequest(verb, parsedRedirectUrl, headers);
-                response = await this.requestRaw(info, data);
-                redirectsRemaining--;
-            }
-            if (HttpResponseRetryCodes.indexOf(response.message.statusCode) == -1) {
-                // If not a retry code, return immediately instead of retrying
-                return response;
-            }
-            numTries += 1;
-            if (numTries < maxTries) {
-                await response.readBody();
-                await this._performExponentialBackoff(numTries);
-            }
-        }
-        return response;
-    }
-    /**
-     * Needs to be called if keepAlive is set to true in request options.
-     */
-    dispose() {
-        if (this._agent) {
-            this._agent.destroy();
-        }
-        this._disposed = true;
-    }
-    /**
-     * Raw request.
-     * @param info
-     * @param data
-     */
-    requestRaw(info, data) {
-        return new Promise((resolve, reject) => {
-            let callbackForResult = function (err, res) {
-                if (err) {
-                    reject(err);
-                }
-                resolve(res);
-            };
-            this.requestRawWithCallback(info, data, callbackForResult);
-        });
-    }
-    /**
-     * Raw request with callback.
-     * @param info
-     * @param data
-     * @param onResult
-     */
-    requestRawWithCallback(info, data, onResult) {
-        let socket;
-        if (typeof data === 'string') {
-            info.options.headers['Content-Length'] = Buffer.byteLength(data, 'utf8');
-        }
-        let callbackCalled = false;
-        let handleResult = (err, res) => {
-            if (!callbackCalled) {
-                callbackCalled = true;
-                onResult(err, res);
-            }
-        };
-        let req = info.httpModule.request(info.options, (msg) => {
-            let res = new HttpClientResponse(msg);
-            handleResult(null, res);
-        });
-        req.on('socket', sock => {
-            socket = sock;
-        });
-        // If we ever get disconnected, we want the socket to timeout eventually
-        req.setTimeout(this._socketTimeout || 3 * 60000, () => {
-            if (socket) {
-                socket.end();
-            }
-            handleResult(new Error('Request timeout: ' + info.options.path), null);
-        });
-        req.on('error', function (err) {
-            // err has statusCode property
-            // res should have headers
-            handleResult(err, null);
-        });
-        if (data && typeof data === 'string') {
-            req.write(data, 'utf8');
-        }
-        if (data && typeof data !== 'string') {
-            data.on('close', function () {
-                req.end();
-            });
-            data.pipe(req);
-        }
-        else {
-            req.end();
-        }
-    }
-    /**
-     * Gets an http agent. This function is useful when you need an http agent that handles
-     * routing through a proxy server - depending upon the url and proxy environment variables.
-     * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
-     */
-    getAgent(serverUrl) {
-        let parsedUrl = new URL(serverUrl);
-        return this._getAgent(parsedUrl);
-    }
-    _prepareRequest(method, requestUrl, headers) {
-        const info = {};
-        info.parsedUrl = requestUrl;
-        const usingSsl = info.parsedUrl.protocol === 'https:';
-        info.httpModule = usingSsl ? https : http;
-        const defaultPort = usingSsl ? 443 : 80;
-        info.options = {};
-        info.options.host = info.parsedUrl.hostname;
-        info.options.port = info.parsedUrl.port
-            ? parseInt(info.parsedUrl.port)
-            : defaultPort;
-        info.options.path =
-            (info.parsedUrl.pathname || '') + (info.parsedUrl.search || '');
-        info.options.method = method;
-        info.options.headers = this._mergeHeaders(headers);
-        if (this.userAgent != null) {
-            info.options.headers['user-agent'] = this.userAgent;
-        }
-        info.options.agent = this._getAgent(info.parsedUrl);
-        // gives handlers an opportunity to participate
-        if (this.handlers) {
-            this.handlers.forEach(handler => {
-                handler.prepareRequest(info.options);
-            });
-        }
-        return info;
-    }
-    _mergeHeaders(headers) {
-        const lowercaseKeys = obj => Object.keys(obj).reduce((c, k) => ((c[k.toLowerCase()] = obj[k]), c), {});
-        if (this.requestOptions && this.requestOptions.headers) {
-            return Object.assign({}, lowercaseKeys(this.requestOptions.headers), lowercaseKeys(headers));
-        }
-        return lowercaseKeys(headers || {});
-    }
-    _getExistingOrDefaultHeader(additionalHeaders, header, _default) {
-        const lowercaseKeys = obj => Object.keys(obj).reduce((c, k) => ((c[k.toLowerCase()] = obj[k]), c), {});
-        let clientHeader;
-        if (this.requestOptions && this.requestOptions.headers) {
-            clientHeader = lowercaseKeys(this.requestOptions.headers)[header];
-        }
-        return additionalHeaders[header] || clientHeader || _default;
-    }
-    _getAgent(parsedUrl) {
-        let agent;
-        let proxyUrl = pm.getProxyUrl(parsedUrl);
-        let useProxy = proxyUrl && proxyUrl.hostname;
-        if (this._keepAlive && useProxy) {
-            agent = this._proxyAgent;
-        }
-        if (this._keepAlive && !useProxy) {
-            agent = this._agent;
-        }
-        // if agent is already assigned use that agent.
-        if (!!agent) {
-            return agent;
-        }
-        const usingSsl = parsedUrl.protocol === 'https:';
-        let maxSockets = 100;
-        if (!!this.requestOptions) {
-            maxSockets = this.requestOptions.maxSockets || http.globalAgent.maxSockets;
-        }
-        if (useProxy) {
-            // If using proxy, need tunnel
-            if (!tunnel) {
-                tunnel = __nccwpck_require__(4294);
-            }
-            const agentOptions = {
-                maxSockets: maxSockets,
-                keepAlive: this._keepAlive,
-                proxy: {
-                    ...((proxyUrl.username || proxyUrl.password) && {
-                        proxyAuth: `${proxyUrl.username}:${proxyUrl.password}`
-                    }),
-                    host: proxyUrl.hostname,
-                    port: proxyUrl.port
-                }
-            };
-            let tunnelAgent;
-            const overHttps = proxyUrl.protocol === 'https:';
-            if (usingSsl) {
-                tunnelAgent = overHttps ? tunnel.httpsOverHttps : tunnel.httpsOverHttp;
-            }
-            else {
-                tunnelAgent = overHttps ? tunnel.httpOverHttps : tunnel.httpOverHttp;
-            }
-            agent = tunnelAgent(agentOptions);
-            this._proxyAgent = agent;
-        }
-        // if reusing agent across request and tunneling agent isn't assigned create a new agent
-        if (this._keepAlive && !agent) {
-            const options = { keepAlive: this._keepAlive, maxSockets: maxSockets };
-            agent = usingSsl ? new https.Agent(options) : new http.Agent(options);
-            this._agent = agent;
-        }
-        // if not using private agent and tunnel agent isn't setup then use global agent
-        if (!agent) {
-            agent = usingSsl ? https.globalAgent : http.globalAgent;
-        }
-        if (usingSsl && this._ignoreSslError) {
-            // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
-            // http.RequestOptions doesn't expose a way to modify RequestOptions.agent.options
-            // we have to cast it to any and change it directly
-            agent.options = Object.assign(agent.options || {}, {
-                rejectUnauthorized: false
-            });
-        }
-        return agent;
-    }
-    _performExponentialBackoff(retryNumber) {
-        retryNumber = Math.min(ExponentialBackoffCeiling, retryNumber);
-        const ms = ExponentialBackoffTimeSlice * Math.pow(2, retryNumber);
-        return new Promise(resolve => setTimeout(() => resolve(), ms));
-    }
-    static dateTimeDeserializer(key, value) {
-        if (typeof value === 'string') {
-            let a = new Date(value);
-            if (!isNaN(a.valueOf())) {
-                return a;
-            }
-        }
-        return value;
-    }
-    async _processResponse(res, options) {
-        return new Promise(async (resolve, reject) => {
-            const statusCode = res.message.statusCode;
-            const response = {
-                statusCode: statusCode,
-                result: null,
-                headers: {}
-            };
-            // not found leads to null obj returned
-            if (statusCode == HttpCodes.NotFound) {
-                resolve(response);
-            }
-            let obj;
-            let contents;
-            // get the result from the body
-            try {
-                contents = await res.readBody();
-                if (contents && contents.length > 0) {
-                    if (options && options.deserializeDates) {
-                        obj = JSON.parse(contents, HttpClient.dateTimeDeserializer);
-                    }
-                    else {
-                        obj = JSON.parse(contents);
-                    }
-                    response.result = obj;
-                }
-                response.headers = res.message.headers;
-            }
-            catch (err) {
-                // Invalid resource (contents not json);  leaving result obj null
-            }
-            // note that 3xx redirects are handled by the http layer.
-            if (statusCode > 299) {
-                let msg;
-                // if exception/error in body, attempt to get better error
-                if (obj && obj.message) {
-                    msg = obj.message;
-                }
-                else if (contents && contents.length > 0) {
-                    // it may be the case that the exception is in the body message as string
-                    msg = contents;
-                }
-                else {
-                    msg = 'Failed request: (' + statusCode + ')';
-                }
-                let err = new HttpClientError(msg, statusCode);
-                err.result = response.result;
-                reject(err);
-            }
-            else {
-                resolve(response);
-            }
-        });
-    }
-}
-exports.HttpClient = HttpClient;
-
-
-/***/ }),
-
-/***/ 4437:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-function getProxyUrl(reqUrl) {
-    let usingSsl = reqUrl.protocol === 'https:';
-    let proxyUrl;
-    if (checkBypass(reqUrl)) {
-        return proxyUrl;
-    }
-    let proxyVar;
-    if (usingSsl) {
-        proxyVar = process.env['https_proxy'] || process.env['HTTPS_PROXY'];
-    }
-    else {
-        proxyVar = process.env['http_proxy'] || process.env['HTTP_PROXY'];
-    }
-    if (proxyVar) {
-        proxyUrl = new URL(proxyVar);
-    }
-    return proxyUrl;
-}
-exports.getProxyUrl = getProxyUrl;
-function checkBypass(reqUrl) {
-    if (!reqUrl.hostname) {
-        return false;
-    }
-    let noProxy = process.env['no_proxy'] || process.env['NO_PROXY'] || '';
-    if (!noProxy) {
-        return false;
-    }
-    // Determine the request port
-    let reqPort;
-    if (reqUrl.port) {
-        reqPort = Number(reqUrl.port);
-    }
-    else if (reqUrl.protocol === 'http:') {
-        reqPort = 80;
-    }
-    else if (reqUrl.protocol === 'https:') {
-        reqPort = 443;
-    }
-    // Format the request hostname and hostname with port
-    let upperReqHosts = [reqUrl.hostname.toUpperCase()];
-    if (typeof reqPort === 'number') {
-        upperReqHosts.push(`${upperReqHosts[0]}:${reqPort}`);
-    }
-    // Compare request host against noproxy
-    for (let upperNoProxyItem of noProxy
-        .split(',')
-        .map(x => x.trim().toUpperCase())
-        .filter(x => x)) {
-        if (upperReqHosts.some(x => x === upperNoProxyItem)) {
-            return true;
-        }
-    }
-    return false;
-}
-exports.checkBypass = checkBypass;
-
 
 /***/ }),
 
@@ -8040,7 +7364,7 @@ var isPlainObject = __nccwpck_require__(3287);
 var nodeFetch = _interopDefault(__nccwpck_require__(467));
 var requestError = __nccwpck_require__(537);
 
-const VERSION = "5.6.2";
+const VERSION = "5.6.3";
 
 function getBufferResponse(response) {
   return response.arrayBuffer();
@@ -14907,10 +14231,10 @@ module.exports = new Type('tag:yaml.org,2002:timestamp', {
 module.exports = minimatch
 minimatch.Minimatch = Minimatch
 
-var path = { sep: '/' }
-try {
-  path = __nccwpck_require__(1017)
-} catch (er) {}
+var path = (function () { try { return __nccwpck_require__(1017) } catch (e) {}}()) || {
+  sep: '/'
+}
+minimatch.sep = path.sep
 
 var GLOBSTAR = minimatch.GLOBSTAR = Minimatch.GLOBSTAR = {}
 var expand = __nccwpck_require__(3717)
@@ -14962,43 +14286,64 @@ function filter (pattern, options) {
 }
 
 function ext (a, b) {
-  a = a || {}
   b = b || {}
   var t = {}
-  Object.keys(b).forEach(function (k) {
-    t[k] = b[k]
-  })
   Object.keys(a).forEach(function (k) {
     t[k] = a[k]
+  })
+  Object.keys(b).forEach(function (k) {
+    t[k] = b[k]
   })
   return t
 }
 
 minimatch.defaults = function (def) {
-  if (!def || !Object.keys(def).length) return minimatch
+  if (!def || typeof def !== 'object' || !Object.keys(def).length) {
+    return minimatch
+  }
 
   var orig = minimatch
 
   var m = function minimatch (p, pattern, options) {
-    return orig.minimatch(p, pattern, ext(def, options))
+    return orig(p, pattern, ext(def, options))
   }
 
   m.Minimatch = function Minimatch (pattern, options) {
     return new orig.Minimatch(pattern, ext(def, options))
+  }
+  m.Minimatch.defaults = function defaults (options) {
+    return orig.defaults(ext(def, options)).Minimatch
+  }
+
+  m.filter = function filter (pattern, options) {
+    return orig.filter(pattern, ext(def, options))
+  }
+
+  m.defaults = function defaults (options) {
+    return orig.defaults(ext(def, options))
+  }
+
+  m.makeRe = function makeRe (pattern, options) {
+    return orig.makeRe(pattern, ext(def, options))
+  }
+
+  m.braceExpand = function braceExpand (pattern, options) {
+    return orig.braceExpand(pattern, ext(def, options))
+  }
+
+  m.match = function (list, pattern, options) {
+    return orig.match(list, pattern, ext(def, options))
   }
 
   return m
 }
 
 Minimatch.defaults = function (def) {
-  if (!def || !Object.keys(def).length) return Minimatch
   return minimatch.defaults(def).Minimatch
 }
 
 function minimatch (p, pattern, options) {
-  if (typeof pattern !== 'string') {
-    throw new TypeError('glob pattern string required')
-  }
+  assertValidPattern(pattern)
 
   if (!options) options = {}
 
@@ -15006,9 +14351,6 @@ function minimatch (p, pattern, options) {
   if (!options.nocomment && pattern.charAt(0) === '#') {
     return false
   }
-
-  // "" only matches ""
-  if (pattern.trim() === '') return p === ''
 
   return new Minimatch(pattern, options).match(p)
 }
@@ -15018,15 +14360,14 @@ function Minimatch (pattern, options) {
     return new Minimatch(pattern, options)
   }
 
-  if (typeof pattern !== 'string') {
-    throw new TypeError('glob pattern string required')
-  }
+  assertValidPattern(pattern)
 
   if (!options) options = {}
+
   pattern = pattern.trim()
 
   // windows support: need to use /, not \
-  if (path.sep !== '/') {
+  if (!options.allowWindowsEscape && path.sep !== '/') {
     pattern = pattern.split(path.sep).join('/')
   }
 
@@ -15037,6 +14378,7 @@ function Minimatch (pattern, options) {
   this.negate = false
   this.comment = false
   this.empty = false
+  this.partial = !!options.partial
 
   // make the set of regexps etc.
   this.make()
@@ -15046,9 +14388,6 @@ Minimatch.prototype.debug = function () {}
 
 Minimatch.prototype.make = make
 function make () {
-  // don't do it more than once.
-  if (this._made) return
-
   var pattern = this.pattern
   var options = this.options
 
@@ -15068,7 +14407,7 @@ function make () {
   // step 2: expand braces
   var set = this.globSet = this.braceExpand()
 
-  if (options.debug) this.debug = console.error
+  if (options.debug) this.debug = function debug() { console.error.apply(console, arguments) }
 
   this.debug(this.pattern, set)
 
@@ -15148,17 +14487,27 @@ function braceExpand (pattern, options) {
   pattern = typeof pattern === 'undefined'
     ? this.pattern : pattern
 
-  if (typeof pattern === 'undefined') {
-    throw new TypeError('undefined pattern')
-  }
+  assertValidPattern(pattern)
 
-  if (options.nobrace ||
-    !pattern.match(/\{.*\}/)) {
+  // Thanks to Yeting Li <https://github.com/yetingli> for
+  // improving this regexp to avoid a ReDOS vulnerability.
+  if (options.nobrace || !/\{(?:(?!\{).)*\}/.test(pattern)) {
     // shortcut. no need to expand.
     return [pattern]
   }
 
   return expand(pattern)
+}
+
+var MAX_PATTERN_LENGTH = 1024 * 64
+var assertValidPattern = function (pattern) {
+  if (typeof pattern !== 'string') {
+    throw new TypeError('invalid pattern')
+  }
+
+  if (pattern.length > MAX_PATTERN_LENGTH) {
+    throw new TypeError('pattern is too long')
+  }
 }
 
 // parse a component of the expanded set.
@@ -15175,14 +14524,17 @@ function braceExpand (pattern, options) {
 Minimatch.prototype.parse = parse
 var SUBPARSE = {}
 function parse (pattern, isSub) {
-  if (pattern.length > 1024 * 64) {
-    throw new TypeError('pattern is too long')
-  }
+  assertValidPattern(pattern)
 
   var options = this.options
 
   // shortcuts
-  if (!options.noglobstar && pattern === '**') return GLOBSTAR
+  if (pattern === '**') {
+    if (!options.noglobstar)
+      return GLOBSTAR
+    else
+      pattern = '*'
+  }
   if (pattern === '') return ''
 
   var re = ''
@@ -15238,10 +14590,12 @@ function parse (pattern, isSub) {
     }
 
     switch (c) {
-      case '/':
+      /* istanbul ignore next */
+      case '/': {
         // completely not allowed, even escaped.
         // Should already be path-split by now.
         return false
+      }
 
       case '\\':
         clearStateChar()
@@ -15360,25 +14714,23 @@ function parse (pattern, isSub) {
 
         // handle the case where we left a class open.
         // "[z-a]" is valid, equivalent to "\[z-a\]"
-        if (inClass) {
-          // split where the last [ was, make sure we don't have
-          // an invalid re. if so, re-walk the contents of the
-          // would-be class to re-translate any characters that
-          // were passed through as-is
-          // TODO: It would probably be faster to determine this
-          // without a try/catch and a new RegExp, but it's tricky
-          // to do safely.  For now, this is safe and works.
-          var cs = pattern.substring(classStart + 1, i)
-          try {
-            RegExp('[' + cs + ']')
-          } catch (er) {
-            // not a valid class!
-            var sp = this.parse(cs, SUBPARSE)
-            re = re.substr(0, reClassStart) + '\\[' + sp[0] + '\\]'
-            hasMagic = hasMagic || sp[1]
-            inClass = false
-            continue
-          }
+        // split where the last [ was, make sure we don't have
+        // an invalid re. if so, re-walk the contents of the
+        // would-be class to re-translate any characters that
+        // were passed through as-is
+        // TODO: It would probably be faster to determine this
+        // without a try/catch and a new RegExp, but it's tricky
+        // to do safely.  For now, this is safe and works.
+        var cs = pattern.substring(classStart + 1, i)
+        try {
+          RegExp('[' + cs + ']')
+        } catch (er) {
+          // not a valid class!
+          var sp = this.parse(cs, SUBPARSE)
+          re = re.substr(0, reClassStart) + '\\[' + sp[0] + '\\]'
+          hasMagic = hasMagic || sp[1]
+          inClass = false
+          continue
         }
 
         // finish up the class.
@@ -15462,9 +14814,7 @@ function parse (pattern, isSub) {
   // something that could conceivably capture a dot
   var addPatternStart = false
   switch (re.charAt(0)) {
-    case '.':
-    case '[':
-    case '(': addPatternStart = true
+    case '[': case '.': case '(': addPatternStart = true
   }
 
   // Hack to work around lack of negative lookbehind in JS
@@ -15526,7 +14876,7 @@ function parse (pattern, isSub) {
   var flags = options.nocase ? 'i' : ''
   try {
     var regExp = new RegExp('^' + re + '$', flags)
-  } catch (er) {
+  } catch (er) /* istanbul ignore next - should be impossible */ {
     // If it was an invalid regular expression, then it can't match
     // anything.  This trick looks for a character after the end of
     // the string, which is of course impossible, except in multi-line
@@ -15584,7 +14934,7 @@ function makeRe () {
 
   try {
     this.regexp = new RegExp(re, flags)
-  } catch (ex) {
+  } catch (ex) /* istanbul ignore next - should be impossible */ {
     this.regexp = false
   }
   return this.regexp
@@ -15602,8 +14952,8 @@ minimatch.match = function (list, pattern, options) {
   return list
 }
 
-Minimatch.prototype.match = match
-function match (f, partial) {
+Minimatch.prototype.match = function match (f, partial) {
+  if (typeof partial === 'undefined') partial = this.partial
   this.debug('match', f, this.pattern)
   // short-circuit in the case of busted things.
   // comments, etc.
@@ -15685,6 +15035,7 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
 
     // should be impossible.
     // some invalid regexp stuff in the set.
+    /* istanbul ignore if */
     if (p === false) return false
 
     if (p === GLOBSTAR) {
@@ -15758,6 +15109,7 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
       // no match was found.
       // However, in partial mode, we can't say this is necessarily over.
       // If there's more *pattern* left, then
+      /* istanbul ignore if */
       if (partial) {
         // ran out of file
         this.debug('\n>>> no match, partial?', file, fr, pattern, pr)
@@ -15771,11 +15123,7 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
     // patterns with magic have been turned into regexps.
     var hit
     if (typeof p === 'string') {
-      if (options.nocase) {
-        hit = f.toLowerCase() === p.toLowerCase()
-      } else {
-        hit = f === p
-      }
+      hit = f === p
       this.debug('string match', p, f, hit)
     } else {
       hit = f.match(p)
@@ -15806,16 +15154,16 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
     // this is ok if we're doing the match as part of
     // a glob fs traversal.
     return partial
-  } else if (pi === pl) {
+  } else /* istanbul ignore else */ if (pi === pl) {
     // ran out of pattern, still have file left.
     // this is only acceptable if we're on the very last
     // empty segment of a file with a trailing slash.
     // a/* should match a/b/
-    var emptyFileEnd = (fi === fl - 1) && (file[fi] === '')
-    return emptyFileEnd
+    return (fi === fl - 1) && (file[fi] === '')
   }
 
   // should be unreachable.
+  /* istanbul ignore next */
   throw new Error('wtf?')
 }
 
@@ -15844,7 +15192,7 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 var Stream = _interopDefault(__nccwpck_require__(2781));
 var http = _interopDefault(__nccwpck_require__(3685));
 var Url = _interopDefault(__nccwpck_require__(7310));
-var whatwgUrl = _interopDefault(__nccwpck_require__(8665));
+var whatwgUrl = _interopDefault(__nccwpck_require__(3323));
 var https = _interopDefault(__nccwpck_require__(5687));
 var zlib = _interopDefault(__nccwpck_require__(9796));
 
@@ -17536,1294 +16884,14 @@ exports.FetchError = FetchError;
 
 /***/ }),
 
-/***/ 1223:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-var wrappy = __nccwpck_require__(2940)
-module.exports = wrappy(once)
-module.exports.strict = wrappy(onceStrict)
-
-once.proto = once(function () {
-  Object.defineProperty(Function.prototype, 'once', {
-    value: function () {
-      return once(this)
-    },
-    configurable: true
-  })
-
-  Object.defineProperty(Function.prototype, 'onceStrict', {
-    value: function () {
-      return onceStrict(this)
-    },
-    configurable: true
-  })
-})
-
-function once (fn) {
-  var f = function () {
-    if (f.called) return f.value
-    f.called = true
-    return f.value = fn.apply(this, arguments)
-  }
-  f.called = false
-  return f
-}
-
-function onceStrict (fn) {
-  var f = function () {
-    if (f.called)
-      throw new Error(f.onceError)
-    f.called = true
-    return f.value = fn.apply(this, arguments)
-  }
-  var name = fn.name || 'Function wrapped with `once`'
-  f.onceError = name + " shouldn't be called more than once"
-  f.called = false
-  return f
-}
-
-
-/***/ }),
-
-/***/ 8714:
-/***/ ((module) => {
-
-"use strict";
-
-
-function posix(path) {
-	return path.charAt(0) === '/';
-}
-
-function win32(path) {
-	// https://github.com/nodejs/node/blob/b3fcc245fb25539909ef1d5eaa01dbf92e168633/lib/path.js#L56
-	var splitDeviceRe = /^([a-zA-Z]:|[\\\/]{2}[^\\\/]+[\\\/]+[^\\\/]+)?([\\\/])?([\s\S]*?)$/;
-	var result = splitDeviceRe.exec(path);
-	var device = result[1] || '';
-	var isUnc = Boolean(device && device.charAt(1) !== ':');
-
-	// UNC paths are always absolute
-	return Boolean(result[2] || isUnc);
-}
-
-module.exports = process.platform === 'win32' ? win32 : posix;
-module.exports.posix = posix;
-module.exports.win32 = win32;
-
-
-/***/ }),
-
-/***/ 4959:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-module.exports = rimraf
-rimraf.sync = rimrafSync
-
-var assert = __nccwpck_require__(9491)
-var path = __nccwpck_require__(1017)
-var fs = __nccwpck_require__(7147)
-var glob = undefined
-try {
-  glob = __nccwpck_require__(1957)
-} catch (_err) {
-  // treat glob as optional.
-}
-var _0666 = parseInt('666', 8)
-
-var defaultGlobOpts = {
-  nosort: true,
-  silent: true
-}
-
-// for EMFILE handling
-var timeout = 0
-
-var isWindows = (process.platform === "win32")
-
-function defaults (options) {
-  var methods = [
-    'unlink',
-    'chmod',
-    'stat',
-    'lstat',
-    'rmdir',
-    'readdir'
-  ]
-  methods.forEach(function(m) {
-    options[m] = options[m] || fs[m]
-    m = m + 'Sync'
-    options[m] = options[m] || fs[m]
-  })
-
-  options.maxBusyTries = options.maxBusyTries || 3
-  options.emfileWait = options.emfileWait || 1000
-  if (options.glob === false) {
-    options.disableGlob = true
-  }
-  if (options.disableGlob !== true && glob === undefined) {
-    throw Error('glob dependency not found, set `options.disableGlob = true` if intentional')
-  }
-  options.disableGlob = options.disableGlob || false
-  options.glob = options.glob || defaultGlobOpts
-}
-
-function rimraf (p, options, cb) {
-  if (typeof options === 'function') {
-    cb = options
-    options = {}
-  }
-
-  assert(p, 'rimraf: missing path')
-  assert.equal(typeof p, 'string', 'rimraf: path should be a string')
-  assert.equal(typeof cb, 'function', 'rimraf: callback function required')
-  assert(options, 'rimraf: invalid options argument provided')
-  assert.equal(typeof options, 'object', 'rimraf: options should be object')
-
-  defaults(options)
-
-  var busyTries = 0
-  var errState = null
-  var n = 0
-
-  if (options.disableGlob || !glob.hasMagic(p))
-    return afterGlob(null, [p])
-
-  options.lstat(p, function (er, stat) {
-    if (!er)
-      return afterGlob(null, [p])
-
-    glob(p, options.glob, afterGlob)
-  })
-
-  function next (er) {
-    errState = errState || er
-    if (--n === 0)
-      cb(errState)
-  }
-
-  function afterGlob (er, results) {
-    if (er)
-      return cb(er)
-
-    n = results.length
-    if (n === 0)
-      return cb()
-
-    results.forEach(function (p) {
-      rimraf_(p, options, function CB (er) {
-        if (er) {
-          if ((er.code === "EBUSY" || er.code === "ENOTEMPTY" || er.code === "EPERM") &&
-              busyTries < options.maxBusyTries) {
-            busyTries ++
-            var time = busyTries * 100
-            // try again, with the same exact callback as this one.
-            return setTimeout(function () {
-              rimraf_(p, options, CB)
-            }, time)
-          }
-
-          // this one won't happen if graceful-fs is used.
-          if (er.code === "EMFILE" && timeout < options.emfileWait) {
-            return setTimeout(function () {
-              rimraf_(p, options, CB)
-            }, timeout ++)
-          }
-
-          // already gone
-          if (er.code === "ENOENT") er = null
-        }
-
-        timeout = 0
-        next(er)
-      })
-    })
-  }
-}
-
-// Two possible strategies.
-// 1. Assume it's a file.  unlink it, then do the dir stuff on EPERM or EISDIR
-// 2. Assume it's a directory.  readdir, then do the file stuff on ENOTDIR
-//
-// Both result in an extra syscall when you guess wrong.  However, there
-// are likely far more normal files in the world than directories.  This
-// is based on the assumption that a the average number of files per
-// directory is >= 1.
-//
-// If anyone ever complains about this, then I guess the strategy could
-// be made configurable somehow.  But until then, YAGNI.
-function rimraf_ (p, options, cb) {
-  assert(p)
-  assert(options)
-  assert(typeof cb === 'function')
-
-  // sunos lets the root user unlink directories, which is... weird.
-  // so we have to lstat here and make sure it's not a dir.
-  options.lstat(p, function (er, st) {
-    if (er && er.code === "ENOENT")
-      return cb(null)
-
-    // Windows can EPERM on stat.  Life is suffering.
-    if (er && er.code === "EPERM" && isWindows)
-      fixWinEPERM(p, options, er, cb)
-
-    if (st && st.isDirectory())
-      return rmdir(p, options, er, cb)
-
-    options.unlink(p, function (er) {
-      if (er) {
-        if (er.code === "ENOENT")
-          return cb(null)
-        if (er.code === "EPERM")
-          return (isWindows)
-            ? fixWinEPERM(p, options, er, cb)
-            : rmdir(p, options, er, cb)
-        if (er.code === "EISDIR")
-          return rmdir(p, options, er, cb)
-      }
-      return cb(er)
-    })
-  })
-}
-
-function fixWinEPERM (p, options, er, cb) {
-  assert(p)
-  assert(options)
-  assert(typeof cb === 'function')
-  if (er)
-    assert(er instanceof Error)
-
-  options.chmod(p, _0666, function (er2) {
-    if (er2)
-      cb(er2.code === "ENOENT" ? null : er)
-    else
-      options.stat(p, function(er3, stats) {
-        if (er3)
-          cb(er3.code === "ENOENT" ? null : er)
-        else if (stats.isDirectory())
-          rmdir(p, options, er, cb)
-        else
-          options.unlink(p, cb)
-      })
-  })
-}
-
-function fixWinEPERMSync (p, options, er) {
-  assert(p)
-  assert(options)
-  if (er)
-    assert(er instanceof Error)
-
-  try {
-    options.chmodSync(p, _0666)
-  } catch (er2) {
-    if (er2.code === "ENOENT")
-      return
-    else
-      throw er
-  }
-
-  try {
-    var stats = options.statSync(p)
-  } catch (er3) {
-    if (er3.code === "ENOENT")
-      return
-    else
-      throw er
-  }
-
-  if (stats.isDirectory())
-    rmdirSync(p, options, er)
-  else
-    options.unlinkSync(p)
-}
-
-function rmdir (p, options, originalEr, cb) {
-  assert(p)
-  assert(options)
-  if (originalEr)
-    assert(originalEr instanceof Error)
-  assert(typeof cb === 'function')
-
-  // try to rmdir first, and only readdir on ENOTEMPTY or EEXIST (SunOS)
-  // if we guessed wrong, and it's not a directory, then
-  // raise the original error.
-  options.rmdir(p, function (er) {
-    if (er && (er.code === "ENOTEMPTY" || er.code === "EEXIST" || er.code === "EPERM"))
-      rmkids(p, options, cb)
-    else if (er && er.code === "ENOTDIR")
-      cb(originalEr)
-    else
-      cb(er)
-  })
-}
-
-function rmkids(p, options, cb) {
-  assert(p)
-  assert(options)
-  assert(typeof cb === 'function')
-
-  options.readdir(p, function (er, files) {
-    if (er)
-      return cb(er)
-    var n = files.length
-    if (n === 0)
-      return options.rmdir(p, cb)
-    var errState
-    files.forEach(function (f) {
-      rimraf(path.join(p, f), options, function (er) {
-        if (errState)
-          return
-        if (er)
-          return cb(errState = er)
-        if (--n === 0)
-          options.rmdir(p, cb)
-      })
-    })
-  })
-}
-
-// this looks simpler, and is strictly *faster*, but will
-// tie up the JavaScript thread and fail on excessively
-// deep directory trees.
-function rimrafSync (p, options) {
-  options = options || {}
-  defaults(options)
-
-  assert(p, 'rimraf: missing path')
-  assert.equal(typeof p, 'string', 'rimraf: path should be a string')
-  assert(options, 'rimraf: missing options')
-  assert.equal(typeof options, 'object', 'rimraf: options should be object')
-
-  var results
-
-  if (options.disableGlob || !glob.hasMagic(p)) {
-    results = [p]
-  } else {
-    try {
-      options.lstatSync(p)
-      results = [p]
-    } catch (er) {
-      results = glob.sync(p, options.glob)
-    }
-  }
-
-  if (!results.length)
-    return
-
-  for (var i = 0; i < results.length; i++) {
-    var p = results[i]
-
-    try {
-      var st = options.lstatSync(p)
-    } catch (er) {
-      if (er.code === "ENOENT")
-        return
-
-      // Windows can EPERM on stat.  Life is suffering.
-      if (er.code === "EPERM" && isWindows)
-        fixWinEPERMSync(p, options, er)
-    }
-
-    try {
-      // sunos lets the root user unlink directories, which is... weird.
-      if (st && st.isDirectory())
-        rmdirSync(p, options, null)
-      else
-        options.unlinkSync(p)
-    } catch (er) {
-      if (er.code === "ENOENT")
-        return
-      if (er.code === "EPERM")
-        return isWindows ? fixWinEPERMSync(p, options, er) : rmdirSync(p, options, er)
-      if (er.code !== "EISDIR")
-        throw er
-
-      rmdirSync(p, options, er)
-    }
-  }
-}
-
-function rmdirSync (p, options, originalEr) {
-  assert(p)
-  assert(options)
-  if (originalEr)
-    assert(originalEr instanceof Error)
-
-  try {
-    options.rmdirSync(p)
-  } catch (er) {
-    if (er.code === "ENOENT")
-      return
-    if (er.code === "ENOTDIR")
-      throw originalEr
-    if (er.code === "ENOTEMPTY" || er.code === "EEXIST" || er.code === "EPERM")
-      rmkidsSync(p, options)
-  }
-}
-
-function rmkidsSync (p, options) {
-  assert(p)
-  assert(options)
-  options.readdirSync(p).forEach(function (f) {
-    rimrafSync(path.join(p, f), options)
-  })
-
-  // We only end up here once we got ENOTEMPTY at least once, and
-  // at this point, we are guaranteed to have removed all the kids.
-  // So, we know that it won't be ENOENT or ENOTDIR or anything else.
-  // try really hard to delete stuff on windows, because it has a
-  // PROFOUNDLY annoying habit of not closing handles promptly when
-  // files are deleted, resulting in spurious ENOTEMPTY errors.
-  var retries = isWindows ? 100 : 1
-  var i = 0
-  do {
-    var threw = true
-    try {
-      var ret = options.rmdirSync(p, options)
-      threw = false
-      return ret
-    } finally {
-      if (++i < retries && threw)
-        continue
-    }
-  } while (true)
-}
-
-
-/***/ }),
-
-/***/ 8065:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-const {promisify} = __nccwpck_require__(3837);
-const tmp = __nccwpck_require__(8517);
-
-// file
-module.exports.fileSync = tmp.fileSync;
-const fileWithOptions = promisify((options, cb) =>
-  tmp.file(options, (err, path, fd, cleanup) =>
-    err ? cb(err) : cb(undefined, { path, fd, cleanup: promisify(cleanup) })
-  )
-);
-module.exports.file = async (options) => fileWithOptions(options);
-
-module.exports.withFile = async function withFile(fn, options) {
-  const { path, fd, cleanup } = await module.exports.file(options);
-  try {
-    return await fn({ path, fd });
-  } finally {
-    await cleanup();
-  }
-};
-
-
-// directory
-module.exports.dirSync = tmp.dirSync;
-const dirWithOptions = promisify((options, cb) =>
-  tmp.dir(options, (err, path, cleanup) =>
-    err ? cb(err) : cb(undefined, { path, cleanup: promisify(cleanup) })
-  )
-);
-module.exports.dir = async (options) => dirWithOptions(options);
-
-module.exports.withDir = async function withDir(fn, options) {
-  const { path, cleanup } = await module.exports.dir(options);
-  try {
-    return await fn({ path });
-  } finally {
-    await cleanup();
-  }
-};
-
-
-// name generation
-module.exports.tmpNameSync = tmp.tmpNameSync;
-module.exports.tmpName = promisify(tmp.tmpName);
-
-module.exports.tmpdir = tmp.tmpdir;
-
-module.exports.setGracefulCleanup = tmp.setGracefulCleanup;
-
-
-/***/ }),
-
-/***/ 8517:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-/*!
- * Tmp
- *
- * Copyright (c) 2011-2017 KARASZI Istvan <github@spam.raszi.hu>
- *
- * MIT Licensed
- */
-
-/*
- * Module dependencies.
- */
-const fs = __nccwpck_require__(7147);
-const os = __nccwpck_require__(2037);
-const path = __nccwpck_require__(1017);
-const crypto = __nccwpck_require__(6113);
-const _c = fs.constants && os.constants ?
-  { fs: fs.constants, os: os.constants } :
-  process.binding('constants');
-const rimraf = __nccwpck_require__(4959);
-
-/*
- * The working inner variables.
- */
-const
-  // the random characters to choose from
-  RANDOM_CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
-
-  TEMPLATE_PATTERN = /XXXXXX/,
-
-  DEFAULT_TRIES = 3,
-
-  CREATE_FLAGS = (_c.O_CREAT || _c.fs.O_CREAT) | (_c.O_EXCL || _c.fs.O_EXCL) | (_c.O_RDWR || _c.fs.O_RDWR),
-
-  EBADF = _c.EBADF || _c.os.errno.EBADF,
-  ENOENT = _c.ENOENT || _c.os.errno.ENOENT,
-
-  DIR_MODE = 448 /* 0o700 */,
-  FILE_MODE = 384 /* 0o600 */,
-
-  EXIT = 'exit',
-
-  SIGINT = 'SIGINT',
-
-  // this will hold the objects need to be removed on exit
-  _removeObjects = [];
-
-var
-  _gracefulCleanup = false;
-
-/**
- * Random name generator based on crypto.
- * Adapted from http://blog.tompawlak.org/how-to-generate-random-values-nodejs-javascript
- *
- * @param {number} howMany
- * @returns {string} the generated random name
- * @private
- */
-function _randomChars(howMany) {
-  var
-    value = [],
-    rnd = null;
-
-  // make sure that we do not fail because we ran out of entropy
-  try {
-    rnd = crypto.randomBytes(howMany);
-  } catch (e) {
-    rnd = crypto.pseudoRandomBytes(howMany);
-  }
-
-  for (var i = 0; i < howMany; i++) {
-    value.push(RANDOM_CHARS[rnd[i] % RANDOM_CHARS.length]);
-  }
-
-  return value.join('');
-}
-
-/**
- * Checks whether the `obj` parameter is defined or not.
- *
- * @param {Object} obj
- * @returns {boolean} true if the object is undefined
- * @private
- */
-function _isUndefined(obj) {
-  return typeof obj === 'undefined';
-}
-
-/**
- * Parses the function arguments.
- *
- * This function helps to have optional arguments.
- *
- * @param {(Options|Function)} options
- * @param {Function} callback
- * @returns {Array} parsed arguments
- * @private
- */
-function _parseArguments(options, callback) {
-  /* istanbul ignore else */
-  if (typeof options === 'function') {
-    return [{}, options];
-  }
-
-  /* istanbul ignore else */
-  if (_isUndefined(options)) {
-    return [{}, callback];
-  }
-
-  return [options, callback];
-}
-
-/**
- * Generates a new temporary name.
- *
- * @param {Object} opts
- * @returns {string} the new random name according to opts
- * @private
- */
-function _generateTmpName(opts) {
-
-  const tmpDir = _getTmpDir();
-
-  // fail early on missing tmp dir
-  if (isBlank(opts.dir) && isBlank(tmpDir)) {
-    throw new Error('No tmp dir specified');
-  }
-
-  /* istanbul ignore else */
-  if (!isBlank(opts.name)) {
-    return path.join(opts.dir || tmpDir, opts.name);
-  }
-
-  // mkstemps like template
-  // opts.template has already been guarded in tmpName() below
-  /* istanbul ignore else */
-  if (opts.template) {
-    var template = opts.template;
-    // make sure that we prepend the tmp path if none was given
-    /* istanbul ignore else */
-    if (path.basename(template) === template)
-      template = path.join(opts.dir || tmpDir, template);
-    return template.replace(TEMPLATE_PATTERN, _randomChars(6));
-  }
-
-  // prefix and postfix
-  const name = [
-    (isBlank(opts.prefix) ? 'tmp-' : opts.prefix),
-    process.pid,
-    _randomChars(12),
-    (opts.postfix ? opts.postfix : '')
-  ].join('');
-
-  return path.join(opts.dir || tmpDir, name);
-}
-
-/**
- * Gets a temporary file name.
- *
- * @param {(Options|tmpNameCallback)} options options or callback
- * @param {?tmpNameCallback} callback the callback function
- */
-function tmpName(options, callback) {
-  var
-    args = _parseArguments(options, callback),
-    opts = args[0],
-    cb = args[1],
-    tries = !isBlank(opts.name) ? 1 : opts.tries || DEFAULT_TRIES;
-
-  /* istanbul ignore else */
-  if (isNaN(tries) || tries < 0)
-    return cb(new Error('Invalid tries'));
-
-  /* istanbul ignore else */
-  if (opts.template && !opts.template.match(TEMPLATE_PATTERN))
-    return cb(new Error('Invalid template provided'));
-
-  (function _getUniqueName() {
-    try {
-      const name = _generateTmpName(opts);
-
-      // check whether the path exists then retry if needed
-      fs.stat(name, function (err) {
-        /* istanbul ignore else */
-        if (!err) {
-          /* istanbul ignore else */
-          if (tries-- > 0) return _getUniqueName();
-
-          return cb(new Error('Could not get a unique tmp filename, max tries reached ' + name));
-        }
-
-        cb(null, name);
-      });
-    } catch (err) {
-      cb(err);
-    }
-  }());
-}
-
-/**
- * Synchronous version of tmpName.
- *
- * @param {Object} options
- * @returns {string} the generated random name
- * @throws {Error} if the options are invalid or could not generate a filename
- */
-function tmpNameSync(options) {
-  var
-    args = _parseArguments(options),
-    opts = args[0],
-    tries = !isBlank(opts.name) ? 1 : opts.tries || DEFAULT_TRIES;
-
-  /* istanbul ignore else */
-  if (isNaN(tries) || tries < 0)
-    throw new Error('Invalid tries');
-
-  /* istanbul ignore else */
-  if (opts.template && !opts.template.match(TEMPLATE_PATTERN))
-    throw new Error('Invalid template provided');
-
-  do {
-    const name = _generateTmpName(opts);
-    try {
-      fs.statSync(name);
-    } catch (e) {
-      return name;
-    }
-  } while (tries-- > 0);
-
-  throw new Error('Could not get a unique tmp filename, max tries reached');
-}
-
-/**
- * Creates and opens a temporary file.
- *
- * @param {(Options|fileCallback)} options the config options or the callback function
- * @param {?fileCallback} callback
- */
-function file(options, callback) {
-  var
-    args = _parseArguments(options, callback),
-    opts = args[0],
-    cb = args[1];
-
-  // gets a temporary filename
-  tmpName(opts, function _tmpNameCreated(err, name) {
-    /* istanbul ignore else */
-    if (err) return cb(err);
-
-    // create and open the file
-    fs.open(name, CREATE_FLAGS, opts.mode || FILE_MODE, function _fileCreated(err, fd) {
-      /* istanbul ignore else */
-      if (err) return cb(err);
-
-      if (opts.discardDescriptor) {
-        return fs.close(fd, function _discardCallback(err) {
-          /* istanbul ignore else */
-          if (err) {
-            // Low probability, and the file exists, so this could be
-            // ignored.  If it isn't we certainly need to unlink the
-            // file, and if that fails too its error is more
-            // important.
-            try {
-              fs.unlinkSync(name);
-            } catch (e) {
-              if (!isENOENT(e)) {
-                err = e;
-              }
-            }
-            return cb(err);
-          }
-          cb(null, name, undefined, _prepareTmpFileRemoveCallback(name, -1, opts));
-        });
-      }
-      /* istanbul ignore else */
-      if (opts.detachDescriptor) {
-        return cb(null, name, fd, _prepareTmpFileRemoveCallback(name, -1, opts));
-      }
-      cb(null, name, fd, _prepareTmpFileRemoveCallback(name, fd, opts));
-    });
-  });
-}
-
-/**
- * Synchronous version of file.
- *
- * @param {Options} options
- * @returns {FileSyncObject} object consists of name, fd and removeCallback
- * @throws {Error} if cannot create a file
- */
-function fileSync(options) {
-  var
-    args = _parseArguments(options),
-    opts = args[0];
-
-  const discardOrDetachDescriptor = opts.discardDescriptor || opts.detachDescriptor;
-  const name = tmpNameSync(opts);
-  var fd = fs.openSync(name, CREATE_FLAGS, opts.mode || FILE_MODE);
-  /* istanbul ignore else */
-  if (opts.discardDescriptor) {
-    fs.closeSync(fd);
-    fd = undefined;
-  }
-
-  return {
-    name: name,
-    fd: fd,
-    removeCallback: _prepareTmpFileRemoveCallback(name, discardOrDetachDescriptor ? -1 : fd, opts)
-  };
-}
-
-/**
- * Creates a temporary directory.
- *
- * @param {(Options|dirCallback)} options the options or the callback function
- * @param {?dirCallback} callback
- */
-function dir(options, callback) {
-  var
-    args = _parseArguments(options, callback),
-    opts = args[0],
-    cb = args[1];
-
-  // gets a temporary filename
-  tmpName(opts, function _tmpNameCreated(err, name) {
-    /* istanbul ignore else */
-    if (err) return cb(err);
-
-    // create the directory
-    fs.mkdir(name, opts.mode || DIR_MODE, function _dirCreated(err) {
-      /* istanbul ignore else */
-      if (err) return cb(err);
-
-      cb(null, name, _prepareTmpDirRemoveCallback(name, opts));
-    });
-  });
-}
-
-/**
- * Synchronous version of dir.
- *
- * @param {Options} options
- * @returns {DirSyncObject} object consists of name and removeCallback
- * @throws {Error} if it cannot create a directory
- */
-function dirSync(options) {
-  var
-    args = _parseArguments(options),
-    opts = args[0];
-
-  const name = tmpNameSync(opts);
-  fs.mkdirSync(name, opts.mode || DIR_MODE);
-
-  return {
-    name: name,
-    removeCallback: _prepareTmpDirRemoveCallback(name, opts)
-  };
-}
-
-/**
- * Removes files asynchronously.
- *
- * @param {Object} fdPath
- * @param {Function} next
- * @private
- */
-function _removeFileAsync(fdPath, next) {
-  const _handler = function (err) {
-    if (err && !isENOENT(err)) {
-      // reraise any unanticipated error
-      return next(err);
-    }
-    next();
-  }
-
-  if (0 <= fdPath[0])
-    fs.close(fdPath[0], function (err) {
-      fs.unlink(fdPath[1], _handler);
-    });
-  else fs.unlink(fdPath[1], _handler);
-}
-
-/**
- * Removes files synchronously.
- *
- * @param {Object} fdPath
- * @private
- */
-function _removeFileSync(fdPath) {
-  try {
-    if (0 <= fdPath[0]) fs.closeSync(fdPath[0]);
-  } catch (e) {
-    // reraise any unanticipated error
-    if (!isEBADF(e) && !isENOENT(e)) throw e;
-  } finally {
-    try {
-      fs.unlinkSync(fdPath[1]);
-    }
-    catch (e) {
-      // reraise any unanticipated error
-      if (!isENOENT(e)) throw e;
-    }
-  }
-}
-
-/**
- * Prepares the callback for removal of the temporary file.
- *
- * @param {string} name the path of the file
- * @param {number} fd file descriptor
- * @param {Object} opts
- * @returns {fileCallback}
- * @private
- */
-function _prepareTmpFileRemoveCallback(name, fd, opts) {
-  const removeCallbackSync = _prepareRemoveCallback(_removeFileSync, [fd, name]);
-  const removeCallback = _prepareRemoveCallback(_removeFileAsync, [fd, name], removeCallbackSync);
-
-  if (!opts.keep) _removeObjects.unshift(removeCallbackSync);
-
-  return removeCallback;
-}
-
-/**
- * Simple wrapper for rimraf.
- *
- * @param {string} dirPath
- * @param {Function} next
- * @private
- */
-function _rimrafRemoveDirWrapper(dirPath, next) {
-  rimraf(dirPath, next);
-}
-
-/**
- * Simple wrapper for rimraf.sync.
- *
- * @param {string} dirPath
- * @private
- */
-function _rimrafRemoveDirSyncWrapper(dirPath, next) {
-  try {
-    return next(null, rimraf.sync(dirPath));
-  } catch (err) {
-    return next(err);
-  }
-}
-
-/**
- * Prepares the callback for removal of the temporary directory.
- *
- * @param {string} name
- * @param {Object} opts
- * @returns {Function} the callback
- * @private
- */
-function _prepareTmpDirRemoveCallback(name, opts) {
-  const removeFunction = opts.unsafeCleanup ? _rimrafRemoveDirWrapper : fs.rmdir.bind(fs);
-  const removeFunctionSync = opts.unsafeCleanup ? _rimrafRemoveDirSyncWrapper : fs.rmdirSync.bind(fs);
-  const removeCallbackSync = _prepareRemoveCallback(removeFunctionSync, name);
-  const removeCallback = _prepareRemoveCallback(removeFunction, name, removeCallbackSync);
-  if (!opts.keep) _removeObjects.unshift(removeCallbackSync);
-
-  return removeCallback;
-}
-
-/**
- * Creates a guarded function wrapping the removeFunction call.
- *
- * @param {Function} removeFunction
- * @param {Object} arg
- * @returns {Function}
- * @private
- */
-function _prepareRemoveCallback(removeFunction, arg, cleanupCallbackSync) {
-  var called = false;
-
-  return function _cleanupCallback(next) {
-    next = next || function () {};
-    if (!called) {
-      const toRemove = cleanupCallbackSync || _cleanupCallback;
-      const index = _removeObjects.indexOf(toRemove);
-      /* istanbul ignore else */
-      if (index >= 0) _removeObjects.splice(index, 1);
-
-      called = true;
-      // sync?
-      if (removeFunction.length === 1) {
-        try {
-          removeFunction(arg);
-          return next(null);
-        }
-        catch (err) {
-          // if no next is provided and since we are
-          // in silent cleanup mode on process exit,
-          // we will ignore the error
-          return next(err);
-        }
-      } else return removeFunction(arg, next);
-    } else return next(new Error('cleanup callback has already been called'));
-  };
-}
-
-/**
- * The garbage collector.
- *
- * @private
- */
-function _garbageCollector() {
-  /* istanbul ignore else */
-  if (!_gracefulCleanup) return;
-
-  // the function being called removes itself from _removeObjects,
-  // loop until _removeObjects is empty
-  while (_removeObjects.length) {
-    try {
-      _removeObjects[0]();
-    } catch (e) {
-      // already removed?
-    }
-  }
-}
-
-/**
- * Helper for testing against EBADF to compensate changes made to Node 7.x under Windows.
- */
-function isEBADF(error) {
-  return isExpectedError(error, -EBADF, 'EBADF');
-}
-
-/**
- * Helper for testing against ENOENT to compensate changes made to Node 7.x under Windows.
- */
-function isENOENT(error) {
-  return isExpectedError(error, -ENOENT, 'ENOENT');
-}
-
-/**
- * Helper to determine whether the expected error code matches the actual code and errno,
- * which will differ between the supported node versions.
- *
- * - Node >= 7.0:
- *   error.code {string}
- *   error.errno {string|number} any numerical value will be negated
- *
- * - Node >= 6.0 < 7.0:
- *   error.code {string}
- *   error.errno {number} negated
- *
- * - Node >= 4.0 < 6.0: introduces SystemError
- *   error.code {string}
- *   error.errno {number} negated
- *
- * - Node >= 0.10 < 4.0:
- *   error.code {number} negated
- *   error.errno n/a
- */
-function isExpectedError(error, code, errno) {
-  return error.code === code || error.code === errno;
-}
-
-/**
- * Helper which determines whether a string s is blank, that is undefined, or empty or null.
- *
- * @private
- * @param {string} s
- * @returns {Boolean} true whether the string s is blank, false otherwise
- */
-function isBlank(s) {
-  return s === null || s === undefined || !s.trim();
-}
-
-/**
- * Sets the graceful cleanup.
- */
-function setGracefulCleanup() {
-  _gracefulCleanup = true;
-}
-
-/**
- * Returns the currently configured tmp dir from os.tmpdir().
- *
- * @private
- * @returns {string} the currently configured tmp dir
- */
-function _getTmpDir() {
-  return os.tmpdir();
-}
-
-/**
- * If there are multiple different versions of tmp in place, make sure that
- * we recognize the old listeners.
- *
- * @param {Function} listener
- * @private
- * @returns {Boolean} true whether listener is a legacy listener
- */
-function _is_legacy_listener(listener) {
-  return (listener.name === '_exit' || listener.name === '_uncaughtExceptionThrown')
-    && listener.toString().indexOf('_garbageCollector();') > -1;
-}
-
-/**
- * Safely install SIGINT listener.
- *
- * NOTE: this will only work on OSX and Linux.
- *
- * @private
- */
-function _safely_install_sigint_listener() {
-
-  const listeners = process.listeners(SIGINT);
-  const existingListeners = [];
-  for (let i = 0, length = listeners.length; i < length; i++) {
-    const lstnr = listeners[i];
-    /* istanbul ignore else */
-    if (lstnr.name === '_tmp$sigint_listener') {
-      existingListeners.push(lstnr);
-      process.removeListener(SIGINT, lstnr);
-    }
-  }
-  process.on(SIGINT, function _tmp$sigint_listener(doExit) {
-    for (let i = 0, length = existingListeners.length; i < length; i++) {
-      // let the existing listener do the garbage collection (e.g. jest sandbox)
-      try {
-        existingListeners[i](false);
-      } catch (err) {
-        // ignore
-      }
-    }
-    try {
-      // force the garbage collector even it is called again in the exit listener
-      _garbageCollector();
-    } finally {
-      if (!!doExit) {
-        process.exit(0);
-      }
-    }
-  });
-}
-
-/**
- * Safely install process exit listener.
- *
- * @private
- */
-function _safely_install_exit_listener() {
-  const listeners = process.listeners(EXIT);
-
-  // collect any existing listeners
-  const existingListeners = [];
-  for (let i = 0, length = listeners.length; i < length; i++) {
-    const lstnr = listeners[i];
-    /* istanbul ignore else */
-    // TODO: remove support for legacy listeners once release 1.0.0 is out
-    if (lstnr.name === '_tmp$safe_listener' || _is_legacy_listener(lstnr)) {
-      // we must forget about the uncaughtException listener, hopefully it is ours
-      if (lstnr.name !== '_uncaughtExceptionThrown') {
-        existingListeners.push(lstnr);
-      }
-      process.removeListener(EXIT, lstnr);
-    }
-  }
-  // TODO: what was the data parameter good for?
-  process.addListener(EXIT, function _tmp$safe_listener(data) {
-    for (let i = 0, length = existingListeners.length; i < length; i++) {
-      // let the existing listener do the garbage collection (e.g. jest sandbox)
-      try {
-        existingListeners[i](data);
-      } catch (err) {
-        // ignore
-      }
-    }
-    _garbageCollector();
-  });
-}
-
-_safely_install_exit_listener();
-_safely_install_sigint_listener();
-
-/**
- * Configuration options.
- *
- * @typedef {Object} Options
- * @property {?number} tries the number of tries before give up the name generation
- * @property {?string} template the "mkstemp" like filename template
- * @property {?string} name fix name
- * @property {?string} dir the tmp directory to use
- * @property {?string} prefix prefix for the generated name
- * @property {?string} postfix postfix for the generated name
- * @property {?boolean} unsafeCleanup recursively removes the created temporary directory, even when it's not empty
- */
-
-/**
- * @typedef {Object} FileSyncObject
- * @property {string} name the name of the file
- * @property {string} fd the file descriptor
- * @property {fileCallback} removeCallback the callback function to remove the file
- */
-
-/**
- * @typedef {Object} DirSyncObject
- * @property {string} name the name of the directory
- * @property {fileCallback} removeCallback the callback function to remove the directory
- */
-
-/**
- * @callback tmpNameCallback
- * @param {?Error} err the error object if anything goes wrong
- * @param {string} name the temporary file name
- */
-
-/**
- * @callback fileCallback
- * @param {?Error} err the error object if anything goes wrong
- * @param {string} name the temporary file name
- * @param {number} fd the file descriptor
- * @param {cleanupCallback} fn the cleanup callback function
- */
-
-/**
- * @callback dirCallback
- * @param {?Error} err the error object if anything goes wrong
- * @param {string} name the temporary file name
- * @param {cleanupCallback} fn the cleanup callback function
- */
-
-/**
- * Removes the temporary created file or directory.
- *
- * @callback cleanupCallback
- * @param {simpleCallback} [next] function to call after entry was removed
- */
-
-/**
- * Callback function for function composition.
- * @see {@link https://github.com/raszi/node-tmp/issues/57|raszi/node-tmp#57}
- *
- * @callback simpleCallback
- */
-
-// exporting all the needed methods
-
-// evaluate os.tmpdir() lazily, mainly for simplifying testing but it also will
-// allow users to reconfigure the temporary directory
-Object.defineProperty(module.exports, "tmpdir", ({
-  enumerable: true,
-  configurable: false,
-  get: function () {
-    return _getTmpDir();
-  }
-}));
-
-module.exports.dir = dir;
-module.exports.dirSync = dirSync;
-
-module.exports.file = file;
-module.exports.fileSync = fileSync;
-
-module.exports.tmpName = tmpName;
-module.exports.tmpNameSync = tmpNameSync;
-
-module.exports.setGracefulCleanup = setGracefulCleanup;
-
-
-/***/ }),
-
-/***/ 4256:
+/***/ 2299:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
 var punycode = __nccwpck_require__(5477);
-var mappingTable = __nccwpck_require__(2020);
+var mappingTable = __nccwpck_require__(1907);
 
 var PROCESSING_OPTIONS = {
   TRANSITIONAL: 0,
@@ -19017,313 +17085,7 @@ module.exports.PROCESSING_OPTIONS = PROCESSING_OPTIONS;
 
 /***/ }),
 
-/***/ 4294:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-module.exports = __nccwpck_require__(4219);
-
-
-/***/ }),
-
-/***/ 4219:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-var net = __nccwpck_require__(1808);
-var tls = __nccwpck_require__(4404);
-var http = __nccwpck_require__(3685);
-var https = __nccwpck_require__(5687);
-var events = __nccwpck_require__(2361);
-var assert = __nccwpck_require__(9491);
-var util = __nccwpck_require__(3837);
-
-
-exports.httpOverHttp = httpOverHttp;
-exports.httpsOverHttp = httpsOverHttp;
-exports.httpOverHttps = httpOverHttps;
-exports.httpsOverHttps = httpsOverHttps;
-
-
-function httpOverHttp(options) {
-  var agent = new TunnelingAgent(options);
-  agent.request = http.request;
-  return agent;
-}
-
-function httpsOverHttp(options) {
-  var agent = new TunnelingAgent(options);
-  agent.request = http.request;
-  agent.createSocket = createSecureSocket;
-  agent.defaultPort = 443;
-  return agent;
-}
-
-function httpOverHttps(options) {
-  var agent = new TunnelingAgent(options);
-  agent.request = https.request;
-  return agent;
-}
-
-function httpsOverHttps(options) {
-  var agent = new TunnelingAgent(options);
-  agent.request = https.request;
-  agent.createSocket = createSecureSocket;
-  agent.defaultPort = 443;
-  return agent;
-}
-
-
-function TunnelingAgent(options) {
-  var self = this;
-  self.options = options || {};
-  self.proxyOptions = self.options.proxy || {};
-  self.maxSockets = self.options.maxSockets || http.Agent.defaultMaxSockets;
-  self.requests = [];
-  self.sockets = [];
-
-  self.on('free', function onFree(socket, host, port, localAddress) {
-    var options = toOptions(host, port, localAddress);
-    for (var i = 0, len = self.requests.length; i < len; ++i) {
-      var pending = self.requests[i];
-      if (pending.host === options.host && pending.port === options.port) {
-        // Detect the request to connect same origin server,
-        // reuse the connection.
-        self.requests.splice(i, 1);
-        pending.request.onSocket(socket);
-        return;
-      }
-    }
-    socket.destroy();
-    self.removeSocket(socket);
-  });
-}
-util.inherits(TunnelingAgent, events.EventEmitter);
-
-TunnelingAgent.prototype.addRequest = function addRequest(req, host, port, localAddress) {
-  var self = this;
-  var options = mergeOptions({request: req}, self.options, toOptions(host, port, localAddress));
-
-  if (self.sockets.length >= this.maxSockets) {
-    // We are over limit so we'll add it to the queue.
-    self.requests.push(options);
-    return;
-  }
-
-  // If we are under maxSockets create a new one.
-  self.createSocket(options, function(socket) {
-    socket.on('free', onFree);
-    socket.on('close', onCloseOrRemove);
-    socket.on('agentRemove', onCloseOrRemove);
-    req.onSocket(socket);
-
-    function onFree() {
-      self.emit('free', socket, options);
-    }
-
-    function onCloseOrRemove(err) {
-      self.removeSocket(socket);
-      socket.removeListener('free', onFree);
-      socket.removeListener('close', onCloseOrRemove);
-      socket.removeListener('agentRemove', onCloseOrRemove);
-    }
-  });
-};
-
-TunnelingAgent.prototype.createSocket = function createSocket(options, cb) {
-  var self = this;
-  var placeholder = {};
-  self.sockets.push(placeholder);
-
-  var connectOptions = mergeOptions({}, self.proxyOptions, {
-    method: 'CONNECT',
-    path: options.host + ':' + options.port,
-    agent: false,
-    headers: {
-      host: options.host + ':' + options.port
-    }
-  });
-  if (options.localAddress) {
-    connectOptions.localAddress = options.localAddress;
-  }
-  if (connectOptions.proxyAuth) {
-    connectOptions.headers = connectOptions.headers || {};
-    connectOptions.headers['Proxy-Authorization'] = 'Basic ' +
-        new Buffer(connectOptions.proxyAuth).toString('base64');
-  }
-
-  debug('making CONNECT request');
-  var connectReq = self.request(connectOptions);
-  connectReq.useChunkedEncodingByDefault = false; // for v0.6
-  connectReq.once('response', onResponse); // for v0.6
-  connectReq.once('upgrade', onUpgrade);   // for v0.6
-  connectReq.once('connect', onConnect);   // for v0.7 or later
-  connectReq.once('error', onError);
-  connectReq.end();
-
-  function onResponse(res) {
-    // Very hacky. This is necessary to avoid http-parser leaks.
-    res.upgrade = true;
-  }
-
-  function onUpgrade(res, socket, head) {
-    // Hacky.
-    process.nextTick(function() {
-      onConnect(res, socket, head);
-    });
-  }
-
-  function onConnect(res, socket, head) {
-    connectReq.removeAllListeners();
-    socket.removeAllListeners();
-
-    if (res.statusCode !== 200) {
-      debug('tunneling socket could not be established, statusCode=%d',
-        res.statusCode);
-      socket.destroy();
-      var error = new Error('tunneling socket could not be established, ' +
-        'statusCode=' + res.statusCode);
-      error.code = 'ECONNRESET';
-      options.request.emit('error', error);
-      self.removeSocket(placeholder);
-      return;
-    }
-    if (head.length > 0) {
-      debug('got illegal response body from proxy');
-      socket.destroy();
-      var error = new Error('got illegal response body from proxy');
-      error.code = 'ECONNRESET';
-      options.request.emit('error', error);
-      self.removeSocket(placeholder);
-      return;
-    }
-    debug('tunneling connection has established');
-    self.sockets[self.sockets.indexOf(placeholder)] = socket;
-    return cb(socket);
-  }
-
-  function onError(cause) {
-    connectReq.removeAllListeners();
-
-    debug('tunneling socket could not be established, cause=%s\n',
-          cause.message, cause.stack);
-    var error = new Error('tunneling socket could not be established, ' +
-                          'cause=' + cause.message);
-    error.code = 'ECONNRESET';
-    options.request.emit('error', error);
-    self.removeSocket(placeholder);
-  }
-};
-
-TunnelingAgent.prototype.removeSocket = function removeSocket(socket) {
-  var pos = this.sockets.indexOf(socket)
-  if (pos === -1) {
-    return;
-  }
-  this.sockets.splice(pos, 1);
-
-  var pending = this.requests.shift();
-  if (pending) {
-    // If we have pending requests and a socket gets closed a new one
-    // needs to be created to take over in the pool for the one that closed.
-    this.createSocket(pending, function(socket) {
-      pending.request.onSocket(socket);
-    });
-  }
-};
-
-function createSecureSocket(options, cb) {
-  var self = this;
-  TunnelingAgent.prototype.createSocket.call(self, options, function(socket) {
-    var hostHeader = options.request.getHeader('host');
-    var tlsOptions = mergeOptions({}, self.options, {
-      socket: socket,
-      servername: hostHeader ? hostHeader.replace(/:.*$/, '') : options.host
-    });
-
-    // 0 is dummy port for v0.6
-    var secureSocket = tls.connect(0, tlsOptions);
-    self.sockets[self.sockets.indexOf(socket)] = secureSocket;
-    cb(secureSocket);
-  });
-}
-
-
-function toOptions(host, port, localAddress) {
-  if (typeof host === 'string') { // since v0.10
-    return {
-      host: host,
-      port: port,
-      localAddress: localAddress
-    };
-  }
-  return host; // for v0.11 or later
-}
-
-function mergeOptions(target) {
-  for (var i = 1, len = arguments.length; i < len; ++i) {
-    var overrides = arguments[i];
-    if (typeof overrides === 'object') {
-      var keys = Object.keys(overrides);
-      for (var j = 0, keyLen = keys.length; j < keyLen; ++j) {
-        var k = keys[j];
-        if (overrides[k] !== undefined) {
-          target[k] = overrides[k];
-        }
-      }
-    }
-  }
-  return target;
-}
-
-
-var debug;
-if (process.env.NODE_DEBUG && /\btunnel\b/.test(process.env.NODE_DEBUG)) {
-  debug = function() {
-    var args = Array.prototype.slice.call(arguments);
-    if (typeof args[0] === 'string') {
-      args[0] = 'TUNNEL: ' + args[0];
-    } else {
-      args.unshift('TUNNEL:');
-    }
-    console.error.apply(console, args);
-  }
-} else {
-  debug = function() {};
-}
-exports.debug = debug; // for test
-
-
-/***/ }),
-
-/***/ 5030:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-
-function getUserAgent() {
-  if (typeof navigator === "object" && "userAgent" in navigator) {
-    return navigator.userAgent;
-  }
-
-  if (typeof process === "object" && "version" in process) {
-    return `Node.js/${process.version.substr(1)} (${process.platform}; ${process.arch})`;
-  }
-
-  return "<environment undetectable>";
-}
-
-exports.getUserAgent = getUserAgent;
-//# sourceMappingURL=index.js.map
-
-
-/***/ }),
-
-/***/ 4886:
+/***/ 5871:
 /***/ ((module) => {
 
 "use strict";
@@ -19520,12 +17282,12 @@ conversions["RegExp"] = function (V, opts) {
 
 /***/ }),
 
-/***/ 7537:
+/***/ 8262:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
-const usm = __nccwpck_require__(2158);
+const usm = __nccwpck_require__(33);
 
 exports.implementation = class URLImpl {
   constructor(constructorArgs) {
@@ -19728,15 +17490,15 @@ exports.implementation = class URLImpl {
 
 /***/ }),
 
-/***/ 3394:
+/***/ 653:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-const conversions = __nccwpck_require__(4886);
-const utils = __nccwpck_require__(3185);
-const Impl = __nccwpck_require__(7537);
+const conversions = __nccwpck_require__(5871);
+const utils = __nccwpck_require__(276);
+const Impl = __nccwpck_require__(8262);
 
 const impl = utils.implSymbol;
 
@@ -19932,32 +17694,32 @@ module.exports = {
 
 /***/ }),
 
-/***/ 8665:
+/***/ 3323:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-exports.URL = __nccwpck_require__(3394)["interface"];
-exports.serializeURL = __nccwpck_require__(2158).serializeURL;
-exports.serializeURLOrigin = __nccwpck_require__(2158).serializeURLOrigin;
-exports.basicURLParse = __nccwpck_require__(2158).basicURLParse;
-exports.setTheUsername = __nccwpck_require__(2158).setTheUsername;
-exports.setThePassword = __nccwpck_require__(2158).setThePassword;
-exports.serializeHost = __nccwpck_require__(2158).serializeHost;
-exports.serializeInteger = __nccwpck_require__(2158).serializeInteger;
-exports.parseURL = __nccwpck_require__(2158).parseURL;
+exports.URL = __nccwpck_require__(653)["interface"];
+exports.serializeURL = __nccwpck_require__(33).serializeURL;
+exports.serializeURLOrigin = __nccwpck_require__(33).serializeURLOrigin;
+exports.basicURLParse = __nccwpck_require__(33).basicURLParse;
+exports.setTheUsername = __nccwpck_require__(33).setTheUsername;
+exports.setThePassword = __nccwpck_require__(33).setThePassword;
+exports.serializeHost = __nccwpck_require__(33).serializeHost;
+exports.serializeInteger = __nccwpck_require__(33).serializeInteger;
+exports.parseURL = __nccwpck_require__(33).parseURL;
 
 
 /***/ }),
 
-/***/ 2158:
+/***/ 33:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 const punycode = __nccwpck_require__(5477);
-const tr46 = __nccwpck_require__(4256);
+const tr46 = __nccwpck_require__(2299);
 
 const specialSchemes = {
   ftp: 21,
@@ -21256,7 +19018,7 @@ module.exports.parseURL = function (input, options) {
 
 /***/ }),
 
-/***/ 3185:
+/***/ 276:
 /***/ ((module) => {
 
 "use strict";
@@ -21280,6 +19042,1592 @@ module.exports.implForWrapper = function (wrapper) {
   return wrapper[module.exports.implSymbol];
 };
 
+
+
+/***/ }),
+
+/***/ 1223:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+var wrappy = __nccwpck_require__(2940)
+module.exports = wrappy(once)
+module.exports.strict = wrappy(onceStrict)
+
+once.proto = once(function () {
+  Object.defineProperty(Function.prototype, 'once', {
+    value: function () {
+      return once(this)
+    },
+    configurable: true
+  })
+
+  Object.defineProperty(Function.prototype, 'onceStrict', {
+    value: function () {
+      return onceStrict(this)
+    },
+    configurable: true
+  })
+})
+
+function once (fn) {
+  var f = function () {
+    if (f.called) return f.value
+    f.called = true
+    return f.value = fn.apply(this, arguments)
+  }
+  f.called = false
+  return f
+}
+
+function onceStrict (fn) {
+  var f = function () {
+    if (f.called)
+      throw new Error(f.onceError)
+    f.called = true
+    return f.value = fn.apply(this, arguments)
+  }
+  var name = fn.name || 'Function wrapped with `once`'
+  f.onceError = name + " shouldn't be called more than once"
+  f.called = false
+  return f
+}
+
+
+/***/ }),
+
+/***/ 8714:
+/***/ ((module) => {
+
+"use strict";
+
+
+function posix(path) {
+	return path.charAt(0) === '/';
+}
+
+function win32(path) {
+	// https://github.com/nodejs/node/blob/b3fcc245fb25539909ef1d5eaa01dbf92e168633/lib/path.js#L56
+	var splitDeviceRe = /^([a-zA-Z]:|[\\\/]{2}[^\\\/]+[\\\/]+[^\\\/]+)?([\\\/])?([\s\S]*?)$/;
+	var result = splitDeviceRe.exec(path);
+	var device = result[1] || '';
+	var isUnc = Boolean(device && device.charAt(1) !== ':');
+
+	// UNC paths are always absolute
+	return Boolean(result[2] || isUnc);
+}
+
+module.exports = process.platform === 'win32' ? win32 : posix;
+module.exports.posix = posix;
+module.exports.win32 = win32;
+
+
+/***/ }),
+
+/***/ 8065:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const {promisify} = __nccwpck_require__(3837);
+const tmp = __nccwpck_require__(8517);
+
+// file
+module.exports.fileSync = tmp.fileSync;
+const fileWithOptions = promisify((options, cb) =>
+  tmp.file(options, (err, path, fd, cleanup) =>
+    err ? cb(err) : cb(undefined, { path, fd, cleanup: promisify(cleanup) })
+  )
+);
+module.exports.file = async (options) => fileWithOptions(options);
+
+module.exports.withFile = async function withFile(fn, options) {
+  const { path, fd, cleanup } = await module.exports.file(options);
+  try {
+    return await fn({ path, fd });
+  } finally {
+    await cleanup();
+  }
+};
+
+
+// directory
+module.exports.dirSync = tmp.dirSync;
+const dirWithOptions = promisify((options, cb) =>
+  tmp.dir(options, (err, path, cleanup) =>
+    err ? cb(err) : cb(undefined, { path, cleanup: promisify(cleanup) })
+  )
+);
+module.exports.dir = async (options) => dirWithOptions(options);
+
+module.exports.withDir = async function withDir(fn, options) {
+  const { path, cleanup } = await module.exports.dir(options);
+  try {
+    return await fn({ path });
+  } finally {
+    await cleanup();
+  }
+};
+
+
+// name generation
+module.exports.tmpNameSync = tmp.tmpNameSync;
+module.exports.tmpName = promisify(tmp.tmpName);
+
+module.exports.tmpdir = tmp.tmpdir;
+
+module.exports.setGracefulCleanup = tmp.setGracefulCleanup;
+
+
+/***/ }),
+
+/***/ 8517:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+/*!
+ * Tmp
+ *
+ * Copyright (c) 2011-2017 KARASZI Istvan <github@spam.raszi.hu>
+ *
+ * MIT Licensed
+ */
+
+/*
+ * Module dependencies.
+ */
+const fs = __nccwpck_require__(7147);
+const os = __nccwpck_require__(2037);
+const path = __nccwpck_require__(1017);
+const crypto = __nccwpck_require__(6113);
+const _c = fs.constants && os.constants ?
+  { fs: fs.constants, os: os.constants } :
+  process.binding('constants');
+const rimraf = __nccwpck_require__(2371);
+
+/*
+ * The working inner variables.
+ */
+const
+  // the random characters to choose from
+  RANDOM_CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
+
+  TEMPLATE_PATTERN = /XXXXXX/,
+
+  DEFAULT_TRIES = 3,
+
+  CREATE_FLAGS = (_c.O_CREAT || _c.fs.O_CREAT) | (_c.O_EXCL || _c.fs.O_EXCL) | (_c.O_RDWR || _c.fs.O_RDWR),
+
+  EBADF = _c.EBADF || _c.os.errno.EBADF,
+  ENOENT = _c.ENOENT || _c.os.errno.ENOENT,
+
+  DIR_MODE = 448 /* 0o700 */,
+  FILE_MODE = 384 /* 0o600 */,
+
+  EXIT = 'exit',
+
+  SIGINT = 'SIGINT',
+
+  // this will hold the objects need to be removed on exit
+  _removeObjects = [];
+
+var
+  _gracefulCleanup = false;
+
+/**
+ * Random name generator based on crypto.
+ * Adapted from http://blog.tompawlak.org/how-to-generate-random-values-nodejs-javascript
+ *
+ * @param {number} howMany
+ * @returns {string} the generated random name
+ * @private
+ */
+function _randomChars(howMany) {
+  var
+    value = [],
+    rnd = null;
+
+  // make sure that we do not fail because we ran out of entropy
+  try {
+    rnd = crypto.randomBytes(howMany);
+  } catch (e) {
+    rnd = crypto.pseudoRandomBytes(howMany);
+  }
+
+  for (var i = 0; i < howMany; i++) {
+    value.push(RANDOM_CHARS[rnd[i] % RANDOM_CHARS.length]);
+  }
+
+  return value.join('');
+}
+
+/**
+ * Checks whether the `obj` parameter is defined or not.
+ *
+ * @param {Object} obj
+ * @returns {boolean} true if the object is undefined
+ * @private
+ */
+function _isUndefined(obj) {
+  return typeof obj === 'undefined';
+}
+
+/**
+ * Parses the function arguments.
+ *
+ * This function helps to have optional arguments.
+ *
+ * @param {(Options|Function)} options
+ * @param {Function} callback
+ * @returns {Array} parsed arguments
+ * @private
+ */
+function _parseArguments(options, callback) {
+  /* istanbul ignore else */
+  if (typeof options === 'function') {
+    return [{}, options];
+  }
+
+  /* istanbul ignore else */
+  if (_isUndefined(options)) {
+    return [{}, callback];
+  }
+
+  return [options, callback];
+}
+
+/**
+ * Generates a new temporary name.
+ *
+ * @param {Object} opts
+ * @returns {string} the new random name according to opts
+ * @private
+ */
+function _generateTmpName(opts) {
+
+  const tmpDir = _getTmpDir();
+
+  // fail early on missing tmp dir
+  if (isBlank(opts.dir) && isBlank(tmpDir)) {
+    throw new Error('No tmp dir specified');
+  }
+
+  /* istanbul ignore else */
+  if (!isBlank(opts.name)) {
+    return path.join(opts.dir || tmpDir, opts.name);
+  }
+
+  // mkstemps like template
+  // opts.template has already been guarded in tmpName() below
+  /* istanbul ignore else */
+  if (opts.template) {
+    var template = opts.template;
+    // make sure that we prepend the tmp path if none was given
+    /* istanbul ignore else */
+    if (path.basename(template) === template)
+      template = path.join(opts.dir || tmpDir, template);
+    return template.replace(TEMPLATE_PATTERN, _randomChars(6));
+  }
+
+  // prefix and postfix
+  const name = [
+    (isBlank(opts.prefix) ? 'tmp-' : opts.prefix),
+    process.pid,
+    _randomChars(12),
+    (opts.postfix ? opts.postfix : '')
+  ].join('');
+
+  return path.join(opts.dir || tmpDir, name);
+}
+
+/**
+ * Gets a temporary file name.
+ *
+ * @param {(Options|tmpNameCallback)} options options or callback
+ * @param {?tmpNameCallback} callback the callback function
+ */
+function tmpName(options, callback) {
+  var
+    args = _parseArguments(options, callback),
+    opts = args[0],
+    cb = args[1],
+    tries = !isBlank(opts.name) ? 1 : opts.tries || DEFAULT_TRIES;
+
+  /* istanbul ignore else */
+  if (isNaN(tries) || tries < 0)
+    return cb(new Error('Invalid tries'));
+
+  /* istanbul ignore else */
+  if (opts.template && !opts.template.match(TEMPLATE_PATTERN))
+    return cb(new Error('Invalid template provided'));
+
+  (function _getUniqueName() {
+    try {
+      const name = _generateTmpName(opts);
+
+      // check whether the path exists then retry if needed
+      fs.stat(name, function (err) {
+        /* istanbul ignore else */
+        if (!err) {
+          /* istanbul ignore else */
+          if (tries-- > 0) return _getUniqueName();
+
+          return cb(new Error('Could not get a unique tmp filename, max tries reached ' + name));
+        }
+
+        cb(null, name);
+      });
+    } catch (err) {
+      cb(err);
+    }
+  }());
+}
+
+/**
+ * Synchronous version of tmpName.
+ *
+ * @param {Object} options
+ * @returns {string} the generated random name
+ * @throws {Error} if the options are invalid or could not generate a filename
+ */
+function tmpNameSync(options) {
+  var
+    args = _parseArguments(options),
+    opts = args[0],
+    tries = !isBlank(opts.name) ? 1 : opts.tries || DEFAULT_TRIES;
+
+  /* istanbul ignore else */
+  if (isNaN(tries) || tries < 0)
+    throw new Error('Invalid tries');
+
+  /* istanbul ignore else */
+  if (opts.template && !opts.template.match(TEMPLATE_PATTERN))
+    throw new Error('Invalid template provided');
+
+  do {
+    const name = _generateTmpName(opts);
+    try {
+      fs.statSync(name);
+    } catch (e) {
+      return name;
+    }
+  } while (tries-- > 0);
+
+  throw new Error('Could not get a unique tmp filename, max tries reached');
+}
+
+/**
+ * Creates and opens a temporary file.
+ *
+ * @param {(Options|fileCallback)} options the config options or the callback function
+ * @param {?fileCallback} callback
+ */
+function file(options, callback) {
+  var
+    args = _parseArguments(options, callback),
+    opts = args[0],
+    cb = args[1];
+
+  // gets a temporary filename
+  tmpName(opts, function _tmpNameCreated(err, name) {
+    /* istanbul ignore else */
+    if (err) return cb(err);
+
+    // create and open the file
+    fs.open(name, CREATE_FLAGS, opts.mode || FILE_MODE, function _fileCreated(err, fd) {
+      /* istanbul ignore else */
+      if (err) return cb(err);
+
+      if (opts.discardDescriptor) {
+        return fs.close(fd, function _discardCallback(err) {
+          /* istanbul ignore else */
+          if (err) {
+            // Low probability, and the file exists, so this could be
+            // ignored.  If it isn't we certainly need to unlink the
+            // file, and if that fails too its error is more
+            // important.
+            try {
+              fs.unlinkSync(name);
+            } catch (e) {
+              if (!isENOENT(e)) {
+                err = e;
+              }
+            }
+            return cb(err);
+          }
+          cb(null, name, undefined, _prepareTmpFileRemoveCallback(name, -1, opts));
+        });
+      }
+      /* istanbul ignore else */
+      if (opts.detachDescriptor) {
+        return cb(null, name, fd, _prepareTmpFileRemoveCallback(name, -1, opts));
+      }
+      cb(null, name, fd, _prepareTmpFileRemoveCallback(name, fd, opts));
+    });
+  });
+}
+
+/**
+ * Synchronous version of file.
+ *
+ * @param {Options} options
+ * @returns {FileSyncObject} object consists of name, fd and removeCallback
+ * @throws {Error} if cannot create a file
+ */
+function fileSync(options) {
+  var
+    args = _parseArguments(options),
+    opts = args[0];
+
+  const discardOrDetachDescriptor = opts.discardDescriptor || opts.detachDescriptor;
+  const name = tmpNameSync(opts);
+  var fd = fs.openSync(name, CREATE_FLAGS, opts.mode || FILE_MODE);
+  /* istanbul ignore else */
+  if (opts.discardDescriptor) {
+    fs.closeSync(fd);
+    fd = undefined;
+  }
+
+  return {
+    name: name,
+    fd: fd,
+    removeCallback: _prepareTmpFileRemoveCallback(name, discardOrDetachDescriptor ? -1 : fd, opts)
+  };
+}
+
+/**
+ * Creates a temporary directory.
+ *
+ * @param {(Options|dirCallback)} options the options or the callback function
+ * @param {?dirCallback} callback
+ */
+function dir(options, callback) {
+  var
+    args = _parseArguments(options, callback),
+    opts = args[0],
+    cb = args[1];
+
+  // gets a temporary filename
+  tmpName(opts, function _tmpNameCreated(err, name) {
+    /* istanbul ignore else */
+    if (err) return cb(err);
+
+    // create the directory
+    fs.mkdir(name, opts.mode || DIR_MODE, function _dirCreated(err) {
+      /* istanbul ignore else */
+      if (err) return cb(err);
+
+      cb(null, name, _prepareTmpDirRemoveCallback(name, opts));
+    });
+  });
+}
+
+/**
+ * Synchronous version of dir.
+ *
+ * @param {Options} options
+ * @returns {DirSyncObject} object consists of name and removeCallback
+ * @throws {Error} if it cannot create a directory
+ */
+function dirSync(options) {
+  var
+    args = _parseArguments(options),
+    opts = args[0];
+
+  const name = tmpNameSync(opts);
+  fs.mkdirSync(name, opts.mode || DIR_MODE);
+
+  return {
+    name: name,
+    removeCallback: _prepareTmpDirRemoveCallback(name, opts)
+  };
+}
+
+/**
+ * Removes files asynchronously.
+ *
+ * @param {Object} fdPath
+ * @param {Function} next
+ * @private
+ */
+function _removeFileAsync(fdPath, next) {
+  const _handler = function (err) {
+    if (err && !isENOENT(err)) {
+      // reraise any unanticipated error
+      return next(err);
+    }
+    next();
+  }
+
+  if (0 <= fdPath[0])
+    fs.close(fdPath[0], function (err) {
+      fs.unlink(fdPath[1], _handler);
+    });
+  else fs.unlink(fdPath[1], _handler);
+}
+
+/**
+ * Removes files synchronously.
+ *
+ * @param {Object} fdPath
+ * @private
+ */
+function _removeFileSync(fdPath) {
+  try {
+    if (0 <= fdPath[0]) fs.closeSync(fdPath[0]);
+  } catch (e) {
+    // reraise any unanticipated error
+    if (!isEBADF(e) && !isENOENT(e)) throw e;
+  } finally {
+    try {
+      fs.unlinkSync(fdPath[1]);
+    }
+    catch (e) {
+      // reraise any unanticipated error
+      if (!isENOENT(e)) throw e;
+    }
+  }
+}
+
+/**
+ * Prepares the callback for removal of the temporary file.
+ *
+ * @param {string} name the path of the file
+ * @param {number} fd file descriptor
+ * @param {Object} opts
+ * @returns {fileCallback}
+ * @private
+ */
+function _prepareTmpFileRemoveCallback(name, fd, opts) {
+  const removeCallbackSync = _prepareRemoveCallback(_removeFileSync, [fd, name]);
+  const removeCallback = _prepareRemoveCallback(_removeFileAsync, [fd, name], removeCallbackSync);
+
+  if (!opts.keep) _removeObjects.unshift(removeCallbackSync);
+
+  return removeCallback;
+}
+
+/**
+ * Simple wrapper for rimraf.
+ *
+ * @param {string} dirPath
+ * @param {Function} next
+ * @private
+ */
+function _rimrafRemoveDirWrapper(dirPath, next) {
+  rimraf(dirPath, next);
+}
+
+/**
+ * Simple wrapper for rimraf.sync.
+ *
+ * @param {string} dirPath
+ * @private
+ */
+function _rimrafRemoveDirSyncWrapper(dirPath, next) {
+  try {
+    return next(null, rimraf.sync(dirPath));
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/**
+ * Prepares the callback for removal of the temporary directory.
+ *
+ * @param {string} name
+ * @param {Object} opts
+ * @returns {Function} the callback
+ * @private
+ */
+function _prepareTmpDirRemoveCallback(name, opts) {
+  const removeFunction = opts.unsafeCleanup ? _rimrafRemoveDirWrapper : fs.rmdir.bind(fs);
+  const removeFunctionSync = opts.unsafeCleanup ? _rimrafRemoveDirSyncWrapper : fs.rmdirSync.bind(fs);
+  const removeCallbackSync = _prepareRemoveCallback(removeFunctionSync, name);
+  const removeCallback = _prepareRemoveCallback(removeFunction, name, removeCallbackSync);
+  if (!opts.keep) _removeObjects.unshift(removeCallbackSync);
+
+  return removeCallback;
+}
+
+/**
+ * Creates a guarded function wrapping the removeFunction call.
+ *
+ * @param {Function} removeFunction
+ * @param {Object} arg
+ * @returns {Function}
+ * @private
+ */
+function _prepareRemoveCallback(removeFunction, arg, cleanupCallbackSync) {
+  var called = false;
+
+  return function _cleanupCallback(next) {
+    next = next || function () {};
+    if (!called) {
+      const toRemove = cleanupCallbackSync || _cleanupCallback;
+      const index = _removeObjects.indexOf(toRemove);
+      /* istanbul ignore else */
+      if (index >= 0) _removeObjects.splice(index, 1);
+
+      called = true;
+      // sync?
+      if (removeFunction.length === 1) {
+        try {
+          removeFunction(arg);
+          return next(null);
+        }
+        catch (err) {
+          // if no next is provided and since we are
+          // in silent cleanup mode on process exit,
+          // we will ignore the error
+          return next(err);
+        }
+      } else return removeFunction(arg, next);
+    } else return next(new Error('cleanup callback has already been called'));
+  };
+}
+
+/**
+ * The garbage collector.
+ *
+ * @private
+ */
+function _garbageCollector() {
+  /* istanbul ignore else */
+  if (!_gracefulCleanup) return;
+
+  // the function being called removes itself from _removeObjects,
+  // loop until _removeObjects is empty
+  while (_removeObjects.length) {
+    try {
+      _removeObjects[0]();
+    } catch (e) {
+      // already removed?
+    }
+  }
+}
+
+/**
+ * Helper for testing against EBADF to compensate changes made to Node 7.x under Windows.
+ */
+function isEBADF(error) {
+  return isExpectedError(error, -EBADF, 'EBADF');
+}
+
+/**
+ * Helper for testing against ENOENT to compensate changes made to Node 7.x under Windows.
+ */
+function isENOENT(error) {
+  return isExpectedError(error, -ENOENT, 'ENOENT');
+}
+
+/**
+ * Helper to determine whether the expected error code matches the actual code and errno,
+ * which will differ between the supported node versions.
+ *
+ * - Node >= 7.0:
+ *   error.code {string}
+ *   error.errno {string|number} any numerical value will be negated
+ *
+ * - Node >= 6.0 < 7.0:
+ *   error.code {string}
+ *   error.errno {number} negated
+ *
+ * - Node >= 4.0 < 6.0: introduces SystemError
+ *   error.code {string}
+ *   error.errno {number} negated
+ *
+ * - Node >= 0.10 < 4.0:
+ *   error.code {number} negated
+ *   error.errno n/a
+ */
+function isExpectedError(error, code, errno) {
+  return error.code === code || error.code === errno;
+}
+
+/**
+ * Helper which determines whether a string s is blank, that is undefined, or empty or null.
+ *
+ * @private
+ * @param {string} s
+ * @returns {Boolean} true whether the string s is blank, false otherwise
+ */
+function isBlank(s) {
+  return s === null || s === undefined || !s.trim();
+}
+
+/**
+ * Sets the graceful cleanup.
+ */
+function setGracefulCleanup() {
+  _gracefulCleanup = true;
+}
+
+/**
+ * Returns the currently configured tmp dir from os.tmpdir().
+ *
+ * @private
+ * @returns {string} the currently configured tmp dir
+ */
+function _getTmpDir() {
+  return os.tmpdir();
+}
+
+/**
+ * If there are multiple different versions of tmp in place, make sure that
+ * we recognize the old listeners.
+ *
+ * @param {Function} listener
+ * @private
+ * @returns {Boolean} true whether listener is a legacy listener
+ */
+function _is_legacy_listener(listener) {
+  return (listener.name === '_exit' || listener.name === '_uncaughtExceptionThrown')
+    && listener.toString().indexOf('_garbageCollector();') > -1;
+}
+
+/**
+ * Safely install SIGINT listener.
+ *
+ * NOTE: this will only work on OSX and Linux.
+ *
+ * @private
+ */
+function _safely_install_sigint_listener() {
+
+  const listeners = process.listeners(SIGINT);
+  const existingListeners = [];
+  for (let i = 0, length = listeners.length; i < length; i++) {
+    const lstnr = listeners[i];
+    /* istanbul ignore else */
+    if (lstnr.name === '_tmp$sigint_listener') {
+      existingListeners.push(lstnr);
+      process.removeListener(SIGINT, lstnr);
+    }
+  }
+  process.on(SIGINT, function _tmp$sigint_listener(doExit) {
+    for (let i = 0, length = existingListeners.length; i < length; i++) {
+      // let the existing listener do the garbage collection (e.g. jest sandbox)
+      try {
+        existingListeners[i](false);
+      } catch (err) {
+        // ignore
+      }
+    }
+    try {
+      // force the garbage collector even it is called again in the exit listener
+      _garbageCollector();
+    } finally {
+      if (!!doExit) {
+        process.exit(0);
+      }
+    }
+  });
+}
+
+/**
+ * Safely install process exit listener.
+ *
+ * @private
+ */
+function _safely_install_exit_listener() {
+  const listeners = process.listeners(EXIT);
+
+  // collect any existing listeners
+  const existingListeners = [];
+  for (let i = 0, length = listeners.length; i < length; i++) {
+    const lstnr = listeners[i];
+    /* istanbul ignore else */
+    // TODO: remove support for legacy listeners once release 1.0.0 is out
+    if (lstnr.name === '_tmp$safe_listener' || _is_legacy_listener(lstnr)) {
+      // we must forget about the uncaughtException listener, hopefully it is ours
+      if (lstnr.name !== '_uncaughtExceptionThrown') {
+        existingListeners.push(lstnr);
+      }
+      process.removeListener(EXIT, lstnr);
+    }
+  }
+  // TODO: what was the data parameter good for?
+  process.addListener(EXIT, function _tmp$safe_listener(data) {
+    for (let i = 0, length = existingListeners.length; i < length; i++) {
+      // let the existing listener do the garbage collection (e.g. jest sandbox)
+      try {
+        existingListeners[i](data);
+      } catch (err) {
+        // ignore
+      }
+    }
+    _garbageCollector();
+  });
+}
+
+_safely_install_exit_listener();
+_safely_install_sigint_listener();
+
+/**
+ * Configuration options.
+ *
+ * @typedef {Object} Options
+ * @property {?number} tries the number of tries before give up the name generation
+ * @property {?string} template the "mkstemp" like filename template
+ * @property {?string} name fix name
+ * @property {?string} dir the tmp directory to use
+ * @property {?string} prefix prefix for the generated name
+ * @property {?string} postfix postfix for the generated name
+ * @property {?boolean} unsafeCleanup recursively removes the created temporary directory, even when it's not empty
+ */
+
+/**
+ * @typedef {Object} FileSyncObject
+ * @property {string} name the name of the file
+ * @property {string} fd the file descriptor
+ * @property {fileCallback} removeCallback the callback function to remove the file
+ */
+
+/**
+ * @typedef {Object} DirSyncObject
+ * @property {string} name the name of the directory
+ * @property {fileCallback} removeCallback the callback function to remove the directory
+ */
+
+/**
+ * @callback tmpNameCallback
+ * @param {?Error} err the error object if anything goes wrong
+ * @param {string} name the temporary file name
+ */
+
+/**
+ * @callback fileCallback
+ * @param {?Error} err the error object if anything goes wrong
+ * @param {string} name the temporary file name
+ * @param {number} fd the file descriptor
+ * @param {cleanupCallback} fn the cleanup callback function
+ */
+
+/**
+ * @callback dirCallback
+ * @param {?Error} err the error object if anything goes wrong
+ * @param {string} name the temporary file name
+ * @param {cleanupCallback} fn the cleanup callback function
+ */
+
+/**
+ * Removes the temporary created file or directory.
+ *
+ * @callback cleanupCallback
+ * @param {simpleCallback} [next] function to call after entry was removed
+ */
+
+/**
+ * Callback function for function composition.
+ * @see {@link https://github.com/raszi/node-tmp/issues/57|raszi/node-tmp#57}
+ *
+ * @callback simpleCallback
+ */
+
+// exporting all the needed methods
+
+// evaluate os.tmpdir() lazily, mainly for simplifying testing but it also will
+// allow users to reconfigure the temporary directory
+Object.defineProperty(module.exports, "tmpdir", ({
+  enumerable: true,
+  configurable: false,
+  get: function () {
+    return _getTmpDir();
+  }
+}));
+
+module.exports.dir = dir;
+module.exports.dirSync = dirSync;
+
+module.exports.file = file;
+module.exports.fileSync = fileSync;
+
+module.exports.tmpName = tmpName;
+module.exports.tmpNameSync = tmpNameSync;
+
+module.exports.setGracefulCleanup = setGracefulCleanup;
+
+
+/***/ }),
+
+/***/ 2371:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+module.exports = rimraf
+rimraf.sync = rimrafSync
+
+var assert = __nccwpck_require__(9491)
+var path = __nccwpck_require__(1017)
+var fs = __nccwpck_require__(7147)
+var glob = undefined
+try {
+  glob = __nccwpck_require__(1957)
+} catch (_err) {
+  // treat glob as optional.
+}
+var _0666 = parseInt('666', 8)
+
+var defaultGlobOpts = {
+  nosort: true,
+  silent: true
+}
+
+// for EMFILE handling
+var timeout = 0
+
+var isWindows = (process.platform === "win32")
+
+function defaults (options) {
+  var methods = [
+    'unlink',
+    'chmod',
+    'stat',
+    'lstat',
+    'rmdir',
+    'readdir'
+  ]
+  methods.forEach(function(m) {
+    options[m] = options[m] || fs[m]
+    m = m + 'Sync'
+    options[m] = options[m] || fs[m]
+  })
+
+  options.maxBusyTries = options.maxBusyTries || 3
+  options.emfileWait = options.emfileWait || 1000
+  if (options.glob === false) {
+    options.disableGlob = true
+  }
+  if (options.disableGlob !== true && glob === undefined) {
+    throw Error('glob dependency not found, set `options.disableGlob = true` if intentional')
+  }
+  options.disableGlob = options.disableGlob || false
+  options.glob = options.glob || defaultGlobOpts
+}
+
+function rimraf (p, options, cb) {
+  if (typeof options === 'function') {
+    cb = options
+    options = {}
+  }
+
+  assert(p, 'rimraf: missing path')
+  assert.equal(typeof p, 'string', 'rimraf: path should be a string')
+  assert.equal(typeof cb, 'function', 'rimraf: callback function required')
+  assert(options, 'rimraf: invalid options argument provided')
+  assert.equal(typeof options, 'object', 'rimraf: options should be object')
+
+  defaults(options)
+
+  var busyTries = 0
+  var errState = null
+  var n = 0
+
+  if (options.disableGlob || !glob.hasMagic(p))
+    return afterGlob(null, [p])
+
+  options.lstat(p, function (er, stat) {
+    if (!er)
+      return afterGlob(null, [p])
+
+    glob(p, options.glob, afterGlob)
+  })
+
+  function next (er) {
+    errState = errState || er
+    if (--n === 0)
+      cb(errState)
+  }
+
+  function afterGlob (er, results) {
+    if (er)
+      return cb(er)
+
+    n = results.length
+    if (n === 0)
+      return cb()
+
+    results.forEach(function (p) {
+      rimraf_(p, options, function CB (er) {
+        if (er) {
+          if ((er.code === "EBUSY" || er.code === "ENOTEMPTY" || er.code === "EPERM") &&
+              busyTries < options.maxBusyTries) {
+            busyTries ++
+            var time = busyTries * 100
+            // try again, with the same exact callback as this one.
+            return setTimeout(function () {
+              rimraf_(p, options, CB)
+            }, time)
+          }
+
+          // this one won't happen if graceful-fs is used.
+          if (er.code === "EMFILE" && timeout < options.emfileWait) {
+            return setTimeout(function () {
+              rimraf_(p, options, CB)
+            }, timeout ++)
+          }
+
+          // already gone
+          if (er.code === "ENOENT") er = null
+        }
+
+        timeout = 0
+        next(er)
+      })
+    })
+  }
+}
+
+// Two possible strategies.
+// 1. Assume it's a file.  unlink it, then do the dir stuff on EPERM or EISDIR
+// 2. Assume it's a directory.  readdir, then do the file stuff on ENOTDIR
+//
+// Both result in an extra syscall when you guess wrong.  However, there
+// are likely far more normal files in the world than directories.  This
+// is based on the assumption that a the average number of files per
+// directory is >= 1.
+//
+// If anyone ever complains about this, then I guess the strategy could
+// be made configurable somehow.  But until then, YAGNI.
+function rimraf_ (p, options, cb) {
+  assert(p)
+  assert(options)
+  assert(typeof cb === 'function')
+
+  // sunos lets the root user unlink directories, which is... weird.
+  // so we have to lstat here and make sure it's not a dir.
+  options.lstat(p, function (er, st) {
+    if (er && er.code === "ENOENT")
+      return cb(null)
+
+    // Windows can EPERM on stat.  Life is suffering.
+    if (er && er.code === "EPERM" && isWindows)
+      fixWinEPERM(p, options, er, cb)
+
+    if (st && st.isDirectory())
+      return rmdir(p, options, er, cb)
+
+    options.unlink(p, function (er) {
+      if (er) {
+        if (er.code === "ENOENT")
+          return cb(null)
+        if (er.code === "EPERM")
+          return (isWindows)
+            ? fixWinEPERM(p, options, er, cb)
+            : rmdir(p, options, er, cb)
+        if (er.code === "EISDIR")
+          return rmdir(p, options, er, cb)
+      }
+      return cb(er)
+    })
+  })
+}
+
+function fixWinEPERM (p, options, er, cb) {
+  assert(p)
+  assert(options)
+  assert(typeof cb === 'function')
+  if (er)
+    assert(er instanceof Error)
+
+  options.chmod(p, _0666, function (er2) {
+    if (er2)
+      cb(er2.code === "ENOENT" ? null : er)
+    else
+      options.stat(p, function(er3, stats) {
+        if (er3)
+          cb(er3.code === "ENOENT" ? null : er)
+        else if (stats.isDirectory())
+          rmdir(p, options, er, cb)
+        else
+          options.unlink(p, cb)
+      })
+  })
+}
+
+function fixWinEPERMSync (p, options, er) {
+  assert(p)
+  assert(options)
+  if (er)
+    assert(er instanceof Error)
+
+  try {
+    options.chmodSync(p, _0666)
+  } catch (er2) {
+    if (er2.code === "ENOENT")
+      return
+    else
+      throw er
+  }
+
+  try {
+    var stats = options.statSync(p)
+  } catch (er3) {
+    if (er3.code === "ENOENT")
+      return
+    else
+      throw er
+  }
+
+  if (stats.isDirectory())
+    rmdirSync(p, options, er)
+  else
+    options.unlinkSync(p)
+}
+
+function rmdir (p, options, originalEr, cb) {
+  assert(p)
+  assert(options)
+  if (originalEr)
+    assert(originalEr instanceof Error)
+  assert(typeof cb === 'function')
+
+  // try to rmdir first, and only readdir on ENOTEMPTY or EEXIST (SunOS)
+  // if we guessed wrong, and it's not a directory, then
+  // raise the original error.
+  options.rmdir(p, function (er) {
+    if (er && (er.code === "ENOTEMPTY" || er.code === "EEXIST" || er.code === "EPERM"))
+      rmkids(p, options, cb)
+    else if (er && er.code === "ENOTDIR")
+      cb(originalEr)
+    else
+      cb(er)
+  })
+}
+
+function rmkids(p, options, cb) {
+  assert(p)
+  assert(options)
+  assert(typeof cb === 'function')
+
+  options.readdir(p, function (er, files) {
+    if (er)
+      return cb(er)
+    var n = files.length
+    if (n === 0)
+      return options.rmdir(p, cb)
+    var errState
+    files.forEach(function (f) {
+      rimraf(path.join(p, f), options, function (er) {
+        if (errState)
+          return
+        if (er)
+          return cb(errState = er)
+        if (--n === 0)
+          options.rmdir(p, cb)
+      })
+    })
+  })
+}
+
+// this looks simpler, and is strictly *faster*, but will
+// tie up the JavaScript thread and fail on excessively
+// deep directory trees.
+function rimrafSync (p, options) {
+  options = options || {}
+  defaults(options)
+
+  assert(p, 'rimraf: missing path')
+  assert.equal(typeof p, 'string', 'rimraf: path should be a string')
+  assert(options, 'rimraf: missing options')
+  assert.equal(typeof options, 'object', 'rimraf: options should be object')
+
+  var results
+
+  if (options.disableGlob || !glob.hasMagic(p)) {
+    results = [p]
+  } else {
+    try {
+      options.lstatSync(p)
+      results = [p]
+    } catch (er) {
+      results = glob.sync(p, options.glob)
+    }
+  }
+
+  if (!results.length)
+    return
+
+  for (var i = 0; i < results.length; i++) {
+    var p = results[i]
+
+    try {
+      var st = options.lstatSync(p)
+    } catch (er) {
+      if (er.code === "ENOENT")
+        return
+
+      // Windows can EPERM on stat.  Life is suffering.
+      if (er.code === "EPERM" && isWindows)
+        fixWinEPERMSync(p, options, er)
+    }
+
+    try {
+      // sunos lets the root user unlink directories, which is... weird.
+      if (st && st.isDirectory())
+        rmdirSync(p, options, null)
+      else
+        options.unlinkSync(p)
+    } catch (er) {
+      if (er.code === "ENOENT")
+        return
+      if (er.code === "EPERM")
+        return isWindows ? fixWinEPERMSync(p, options, er) : rmdirSync(p, options, er)
+      if (er.code !== "EISDIR")
+        throw er
+
+      rmdirSync(p, options, er)
+    }
+  }
+}
+
+function rmdirSync (p, options, originalEr) {
+  assert(p)
+  assert(options)
+  if (originalEr)
+    assert(originalEr instanceof Error)
+
+  try {
+    options.rmdirSync(p)
+  } catch (er) {
+    if (er.code === "ENOENT")
+      return
+    if (er.code === "ENOTDIR")
+      throw originalEr
+    if (er.code === "ENOTEMPTY" || er.code === "EEXIST" || er.code === "EPERM")
+      rmkidsSync(p, options)
+  }
+}
+
+function rmkidsSync (p, options) {
+  assert(p)
+  assert(options)
+  options.readdirSync(p).forEach(function (f) {
+    rimrafSync(path.join(p, f), options)
+  })
+
+  // We only end up here once we got ENOTEMPTY at least once, and
+  // at this point, we are guaranteed to have removed all the kids.
+  // So, we know that it won't be ENOENT or ENOTDIR or anything else.
+  // try really hard to delete stuff on windows, because it has a
+  // PROFOUNDLY annoying habit of not closing handles promptly when
+  // files are deleted, resulting in spurious ENOTEMPTY errors.
+  var retries = isWindows ? 100 : 1
+  var i = 0
+  do {
+    var threw = true
+    try {
+      var ret = options.rmdirSync(p, options)
+      threw = false
+      return ret
+    } finally {
+      if (++i < retries && threw)
+        continue
+    }
+  } while (true)
+}
+
+
+/***/ }),
+
+/***/ 4294:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+module.exports = __nccwpck_require__(4219);
+
+
+/***/ }),
+
+/***/ 4219:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+var net = __nccwpck_require__(1808);
+var tls = __nccwpck_require__(4404);
+var http = __nccwpck_require__(3685);
+var https = __nccwpck_require__(5687);
+var events = __nccwpck_require__(2361);
+var assert = __nccwpck_require__(9491);
+var util = __nccwpck_require__(3837);
+
+
+exports.httpOverHttp = httpOverHttp;
+exports.httpsOverHttp = httpsOverHttp;
+exports.httpOverHttps = httpOverHttps;
+exports.httpsOverHttps = httpsOverHttps;
+
+
+function httpOverHttp(options) {
+  var agent = new TunnelingAgent(options);
+  agent.request = http.request;
+  return agent;
+}
+
+function httpsOverHttp(options) {
+  var agent = new TunnelingAgent(options);
+  agent.request = http.request;
+  agent.createSocket = createSecureSocket;
+  agent.defaultPort = 443;
+  return agent;
+}
+
+function httpOverHttps(options) {
+  var agent = new TunnelingAgent(options);
+  agent.request = https.request;
+  return agent;
+}
+
+function httpsOverHttps(options) {
+  var agent = new TunnelingAgent(options);
+  agent.request = https.request;
+  agent.createSocket = createSecureSocket;
+  agent.defaultPort = 443;
+  return agent;
+}
+
+
+function TunnelingAgent(options) {
+  var self = this;
+  self.options = options || {};
+  self.proxyOptions = self.options.proxy || {};
+  self.maxSockets = self.options.maxSockets || http.Agent.defaultMaxSockets;
+  self.requests = [];
+  self.sockets = [];
+
+  self.on('free', function onFree(socket, host, port, localAddress) {
+    var options = toOptions(host, port, localAddress);
+    for (var i = 0, len = self.requests.length; i < len; ++i) {
+      var pending = self.requests[i];
+      if (pending.host === options.host && pending.port === options.port) {
+        // Detect the request to connect same origin server,
+        // reuse the connection.
+        self.requests.splice(i, 1);
+        pending.request.onSocket(socket);
+        return;
+      }
+    }
+    socket.destroy();
+    self.removeSocket(socket);
+  });
+}
+util.inherits(TunnelingAgent, events.EventEmitter);
+
+TunnelingAgent.prototype.addRequest = function addRequest(req, host, port, localAddress) {
+  var self = this;
+  var options = mergeOptions({request: req}, self.options, toOptions(host, port, localAddress));
+
+  if (self.sockets.length >= this.maxSockets) {
+    // We are over limit so we'll add it to the queue.
+    self.requests.push(options);
+    return;
+  }
+
+  // If we are under maxSockets create a new one.
+  self.createSocket(options, function(socket) {
+    socket.on('free', onFree);
+    socket.on('close', onCloseOrRemove);
+    socket.on('agentRemove', onCloseOrRemove);
+    req.onSocket(socket);
+
+    function onFree() {
+      self.emit('free', socket, options);
+    }
+
+    function onCloseOrRemove(err) {
+      self.removeSocket(socket);
+      socket.removeListener('free', onFree);
+      socket.removeListener('close', onCloseOrRemove);
+      socket.removeListener('agentRemove', onCloseOrRemove);
+    }
+  });
+};
+
+TunnelingAgent.prototype.createSocket = function createSocket(options, cb) {
+  var self = this;
+  var placeholder = {};
+  self.sockets.push(placeholder);
+
+  var connectOptions = mergeOptions({}, self.proxyOptions, {
+    method: 'CONNECT',
+    path: options.host + ':' + options.port,
+    agent: false,
+    headers: {
+      host: options.host + ':' + options.port
+    }
+  });
+  if (options.localAddress) {
+    connectOptions.localAddress = options.localAddress;
+  }
+  if (connectOptions.proxyAuth) {
+    connectOptions.headers = connectOptions.headers || {};
+    connectOptions.headers['Proxy-Authorization'] = 'Basic ' +
+        new Buffer(connectOptions.proxyAuth).toString('base64');
+  }
+
+  debug('making CONNECT request');
+  var connectReq = self.request(connectOptions);
+  connectReq.useChunkedEncodingByDefault = false; // for v0.6
+  connectReq.once('response', onResponse); // for v0.6
+  connectReq.once('upgrade', onUpgrade);   // for v0.6
+  connectReq.once('connect', onConnect);   // for v0.7 or later
+  connectReq.once('error', onError);
+  connectReq.end();
+
+  function onResponse(res) {
+    // Very hacky. This is necessary to avoid http-parser leaks.
+    res.upgrade = true;
+  }
+
+  function onUpgrade(res, socket, head) {
+    // Hacky.
+    process.nextTick(function() {
+      onConnect(res, socket, head);
+    });
+  }
+
+  function onConnect(res, socket, head) {
+    connectReq.removeAllListeners();
+    socket.removeAllListeners();
+
+    if (res.statusCode !== 200) {
+      debug('tunneling socket could not be established, statusCode=%d',
+        res.statusCode);
+      socket.destroy();
+      var error = new Error('tunneling socket could not be established, ' +
+        'statusCode=' + res.statusCode);
+      error.code = 'ECONNRESET';
+      options.request.emit('error', error);
+      self.removeSocket(placeholder);
+      return;
+    }
+    if (head.length > 0) {
+      debug('got illegal response body from proxy');
+      socket.destroy();
+      var error = new Error('got illegal response body from proxy');
+      error.code = 'ECONNRESET';
+      options.request.emit('error', error);
+      self.removeSocket(placeholder);
+      return;
+    }
+    debug('tunneling connection has established');
+    self.sockets[self.sockets.indexOf(placeholder)] = socket;
+    return cb(socket);
+  }
+
+  function onError(cause) {
+    connectReq.removeAllListeners();
+
+    debug('tunneling socket could not be established, cause=%s\n',
+          cause.message, cause.stack);
+    var error = new Error('tunneling socket could not be established, ' +
+                          'cause=' + cause.message);
+    error.code = 'ECONNRESET';
+    options.request.emit('error', error);
+    self.removeSocket(placeholder);
+  }
+};
+
+TunnelingAgent.prototype.removeSocket = function removeSocket(socket) {
+  var pos = this.sockets.indexOf(socket)
+  if (pos === -1) {
+    return;
+  }
+  this.sockets.splice(pos, 1);
+
+  var pending = this.requests.shift();
+  if (pending) {
+    // If we have pending requests and a socket gets closed a new one
+    // needs to be created to take over in the pool for the one that closed.
+    this.createSocket(pending, function(socket) {
+      pending.request.onSocket(socket);
+    });
+  }
+};
+
+function createSecureSocket(options, cb) {
+  var self = this;
+  TunnelingAgent.prototype.createSocket.call(self, options, function(socket) {
+    var hostHeader = options.request.getHeader('host');
+    var tlsOptions = mergeOptions({}, self.options, {
+      socket: socket,
+      servername: hostHeader ? hostHeader.replace(/:.*$/, '') : options.host
+    });
+
+    // 0 is dummy port for v0.6
+    var secureSocket = tls.connect(0, tlsOptions);
+    self.sockets[self.sockets.indexOf(socket)] = secureSocket;
+    cb(secureSocket);
+  });
+}
+
+
+function toOptions(host, port, localAddress) {
+  if (typeof host === 'string') { // since v0.10
+    return {
+      host: host,
+      port: port,
+      localAddress: localAddress
+    };
+  }
+  return host; // for v0.11 or later
+}
+
+function mergeOptions(target) {
+  for (var i = 1, len = arguments.length; i < len; ++i) {
+    var overrides = arguments[i];
+    if (typeof overrides === 'object') {
+      var keys = Object.keys(overrides);
+      for (var j = 0, keyLen = keys.length; j < keyLen; ++j) {
+        var k = keys[j];
+        if (overrides[k] !== undefined) {
+          target[k] = overrides[k];
+        }
+      }
+    }
+  }
+  return target;
+}
+
+
+var debug;
+if (process.env.NODE_DEBUG && /\btunnel\b/.test(process.env.NODE_DEBUG)) {
+  debug = function() {
+    var args = Array.prototype.slice.call(arguments);
+    if (typeof args[0] === 'string') {
+      args[0] = 'TUNNEL: ' + args[0];
+    } else {
+      args.unshift('TUNNEL:');
+    }
+    console.error.apply(console, args);
+  }
+} else {
+  debug = function() {};
+}
+exports.debug = debug; // for test
+
+
+/***/ }),
+
+/***/ 5030:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+
+function getUserAgent() {
+  if (typeof navigator === "object" && "userAgent" in navigator) {
+    return navigator.userAgent;
+  }
+
+  if (typeof process === "object" && "version" in process) {
+    return `Node.js/${process.version.substr(1)} (${process.platform}; ${process.arch})`;
+  }
+
+  return "<environment undetectable>";
+}
+
+exports.getUserAgent = getUserAgent;
+//# sourceMappingURL=index.js.map
 
 
 /***/ }),
@@ -21377,13 +20725,35 @@ class UploadCharmAction {
         this.tagger = new services_1.Tagger(this.token);
         this.charmcraft = new services_1.Charmcraft();
     }
+    get overrides() {
+        const raw = core.getInput('resource-overrides');
+        return !raw
+            ? {}
+            : raw.split(',').reduce((a, e) => {
+                const [name, rev] = e.split(':');
+                return Object.assign(Object.assign({}, a), { [name]: rev });
+            }, {});
+    }
     run() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 yield this.snap.install('charmcraft', this.charmcraftChannel);
                 process.chdir(this.charmPath);
                 yield this.charmcraft.pack();
-                const { flags, resourceInfo } = yield this.charmcraft.uploadResources();
+                const overrides = this.overrides;
+                const imageResults = yield this.charmcraft.uploadResources(overrides);
+                const fileResults = yield this.charmcraft.fetchFileFlags(overrides);
+                const staticResults = this.charmcraft.buildStaticFlags(overrides);
+                const resourceInfo = [
+                    imageResults.resourceInfo,
+                    fileResults.resourceInfo,
+                    staticResults.resourceInfo,
+                ].join('\n');
+                const flags = [
+                    ...imageResults.flags,
+                    ...fileResults.flags,
+                    ...staticResults.flags,
+                ];
                 const rev = yield this.charmcraft.upload(this.channel, flags);
                 yield this.tagger.tag(rev, this.channel, resourceInfo, this.tagPrefix);
             }
@@ -21630,7 +21000,7 @@ class Charmcraft {
             env: Object.assign(Object.assign({}, process.env), { CHARMCRAFT_AUTH: this.token }),
         };
     }
-    uploadResources() {
+    uploadResources(overrides) {
         return __awaiter(this, void 0, void 0, function* () {
             let resourceInfo = 'resources:\n';
             if (!this.uploadImage) {
@@ -21639,18 +21009,48 @@ class Charmcraft {
                 core.warning(msg);
                 return { flags: [''], resourceInfo: '' };
             }
-            const { name, images } = this.metadata();
-            const flags = yield Promise.all(images.map(([resource_name, resource_image]) => __awaiter(this, void 0, void 0, function* () {
-                yield this.uploadResource(resource_image, name, resource_name);
-                const resourceFlag = yield this.buildResourceFlag(name, resource_name, resource_image);
-                if (resourceFlag) {
-                    resourceInfo += resourceFlag.info;
-                    return resourceFlag.flag;
-                }
-                return undefined;
+            const { name: charmName, images } = this.metadata();
+            const flags = [];
+            yield Promise.all(images
+                // If an image resource has been overridden in the action input,
+                // we don't want to upload a new version of it either.
+                .filter(([name]) => !overrides || !Object.keys(overrides).includes(name))
+                .map(([name, image]) => __awaiter(this, void 0, void 0, function* () {
+                yield this.uploadResource(image, charmName, name);
+                const resourceFlag = yield this.buildResourceFlag(charmName, name, image);
+                if (!resourceFlag)
+                    return;
+                flags.push(resourceFlag.flag);
+                resourceInfo += resourceFlag.info;
             })));
             return { flags, resourceInfo };
         });
+    }
+    fetchFileFlags(overrides) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { name: charmName, files } = this.metadata();
+            // If an image resource has been overridden in the action input,
+            // we don't want to upload a new version of it either.
+            const filtered = files.filter(([name]) => !overrides || !Object.keys(overrides).includes(name));
+            const result = { flags: [], resourceInfo: '' };
+            yield Promise.all(filtered.map((item) => __awaiter(this, void 0, void 0, function* () {
+                const flag = yield this.buildResourceFlag(charmName, item, '');
+                result.flags.push(flag.flag);
+                result.resourceInfo += flag.info;
+            })));
+            return result;
+        });
+    }
+    buildStaticFlags(overrides) {
+        if (!overrides) {
+            return { flags: [] };
+        }
+        const flags = Object.entries(overrides).map(([key, value]) => `--resource=${key}:${value}`);
+        const resourceInfo = [
+            'Static resources:\n',
+            ...Object.entries(overrides).map(([key, val]) => `  - ${key}\n    resource-revision: ${val}\n`),
+        ].join('\n');
+        return { flags, resourceInfo };
     }
     uploadResource(resource_image, name, resource_name) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -21669,45 +21069,44 @@ class Charmcraft {
             yield (0, exec_1.exec)('charmcraft', args, this.execOptions);
         });
     }
-    buildResourceFlag(name, resource_name, resource_image) {
+    buildResourceFlag(charmName, name, image) {
         return __awaiter(this, void 0, void 0, function* () {
-            const args = ['resource-revisions', name, resource_name];
+            const args = ['resource-revisions', charmName, name];
             const result = yield (0, exec_1.getExecOutput)('charmcraft', args, this.execOptions);
             /*
             ❯ charmcraft resource-revisions prometheus-k8s prometheus-image
               Revision    Created at    Size
+              2 <- This   2022-01-20    1024B
               1           2021-07-19    512B
-              2           2022-01-20    1024B
-              ^-- This value
+              
             */
-            const lines = result.stdout
-                .split('\n')
-                .filter((line) => line.length > 0 && !!line.trim());
-            // Discard headers
-            lines.shift();
-            if (!lines.length) {
-                return undefined;
+            if (result.stdout.trim().split('\n').length <= 1) {
+                throw new Error(`Resource '${name}' does not have any uploaded revisions.`);
             }
-            const lastLine = lines[lines.length - 1];
-            const revision = lastLine.split(/\s+/).filter((token) => !!token.trim())[0];
+            // Always pick the topmost resource revision, but skip the headers
+            const revision = result.stdout.split('\n')[1].split(' ')[0];
             return {
-                flag: `--resource=${resource_name}:${revision}`,
-                info: `    -  ${resource_name}: ${resource_image}\n` +
+                flag: `--resource=${name}:${revision}`,
+                info: `    -  ${name}: ${image}\n` +
                     `       resource-revision: ${revision}\n`,
             };
         });
     }
     metadata() {
-        const buff = fs.readFileSync('metadata.yaml');
-        const metadata = yaml.load(buff.toString());
-        const charmName = metadata.name;
-        const files = Object.entries(metadata.resources || {})
-            .filter(([, res]) => res.type === 'oci-image')
-            .map(([name]) => name);
-        const images = Object.entries(metadata.resources || {})
+        const buffer = fs.readFileSync('metadata.yaml');
+        const metadata = yaml.load(buffer.toString());
+        const resources = Object.entries(metadata.resources || {});
+        const files = resources
             .filter(([, res]) => res.type === 'file')
+            .map(([name]) => name);
+        const images = resources
+            .filter(([, res]) => res.type === 'oci-image')
             .map(([name, res]) => [name, res['upstream-source']]);
-        return { images, files, name: charmName };
+        return {
+            images,
+            files,
+            name: metadata.name,
+        };
     }
     pack() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -21721,25 +21120,12 @@ class Charmcraft {
             // however, we expect charmcraft pack to always output one charm file.
             const globber = yield glob.create('./*.charm');
             const paths = yield globber.glob();
-            const { name, files } = this.metadata();
-            const charmName = name;
-            const filesNotDuplicated = files
-                // Drop files that are explicitly provided as resource via a flag
-                // FIXME: This matching works only if the `--resource=...` syntax is used.
-                //        Does not support `--resource ...`, which would be provided as two
-                //        consecutive flags.
-                .filter(([resourceName]) => !flags.find((flag) => flag.startsWith(`--resource=${resourceName}`)));
-            // Always upload the latest version of a file resource
-            const resourceFlags = (yield Promise.all(filesNotDuplicated.map(([resourceName]) => __awaiter(this, void 0, void 0, function* () { return this.buildResourceFlag(charmName, resourceName, ''); }))))
-                .filter((resource) => !!resource)
-                .map((resource) => resource === null || resource === void 0 ? void 0 : resource.flag);
             const args = [
                 'upload',
                 '--quiet',
                 '--release',
                 channel,
                 paths[0],
-                ...resourceFlags,
                 ...flags,
             ];
             const result = yield (0, exec_1.getExecOutput)('charmcraft', args, this.execOptions);
@@ -22192,7 +21578,7 @@ module.exports = require("zlib");
 
 /***/ }),
 
-/***/ 2020:
+/***/ 1907:
 /***/ ((module) => {
 
 "use strict";

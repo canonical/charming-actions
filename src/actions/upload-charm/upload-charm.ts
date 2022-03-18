@@ -31,13 +31,43 @@ export class UploadCharmAction {
     this.charmcraft = new Charmcraft();
   }
 
+  get overrides(): { [key: string]: string } {
+    const raw = core.getInput('resource-overrides');
+
+    return !raw
+      ? {}
+      : raw.split(',').reduce((a, e) => {
+          const [name, rev] = e.split(':');
+          return {
+            ...a,
+            [name]: rev,
+          };
+        }, {});
+  }
+
   async run() {
     try {
       await this.snap.install('charmcraft', this.charmcraftChannel);
       process.chdir(this.charmPath!);
       await this.charmcraft.pack();
+      const overrides = this.overrides!;
 
-      const { flags, resourceInfo } = await this.charmcraft.uploadResources();
+      const imageResults = await this.charmcraft.uploadResources(overrides);
+      const fileResults = await this.charmcraft.fetchFileFlags(overrides);
+      const staticResults = this.charmcraft.buildStaticFlags(overrides);
+
+      const resourceInfo = [
+        imageResults.resourceInfo,
+        fileResults.resourceInfo,
+        staticResults.resourceInfo,
+      ].join('\n');
+
+      const flags = [
+        ...imageResults.flags,
+        ...fileResults.flags,
+        ...staticResults.flags,
+      ];
+
       const rev = await this.charmcraft.upload(this.channel, flags);
 
       await this.tagger.tag(rev, this.channel, resourceInfo, this.tagPrefix);

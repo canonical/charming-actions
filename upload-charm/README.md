@@ -1,6 +1,13 @@
 # canonical/charming-actions/upload-charm
 
-This action is used to upload a charm to charmhub.io.
+This action is used to upload a charm to charmhub.io. 
+
+> ### ⚠️ File Resource
+>
+> When uploading a charm with file resources, the most recent
+> resource will be attached to the release. If you want to use a
+> newer resource, you'll have to upload this **prior** to
+> running the action.
 
 ## Usage
 

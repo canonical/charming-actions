@@ -12,6 +12,7 @@ class Charmcraft {
   private uploadImage: boolean;
   private token: string;
   private execOptions: ExecOptions;
+
   constructor(token?: string) {
     this.uploadImage = core.getInput('upload-image').toLowerCase() === 'true';
     this.token = token || core.getInput('credentials');
@@ -23,7 +24,7 @@ class Charmcraft {
     };
   }
 
-  async uploadResources() {
+  async uploadResources(overrides?: { [key: string]: string }) {
     let resourceInfo = 'resources:\n';
     if (!this.uploadImage) {
       const msg =
@@ -33,24 +34,68 @@ class Charmcraft {
       return { flags: [''], resourceInfo: '' };
     }
 
-    const { name, images } = this.metadata();
-    const flags = await Promise.all(
-      images.map(async ([resource_name, resource_image]) => {
-        await this.uploadResource(resource_image, name, resource_name);
-        const resourceFlag = await this.buildResourceFlag(
-          name,
-          resource_name,
-          resource_image
-        );
+    const { name: charmName, images } = this.metadata();
+    const flags: string[] = [];
 
-        if (resourceFlag) {
+    await Promise.all(
+      images
+        // If an image resource has been overridden in the action input,
+        // we don't want to upload a new version of it either.
+        .filter(
+          ([name]) => !overrides || !Object.keys(overrides).includes(name)
+        )
+        .map(async ([name, image]) => {
+          await this.uploadResource(image, charmName, name);
+          const resourceFlag = await this.buildResourceFlag(
+            charmName,
+            name,
+            image
+          );
+
+          if (!resourceFlag) return;
+
+          flags.push(resourceFlag.flag);
           resourceInfo += resourceFlag.info;
-          return resourceFlag.flag;
-        }
+        })
+    );
+    return { flags, resourceInfo };
+  }
 
-        return undefined;
+  async fetchFileFlags(overrides: { [key: string]: string }) {
+    const { name: charmName, files } = this.metadata();
+    // If an image resource has been overridden in the action input,
+    // we don't want to upload a new version of it either.
+    const filtered = files.filter(
+      ([name]) => !overrides || !Object.keys(overrides).includes(name)
+    );
+    const result = { flags: [] as string[], resourceInfo: '' };
+    await Promise.all(
+      filtered.map(async (item) => {
+        const flag = await this.buildResourceFlag(charmName, item, '');
+        result.flags.push(flag.flag);
+        result.resourceInfo += flag.info;
       })
     );
+
+    return result;
+  }
+
+  buildStaticFlags(overrides: { [key: string]: string }) {
+    if (!overrides) {
+      return { flags: [] };
+    }
+
+    const flags = Object.entries(overrides!).map(
+      ([key, value]) => `--resource=${key}:${value}`
+    );
+
+    const resourceInfo = [
+      'Static resources:\n',
+      ...Object.entries(overrides).map(
+        ([key, val]) => `  - ${key}\n    resource-revision: ${val}\n`
+      ),
+    ].join('\n');
+
     return { flags, resourceInfo };
   }
 
@@ -79,55 +124,53 @@ class Charmcraft {
     await exec('charmcraft', args, this.execOptions);
   }
 
-  async buildResourceFlag(
-    name: string,
-    resource_name: string,
-    resource_image: string
-  ) {
-    const args = ['resource-revisions', name, resource_name];
+  async buildResourceFlag(charmName: string, name: string, image: string) {
+    const args = ['resource-revisions', charmName, name];
     const result = await getExecOutput('charmcraft', args, this.execOptions);
 
     /*
     ❯ charmcraft resource-revisions prometheus-k8s prometheus-image
       Revision    Created at    Size
+      2 <- This   2022-01-20    1024B
       1           2021-07-19    512B
-      2           2022-01-20    1024B
-      ^-- This value
+      
     */
-    const lines = result.stdout
-      .split('\n')
-      .filter((line) => line.length > 0 && !!line.trim());
 
-    // Discard headers
-    lines.shift();
-
-    if (!lines.length) {
-      return undefined;
+    if (result.stdout.trim().split('\n').length <= 1) {
+      throw new Error(
+        `Resource '${name}' does not have any uploaded revisions.`
+      );
     }
 
-    const lastLine = lines[lines.length - 1];
-    const revision = lastLine.split(/\s+/).filter((token) => !!token.trim())[0];
+    // Always pick the topmost resource revision, but skip the headers
+    const revision = result.stdout.split('\n')[1].split(' ')[0];
 
     return {
-      flag: `--resource=${resource_name}:${revision}`,
+      flag: `--resource=${name}:${revision}`,
       info:
-        `    -  ${resource_name}: ${resource_image}\n` +
+        `    -  ${name}: ${image}\n` +
         `       resource-revision: ${revision}\n`,
     };
   }
 
   metadata() {
-    const buff = fs.readFileSync('metadata.yaml');
-    const metadata = yaml.load(buff.toString()) as Metadata;
-    const charmName = metadata.name;
+    const buffer = fs.readFileSync('metadata.yaml');
+    const metadata = yaml.load(buffer.toString()) as Metadata;
+    const resources = Object.entries(metadata.resources || {});
 
-    const files = Object.entries(metadata.resources || {})
-      .filter(([, res]) => res.type === 'oci-image')
-      .map(([name, _]) => name);
-    const images = Object.entries(metadata.resources || {})
+    const files = resources
       .filter(([, res]) => res.type === 'file')
+      .map(([name]) => name);
+
+    const images = resources
+      .filter(([, res]) => res.type === 'oci-image')
       .map(([name, res]) => [name, res['upstream-source']]);
-    return { images, files, name: charmName };
+
+    return {
+      images,
+      files,
+      name: metadata.name,
+    };
   }
 
   async pack() {
@@ -140,30 +183,6 @@ class Charmcraft {
     // however, we expect charmcraft pack to always output one charm file.
     const globber = await glob.create('./*.charm');
     const paths = await globber.glob();
-    const { name, files } = this.metadata();
-    const charmName = name;
-
-    const filesNotDuplicated = files
-      // Drop files that are explicitly provided as resource via a flag
-      // FIXME: This matching works only if the `--resource=...` syntax is used.
-      //        Does not support `--resource ...`, which would be provided as two
-      //        consecutive flags.
-      .filter(
-        ([name, _]) =>
-          !flags.find((flag) => flag.startsWith(`--resource=${name}`))
-      );
-
-    // Always upload the latest version of a file resource
-
-    const resourceFlags = (
-      await Promise.all(
-        filesNotDuplicated.map(async ([resourceName]) => {
-          return this.buildResourceFlag(charmName, resourceName, '');
-        })
-      )
-    )
-      .filter((resource) => !!resource)
-      .map((resource) => resource?.flag as string);
 
     const args = [
       'upload',
@@ -171,7 +190,6 @@ class Charmcraft {
       '--release',
       channel,
       paths[0],
-      ...resourceFlags,
       ...flags,
     ];
     const result = await getExecOutput('charmcraft', args, this.execOptions);
