@@ -35,6 +35,14 @@ inputs:
     required: true
     description: |
       Github Token needed for automatic tagging when publishing
+  resource-overrides:
+    required: false
+    default: ""
+    description: |
+      Assign static charm resource revisions. If omitted, the latest
+      revision will be used. Separate entries using commas.
+      
+      Example: "promql-transform:2,prometheus-image:12"   
 runs:
   using: node12
   main: ../dist/upload-charm/index.js
