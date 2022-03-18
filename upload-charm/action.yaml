@@ -18,7 +18,7 @@ inputs:
       Path to charm directory
   charmcraft-channel:
     required: false
-    default: 'latest/edge'
+    default: 'latest/stable'
     description: |
       Snap channel to use when installing charmcraft
   upload-image:
