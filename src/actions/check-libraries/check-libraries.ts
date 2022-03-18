@@ -1,7 +1,9 @@
-import { error, getInput, setFailed } from '@actions/core';
+import { error, getInput, setFailed, warning } from '@actions/core';
 import { context, getOctokit } from '@actions/github';
 import { Context } from '@actions/github/lib/context';
 import { GitHub } from '@actions/github/lib/utils';
+import * as fs from 'fs';
+import * as exec from '@actions/exec';
 
 import { Charmcraft, LibStatus, Snap } from '../../services';
 import { Outcomes, Tokens } from '../../types';
@@ -40,6 +42,10 @@ export class CheckLibrariesAction {
   async run() {
     try {
       process.chdir(this.charmPath!);
+      if (!fs.existsSync('./lib')) {
+        warning('No lib folder detected. Skipping action.');
+        return;
+      }
       await this.snap.install('charmcraft', this.channel);
       const status = await this.charmcraft.hasDriftingLibs();
       // we do this using includes to catch both `pull_request` and `pull_request_target`
@@ -51,6 +57,8 @@ export class CheckLibrariesAction {
           body: this.getCommentBody(status),
         });
       }
+      await exec.exec('git', ['checkout', 'HEAD', '--', 'lib']);
+
       if (!status.ok && this.outcomes.fail) {
         setFailed('Charmcraft libraries are not up to date.');
       }
