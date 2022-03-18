@@ -20973,7 +20973,7 @@ class Charmcraft {
             env: Object.assign(Object.assign({}, process.env), { CHARMCRAFT_AUTH: this.token }),
         };
     }
-    uploadResources() {
+    uploadResources(overrides) {
         return __awaiter(this, void 0, void 0, function* () {
             let resourceInfo = 'resources:\n';
             if (!this.uploadImage) {
@@ -20982,15 +20982,48 @@ class Charmcraft {
                 core.warning(msg);
                 return { flags: [''], resourceInfo: '' };
             }
-            const { name, images } = this.metadata();
-            const flags = yield Promise.all(images.map(([resource_name, resource_image]) => __awaiter(this, void 0, void 0, function* () {
-                yield this.uploadResource(resource_image, name, resource_name);
-                const { flag, info } = yield this.buildResourceFlag(name, resource_name, resource_image);
-                resourceInfo += info;
-                return flag;
+            const { name: charmName, images } = this.metadata();
+            const flags = [];
+            yield Promise.all(images
+                // If an image resource has been overridden in the action input,
+                // we don't want to upload a new version of it either.
+                .filter(([name]) => !overrides || !Object.keys(overrides).includes(name))
+                .map(([name, image]) => __awaiter(this, void 0, void 0, function* () {
+                yield this.uploadResource(image, charmName, name);
+                const resourceFlag = yield this.buildResourceFlag(charmName, name, image);
+                if (!resourceFlag)
+                    return;
+                flags.push(resourceFlag.flag);
+                resourceInfo += resourceFlag.info;
             })));
             return { flags, resourceInfo };
         });
+    }
+    fetchFileFlags(overrides) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { name: charmName, files } = this.metadata();
+            // If an image resource has been overridden in the action input,
+            // we don't want to upload a new version of it either.
+            const filtered = files.filter(([name]) => !overrides || !Object.keys(overrides).includes(name));
+            const result = { flags: [], resourceInfo: '' };
+            yield Promise.all(filtered.map((item) => __awaiter(this, void 0, void 0, function* () {
+                const flag = yield this.buildResourceFlag(charmName, item, '');
+                result.flags.push(flag.flag);
+                result.resourceInfo += flag.info;
+            })));
+            return result;
+        });
+    }
+    buildStaticFlags(overrides) {
+        if (!overrides) {
+            return { flags: [] };
+        }
+        const flags = Object.entries(overrides).map(([key, value]) => `--resource=${key}:${value}`);
+        const resourceInfo = [
+            'Static resources:\n',
+            ...Object.entries(overrides).map(([key, val]) => `  - ${key}\n    resource-revision: ${val}\n`),
+        ].join('\n');
+        return { flags, resourceInfo };
     }
     uploadResource(resource_image, name, resource_name) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -21009,32 +21042,44 @@ class Charmcraft {
             yield (0, exec_1.exec)('charmcraft', args, this.execOptions);
         });
     }
-    buildResourceFlag(name, resource_name, resource_image) {
+    buildResourceFlag(charmName, name, image) {
         return __awaiter(this, void 0, void 0, function* () {
-            const args = ['resource-revisions', name, resource_name];
+            const args = ['resource-revisions', charmName, name];
             const result = yield (0, exec_1.getExecOutput)('charmcraft', args, this.execOptions);
             /*
             ❯ charmcraft resource-revisions prometheus-k8s prometheus-image
               Revision    Created at    Size
+              2 <- This   2022-01-20    1024B
               1           2021-07-19    512B
-              ^-- This value
+              
             */
+            if (result.stdout.trim().split('\n').length <= 1) {
+                throw new Error(`Resource '${name}' does not have any uploaded revisions.`);
+            }
+            // Always pick the topmost resource revision, but skip the headers
             const revision = result.stdout.split('\n')[1].split(' ')[0];
             return {
-                flag: `--resource=${resource_name}:${revision}`,
-                info: `    -  ${resource_name}: ${resource_image}\n` +
+                flag: `--resource=${name}:${revision}`,
+                info: `    -  ${name}: ${image}\n` +
                     `       resource-revision: ${revision}\n`,
             };
         });
     }
     metadata() {
-        const buff = fs.readFileSync('metadata.yaml');
-        const metadata = yaml.load(buff.toString());
-        const charmName = metadata.name;
-        const images = Object.entries(metadata.resources || {})
+        const buffer = fs.readFileSync('metadata.yaml');
+        const metadata = yaml.load(buffer.toString());
+        const resources = Object.entries(metadata.resources || {});
+        const files = resources
+            .filter(([, res]) => res.type === 'file')
+            .map(([name]) => name);
+        const images = resources
             .filter(([, res]) => res.type === 'oci-image')
             .map(([name, res]) => [name, res['upstream-source']]);
-        return { images, name: charmName };
+        return {
+            images,
+            files,
+            name: metadata.name,
+        };
     }
     pack() {
         return __awaiter(this, void 0, void 0, function* () {

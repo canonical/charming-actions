@@ -19,7 +19,7 @@ inputs:
       Currently, tagging bundles is not supported, so this property is a noop.
   charmcraft-channel:
     required: false
-    default: 'latest/edge'
+    default: 'latest/stable'
     description: |
       Snap channel to use when installing charmcraft
   credentials:

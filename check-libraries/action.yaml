@@ -37,6 +37,6 @@ inputs:
       checked in and their remote counterparts.
   charmcraft-channel:
     required: false
-    default: 'latest/edge'
+    default: 'latest/stable'
     description: |
       Snap channel to use when installing charmcraft
