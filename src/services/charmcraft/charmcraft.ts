@@ -175,8 +175,8 @@ class Charmcraft {
   }
 
   async pack() {
-    const args = ['pack', '--destructive-mode', '--quiet'];
-    await exec('charmcraft', args, this.execOptions);
+    const args = ['charmcraft', 'pack', '--destructive-mode', '--quiet'];
+    await exec('sudo', args, this.execOptions);
   }
 
   async upload(channel: string, flags: string[]): Promise<string> {

@@ -21736,8 +21736,8 @@ class Charmcraft {
     }
     pack() {
         return __awaiter(this, void 0, void 0, function* () {
-            const args = ['pack', '--destructive-mode', '--quiet'];
-            yield (0, exec_1.exec)('charmcraft', args, this.execOptions);
+            const args = ['charmcraft', 'pack', '--destructive-mode', '--quiet'];
+            yield (0, exec_1.exec)('sudo', args, this.execOptions);
         });
     }
     upload(channel, flags) {
