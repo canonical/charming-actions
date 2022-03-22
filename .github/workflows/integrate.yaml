@@ -3,12 +3,12 @@ name: Test Charmhub Upload
 on:
   push:
     branches:
-      - "track/*"
-      - "main"
+      - 'track/*'
+      - 'main'
   pull_request:
     branches:
-      - "track/*"
-      - "main"
+      - 'track/*'
+      - 'main'
 
 jobs:
   test-charmhub-upload:
@@ -16,12 +16,12 @@ jobs:
     name: Test charmhub upload
     steps:
       - uses: actions/checkout@v2
-      
+
       - name: Check libraries
         uses: ./check-libraries
         with:
-          credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          credentials: '${{ secrets.CHARMCRAFT_AUTH }}'
+          github-token: '${{ secrets.GITHUB_TOKEN }}'
           charm-path: test-charm/
 
       - name: Select charmhub channel
@@ -32,15 +32,15 @@ jobs:
         uses: ./upload-charm
         with:
           tag-prefix: test-charm
-          credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
+          credentials: '${{ secrets.CHARMCRAFT_AUTH }}'
           charm-path: test-charm/
-          upload-image: "true"
-          channel: "${{ steps.channel.outputs.name }}"
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-      
+          upload-image: 'true'
+          channel: '${{ steps.channel.outputs.name }}'
+          github-token: '${{ secrets.GITHUB_TOKEN }}'
+
       - name: Upload bundle to charmhub
         uses: ./upload-bundle
         with:
-          credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
+          credentials: '${{ secrets.CHARMCRAFT_AUTH }}'
           bundle-path: test-bundle/
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          github-token: '${{ secrets.GITHUB_TOKEN }}'

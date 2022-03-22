@@ -7,7 +7,7 @@ extends:
   - airbnb-base
   - airbnb-typescript/base
   - prettier
-parser: "@typescript-eslint/parser"
+parser: '@typescript-eslint/parser'
 parserOptions:
   project:
     - tsconfig.json
@@ -19,12 +19,12 @@ rules:
   import/extensions:
     - error
     - ignorePackages
-    - js: "never"
-      ts: "never"
+    - js: 'never'
+      ts: 'never'
   dot-notation: off
-  "@typescript-eslint/dot-notation":
-    - "error"
-  "@typescript-eslint/lines-between-class-members":
+  '@typescript-eslint/dot-notation':
+    - 'error'
+  '@typescript-eslint/lines-between-class-members':
     - error
     - always
     - exceptAfterSingleLine: true
@@ -36,5 +36,4 @@ settings:
         - .js
 plugins:
   - jest
-  - "@typescript-eslint"
-
+  - '@typescript-eslint'
