@@ -1,3 +1,7 @@
+import { components } from '@octokit/openapi-types';
+
+export type Release = components['schemas']['release'];
+
 export type Resource = {
   type: string;
   name: string;
