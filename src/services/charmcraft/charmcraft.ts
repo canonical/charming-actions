@@ -215,6 +215,77 @@ class Charmcraft {
 
     return { ok: lines.length <= 0, out, err };
   }
+
+  async status(charm: string): Promise<string> {
+    const result = await getExecOutput(
+      'charmcraft',
+      ['status', charm],
+      this.execOptions
+    );
+    return result.stdout;
+  }
+
+  async getRevisionFromChannel(
+    charm: string,
+    track: string,
+    channel: string
+  ): Promise<string> {
+    // For now we have to parse the `charmcraft status` output this will soon be fixed
+    // when we can get json output from charmcraft.
+    // Issue tracked here: https://github.com/canonical/charmcraft/issues/183
+    const acceptedChannels = ['stable', 'candidate', 'beta', 'edge'];
+    if (!acceptedChannels.includes(channel)) {
+      throw new Error(
+        `Provided channel ${channel} is not supported. This actions currently only works with one of the following default channels: edge, beta, candidate, stable`
+      );
+    }
+    const charmcraftStatus = await this.status(charm);
+    const channelLine: Record<string, number> = {
+      stable: 0,
+      candidate: 1,
+      beta: 2,
+      edge: 3,
+    };
+    const lines = charmcraftStatus.split('\n');
+    for (let i = 1; i < lines.length; i += 4) {
+      if (lines[i].includes(track)) {
+        i += channelLine[channel];
+        const targetLine =
+          channel === 'stable'
+            ? lines[i].slice(lines[i].search(/stable/g))
+            : lines[i];
+        const revision = targetLine.trim().split(/\s+/)[2];
+        if (revision === '-') {
+          throw new Error(`No revision available in ${track}/${channel}`);
+        }
+        return revision;
+      }
+    }
+    throw new Error(`No track with name ${track}`);
+  }
+
+  async release(
+    charm: string,
+    charmRevision: string,
+    destinationChannel: string,
+    resourceInfo: Array<{ resourceName: string; resourceRev: string }>
+  ) {
+    const resourceArgs: Array<string> = [];
+    resourceInfo.forEach((resource) => {
+      resourceArgs.push('--resource');
+      resourceArgs.push(`${resource.resourceName}:${resource.resourceRev}`);
+    });
+    const args = [
+      'release',
+      charm,
+      '--revision',
+      charmRevision,
+      '--channel',
+      destinationChannel,
+      ...resourceArgs,
+    ];
+    await exec('charmcraft', args, this.execOptions);
+  }
 }
 
 export interface LibStatus {
