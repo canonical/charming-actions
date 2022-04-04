@@ -1,0 +1,44 @@
+name: Charmhub Release
+description: Releases existing charms to channel.
+author: Dominik Fleischmann
+inputs:
+  destination-channel:
+    required: true
+    default: latest/candidate
+    description: |
+      Channel to which the charm will be released
+  origin-channel:
+    required: false
+    description: |
+      Origin Channel from where the charm that needs to be promoted will be
+      pulled unless `revision` is set.
+  revision:
+    required: false
+    description: |
+      Revision of charm that needs to be released if not set will default to the
+      revision the channel set in `origin-channel`. If this option is set
+      `origin-channel` will be ignored.
+  tag-prefix:
+    required: false
+    description: |
+      Tag prefix, useful when bundling multiple charms in the same repo using a matrix.
+  charmcraft-channel:
+    required: false
+    default: 'latest/edge'
+    description: |
+      Snap channel to use when installing charmcraft
+  credentials:
+    required: true
+    description: |
+      Credentials exported from `charmcraft login --export`. See
+      https://juju.is/docs/sdk/remote-env-auth for more info
+  github-token:
+    required: true
+    description: |
+      Github Token needed for updating Release Information
+runs:
+  using: node12
+  main: ../dist/release-charm/index.js
+branding:
+  icon: upload-cloud
+  color: orange

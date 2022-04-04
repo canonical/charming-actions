@@ -21774,6 +21774,64 @@ class Charmcraft {
             return { ok: lines.length <= 0, out, err };
         });
     }
+    status(charm) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const result = yield (0, exec_1.getExecOutput)('charmcraft', ['status', charm], this.execOptions);
+            return result.stdout;
+        });
+    }
+    getRevisionFromChannel(charm, track, channel) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // For now we have to parse the `charmcraft status` output this will soon be fixed
+            // when we can get json output from charmcraft.
+            // Issue tracked here: https://github.com/canonical/charmcraft/issues/183
+            const acceptedChannels = ['stable', 'candidate', 'beta', 'edge'];
+            if (!acceptedChannels.includes(channel)) {
+                throw new Error(`Provided channel ${channel} is not supported. This actions currently only works with one of the following default channels: edge, beta, candidate, stable`);
+            }
+            const charmcraftStatus = yield this.status(charm);
+            const channelLine = {
+                stable: 0,
+                candidate: 1,
+                beta: 2,
+                edge: 3,
+            };
+            const lines = charmcraftStatus.split('\n');
+            for (let i = 1; i < lines.length; i += 4) {
+                if (lines[i].includes(track)) {
+                    i += channelLine[channel];
+                    const targetLine = channel === 'stable'
+                        ? lines[i].slice(lines[i].search(/stable/g))
+                        : lines[i];
+                    const revision = targetLine.trim().split(/\s+/)[2];
+                    if (revision === '-') {
+                        throw new Error(`No revision available in ${track}/${channel}`);
+                    }
+                    return revision;
+                }
+            }
+            throw new Error(`No track with name ${track}`);
+        });
+    }
+    release(charm, charmRevision, destinationChannel, resourceInfo) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const resourceArgs = [];
+            resourceInfo.forEach((resource) => {
+                resourceArgs.push('--resource');
+                resourceArgs.push(`${resource.resourceName}:${resource.resourceRev}`);
+            });
+            const args = [
+                'release',
+                charm,
+                '--revision',
+                charmRevision,
+                '--channel',
+                destinationChannel,
+                ...resourceArgs,
+            ];
+            yield (0, exec_1.exec)('charmcraft', args, this.execOptions);
+        });
+    }
 }
 exports.Charmcraft = Charmcraft;
 
@@ -22012,7 +22070,7 @@ class Tagger {
     }
     _build(owner, repo, hash, revision, channel, resources, tagPrefix) {
         const name = `${tagPrefix ? `${tagPrefix}-` : ''}rev${revision}`;
-        const message = `${resources} Released to '${channel}' at ${this._get_date_text()}`;
+        const message = `${resources} Released to '${channel}' at ${this.get_date_text()}`;
         return {
             owner,
             repo,
@@ -22025,9 +22083,38 @@ class Tagger {
             target_commitish: hash,
         };
     }
-    _get_date_text() {
+    get_date_text() {
         // 12:00 UTC on 10 Feb 2022
         return (0, dayjs_1.default)().utc().format('HH:mm UTC on D MMM YYYY');
+    }
+    getReleaseByTag(tagName) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { owner, repo } = github_1.context.repo;
+            const { status, data } = yield this.kit.rest.repos.getReleaseByTag({
+                owner,
+                repo,
+                tag: tagName,
+            });
+            if (status !== 200) {
+                throw new Error(`Cannot find release by tag ${tagName}`);
+            }
+            return data;
+        });
+    }
+    updateRelease(release_id, newReleaseBody) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { owner, repo } = github_1.context.repo;
+            const { status, data } = yield this.kit.rest.repos.updateRelease({
+                owner,
+                repo,
+                release_id,
+                body: newReleaseBody,
+            });
+            if (status !== 200) {
+                throw new Error(`Failed to update release with id ${release_id}`);
+            }
+            return data;
+        });
     }
 }
 exports.Tagger = Tagger;
