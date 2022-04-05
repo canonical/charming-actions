@@ -112,7 +112,7 @@ describe('the tagging helper', () => {
       tagger = new Tagger('fake-token');
 
       const { repos } = tagger.kit.rest;
-      jest.spyOn(repos, 'getReleaseByTag').mockReturnValue({
+      jest.spyOn(repos, 'getReleaseByTag').mockRejectedValue({
         status: 404,
         data: {
           message: 'Not Found',

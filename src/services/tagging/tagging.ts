@@ -67,31 +67,31 @@ class Tagger {
 
   async getReleaseByTag(tagName: string) {
     const { owner, repo } = context.repo;
-    const { status, data } = await this.kit.rest.repos.getReleaseByTag({
-      owner,
-      repo,
-      tag: tagName,
-    });
-    if (status !== 200) {
+    try {
+      const { data } = await this.kit.rest.repos.getReleaseByTag({
+        owner,
+        repo,
+        tag: tagName,
+      });
+      return data;
+    } catch (error) {
       throw new Error(`Cannot find release by tag ${tagName}`);
     }
-    return data;
   }
 
   async updateRelease(release_id: number, newReleaseBody?: string) {
     const { owner, repo } = context.repo;
-    const { status, data } = await this.kit.rest.repos.updateRelease({
-      owner,
-      repo,
-      release_id,
-      body: newReleaseBody,
-    });
-
-    if (status !== 200) {
+    try {
+      const { data } = await this.kit.rest.repos.updateRelease({
+        owner,
+        repo,
+        release_id,
+        body: newReleaseBody,
+      });
+      return data;
+    } catch (error) {
       throw new Error(`Failed to update release with id ${release_id}`);
     }
-
-    return data;
   }
 }
 

@@ -22139,30 +22139,34 @@ class Tagger {
     getReleaseByTag(tagName) {
         return __awaiter(this, void 0, void 0, function* () {
             const { owner, repo } = github_1.context.repo;
-            const { status, data } = yield this.kit.rest.repos.getReleaseByTag({
-                owner,
-                repo,
-                tag: tagName,
-            });
-            if (status !== 200) {
+            try {
+                const { data } = yield this.kit.rest.repos.getReleaseByTag({
+                    owner,
+                    repo,
+                    tag: tagName,
+                });
+                return data;
+            }
+            catch (error) {
                 throw new Error(`Cannot find release by tag ${tagName}`);
             }
-            return data;
         });
     }
     updateRelease(release_id, newReleaseBody) {
         return __awaiter(this, void 0, void 0, function* () {
             const { owner, repo } = github_1.context.repo;
-            const { status, data } = yield this.kit.rest.repos.updateRelease({
-                owner,
-                repo,
-                release_id,
-                body: newReleaseBody,
-            });
-            if (status !== 200) {
+            try {
+                const { data } = yield this.kit.rest.repos.updateRelease({
+                    owner,
+                    repo,
+                    release_id,
+                    body: newReleaseBody,
+                });
+                return data;
+            }
+            catch (error) {
                 throw new Error(`Failed to update release with id ${release_id}`);
             }
-            return data;
         });
     }
 }
