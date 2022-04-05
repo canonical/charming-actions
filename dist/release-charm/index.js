@@ -21403,6 +21403,7 @@ class ReleaseCharmAction {
         this.charmcraftChannel = core.getInput('charmcraft-channel');
         this.token = core.getInput('github-token');
         this.tagPrefix = core.getInput('tag-prefix');
+        this.charmPath = core.getInput('charm-path');
         if (!this.token) {
             throw new Error(`Input 'github-token' is missing`);
         }
@@ -21416,6 +21417,7 @@ class ReleaseCharmAction {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 yield this.snap.install('charmcraft', this.charmcraftChannel);
+                process.chdir(this.charmPath);
                 const { name: charmName, images: charmImages } = this.charmcraft.metadata();
                 const [originTrack, originChannel] = this.originChannel.split('/');
                 const revision = this.revision

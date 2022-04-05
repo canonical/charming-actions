@@ -15,6 +15,7 @@ export class ReleaseCharmAction {
   private charmcraftChannel: string;
   private token: string;
   private tagPrefix: string;
+  private charmPath: string;
 
   constructor() {
     this.destinationChannel = core.getInput('destination-channel');
@@ -23,6 +24,7 @@ export class ReleaseCharmAction {
     this.charmcraftChannel = core.getInput('charmcraft-channel');
     this.token = core.getInput('github-token');
     this.tagPrefix = core.getInput('tag-prefix');
+    this.charmPath = core.getInput('charm-path');
 
     if (!this.token) {
       throw new Error(`Input 'github-token' is missing`);
@@ -36,6 +38,7 @@ export class ReleaseCharmAction {
   async run() {
     try {
       await this.snap.install('charmcraft', this.charmcraftChannel);
+      process.chdir(this.charmPath!);
       const { name: charmName, images: charmImages } =
         this.charmcraft.metadata();
 
