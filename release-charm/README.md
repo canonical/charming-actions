@@ -19,12 +19,6 @@ on:
       rev:
         description: 'Revision number'
         required: false
-      tag-prefix:
-        description: 'Tag Prefix'
-        required: false
-      charm-path:
-        description: 'Path to charm'
-        required: false
 
 jobs:
   promote-charm:
@@ -40,10 +34,9 @@ jobs:
           destination-channel: ${{ github.event.inputs.destination-channel }}
           origin-channel: ${{ github.event.inputs.origin-channel }}
           revision: ${{ github.event.inputs.rev }}
-          tag-prefix: ${{ github.event.inputs.tag-prefix }}
-
 ```
 
+![Manual dispatch release charm action form screenshot](dispatch_release_action_form.png "Manual dispatch release charm action form screenshot")
 ## API
 
 ### Inputs

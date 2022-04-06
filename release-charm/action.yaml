@@ -22,6 +22,11 @@ inputs:
     required: false
     description: |
       Tag prefix, useful when bundling multiple charms in the same repo using a matrix.
+  charm-path:
+    required: false
+    default: '.'
+    description: |
+      Path to charm directory
   charmcraft-channel:
     required: false
     default: 'latest/edge'
