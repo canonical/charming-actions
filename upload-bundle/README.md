@@ -6,7 +6,7 @@ This action is used to upload a bundle to charmhub.io.
 
 ```yaml
       - name: Upload bundle to edge
-        uses: canonical/charming-actions/upload-charm@1.0.0
+        uses: canonical/charming-actions/upload-bundle@1.0.0
         with:
           credentials: "${{ secrets.CHARMCRAFT_AUTH }}"
           github-token: "${{ secrets.GITHUB_TOKEN }}"
