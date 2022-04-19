@@ -4,7 +4,7 @@ import * as glob from '@actions/glob';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 
-import { Metadata } from '../../types';
+import { Metadata, ResourceInfo } from '../../types';
 
 /* eslint-disable camelcase */
 
@@ -225,11 +225,11 @@ class Charmcraft {
     return result.stdout;
   }
 
-  async getRevisionFromChannel(
+  async getRevisionInfoFromChannel(
     charm: string,
     track: string,
     channel: string
-  ): Promise<string> {
+  ): Promise<{ charmRev: string; resources: Array<ResourceInfo> }> {
     // For now we have to parse the `charmcraft status` output this will soon be fixed
     // when we can get json output from charmcraft.
     // Issue tracked here: https://github.com/canonical/charmcraft/issues/183
@@ -248,17 +248,28 @@ class Charmcraft {
     };
     const lines = charmcraftStatus.split('\n');
     for (let i = 1; i < lines.length; i += 4) {
+      // find line with track name
       if (lines[i].includes(track)) {
         i += channelLine[channel];
         const targetLine =
           channel === 'stable'
             ? lines[i].slice(lines[i].search(/stable/g))
             : lines[i];
-        const revision = targetLine.trim().split(/\s+/)[2];
+        const splitLine = targetLine.trim().split(/\s{2,}/);
+        const revision = splitLine[2];
         if (revision === '-') {
           throw new Error(`No revision available in ${track}/${channel}`);
         }
-        return revision;
+        const resources = splitLine[3].split(',').reduce((acc, res) => {
+          if (res === '-') {
+            return acc;
+          }
+          const [resName, resRev] = res.trim().split(' ');
+          const revisionNum = resRev.replace(/\D/g, '');
+          acc.push({ resourceName: resName, resourceRev: revisionNum });
+          return acc;
+        }, [] as Array<ResourceInfo>);
+        return { charmRev: revision, resources };
       }
     }
     throw new Error(`No track with name ${track}`);
@@ -268,7 +279,7 @@ class Charmcraft {
     charm: string,
     charmRevision: string,
     destinationChannel: string,
-    resourceInfo: Array<{ resourceName: string; resourceRev: string }>
+    resourceInfo: Array<ResourceInfo>
   ) {
     const resourceArgs: Array<string> = [];
     resourceInfo.forEach((resource) => {

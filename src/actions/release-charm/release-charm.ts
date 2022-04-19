@@ -1,7 +1,6 @@
 import * as core from '@actions/core';
 
 import { Tagger, Snap, Charmcraft, Artifact } from '../../services';
-import { getResourcesInfoByRelease } from './helpers';
 
 export class ReleaseCharmAction {
   private artifacts: Artifact;
@@ -11,7 +10,7 @@ export class ReleaseCharmAction {
 
   private destinationChannel: string;
   private originChannel: string;
-  private revision: string;
+
   private charmcraftChannel: string;
   private token: string;
   private tagPrefix: string;
@@ -20,7 +19,6 @@ export class ReleaseCharmAction {
   constructor() {
     this.destinationChannel = core.getInput('destination-channel');
     this.originChannel = core.getInput('origin-channel');
-    this.revision = core.getInput('revision');
     this.charmcraftChannel = core.getInput('charmcraft-channel');
     this.token = core.getInput('github-token');
     this.tagPrefix = core.getInput('tag-prefix');
@@ -39,32 +37,28 @@ export class ReleaseCharmAction {
     try {
       await this.snap.install('charmcraft', this.charmcraftChannel);
       process.chdir(this.charmPath!);
-      const { name: charmName, images: charmImages } =
-        this.charmcraft.metadata();
+      const { name: charmName } = this.charmcraft.metadata();
 
       const [originTrack, originChannel] = this.originChannel.split('/');
 
-      const revision = this.revision
-        ? this.revision
-        : await this.charmcraft.getRevisionFromChannel(
-            charmName,
-            originTrack,
-            originChannel
-          );
-
-      const tagName = `${
-        this.tagPrefix ? `${this.tagPrefix}-` : ''
-      }rev${revision}`;
-      const release = await this.tagger.getReleaseByTag(tagName);
-      const resourceInfo =
-        charmImages.length === 0 ? [] : getResourcesInfoByRelease(release);
+      const { charmRev, resources } =
+        await this.charmcraft.getRevisionInfoFromChannel(
+          charmName,
+          originTrack,
+          originChannel
+        );
 
       await this.charmcraft.release(
         charmName,
-        revision,
+        charmRev,
         this.destinationChannel,
-        resourceInfo
+        resources
       );
+
+      const tagName = `${
+        this.tagPrefix ? `${this.tagPrefix}-` : ''
+      }rev${charmRev}`;
+      const release = await this.tagger.getReleaseByTag(tagName);
 
       const newReleaseString = `Released to '${
         this.destinationChannel

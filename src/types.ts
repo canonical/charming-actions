@@ -37,3 +37,8 @@ export interface Outcomes {
   fail: boolean;
   comment: boolean;
 }
+
+export interface ResourceInfo {
+  resourceName: string;
+  resourceRev: string;
+}

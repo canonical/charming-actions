@@ -147,56 +147,89 @@ describe('the charmcraft service', () => {
   describe('test getRevisionFromChannel', () => {
     describe('gets correct revision number', () => {
       // test data
-      const charmcraftStatus = `Track    Base                  Channel    Version    Revision    Resources                                                                                                                                 
-        latest   ubuntu 20.04 (amd64)  stable     66         66           -                                                                                                                                         
-                                       candidate  67         67           -                                                                                                                                         
-                                       beta       68         68           -                                                                                                                                         
-                                       edge       80         80           httpbin-image (r3)
-        2.28     ubuntu 20.04 (amd64)  stable     78         78           -                                                                                                                                         
-                                       candidate  79         79           -                                                                                                                                         
-                                       beta       77         77           -                                                                                                                                         
-                                       edge       76         76           httpbin-image (r3)`;
+      const charmcraftStatus = `Track    Base                  Channel    Version    Revision    Resources                                                                                                                   
+      latest   ubuntu 20.04 (amd64)  stable     34         34          noop (r12)                                                                                                                  
+                                     candidate  33         33          noop (r11)                                                                                                                  
+                                     beta       32         32          noop (r10)                                                                                                                  
+                                     edge       68         68          -                                                                                                                           
+      1.5      ubuntu 20.04 (amd64)  stable     57         57          kfam-image (r267), profile-image (r265)                                                                                     
+                                     candidate  55         55          kfam-image (r268), profile-image (r268)                                                                                                                
+                                     beta       56         56          kfam-image (r269), profile-image (r267)                                                                                                              
+                                     edge       58         58          kfam-image (r269), profile-image (r270)`;
 
       [
         {
           track: 'latest',
           channel: 'stable',
-          expected: '66',
+          expected: {
+            charmRev: '34',
+            resources: [{ resourceName: 'noop', resourceRev: '12' }],
+          },
         },
         {
           track: 'latest',
           channel: 'candidate',
-          expected: '67',
+          expected: {
+            charmRev: '33',
+            resources: [{ resourceName: 'noop', resourceRev: '11' }],
+          },
         },
         {
           track: 'latest',
           channel: 'beta',
-          expected: '68',
+          expected: {
+            charmRev: '32',
+            resources: [{ resourceName: 'noop', resourceRev: '10' }],
+          },
         },
         {
           track: 'latest',
           channel: 'edge',
-          expected: '80',
+          expected: { charmRev: '68', resources: [] },
         },
         {
-          track: '2.28',
+          track: '1.5',
           channel: 'stable',
-          expected: '78',
+          expected: {
+            charmRev: '57',
+            resources: [
+              { resourceName: 'kfam-image', resourceRev: '267' },
+              { resourceName: 'profile-image', resourceRev: '265' },
+            ],
+          },
         },
         {
-          track: '2.28',
+          track: '1.5',
           channel: 'candidate',
-          expected: '79',
+          expected: {
+            charmRev: '55',
+            resources: [
+              { resourceName: 'kfam-image', resourceRev: '268' },
+              { resourceName: 'profile-image', resourceRev: '268' },
+            ],
+          },
         },
         {
-          track: '2.28',
+          track: '1.5',
           channel: 'beta',
-          expected: '77',
+          expected: {
+            charmRev: '56',
+            resources: [
+              { resourceName: 'kfam-image', resourceRev: '269' },
+              { resourceName: 'profile-image', resourceRev: '267' },
+            ],
+          },
         },
         {
-          track: '2.28',
+          track: '1.5',
           channel: 'edge',
-          expected: '76',
+          expected: {
+            charmRev: '58',
+            resources: [
+              { resourceName: 'kfam-image', resourceRev: '269' },
+              { resourceName: 'profile-image', resourceRev: '270' },
+            ],
+          },
         },
       ].forEach(({ track, channel, expected }) => {
         it(`gets the correct revision number for ${track}/${channel}`, async () => {
@@ -208,12 +241,12 @@ describe('the charmcraft service', () => {
             stdout: charmcraftStatus,
           });
 
-          const revNum = await charmcraft.getRevisionFromChannel(
-            'dummy-charm',
+          const result = await charmcraft.getRevisionInfoFromChannel(
+            'placeholder-charm',
             track,
             channel
           );
-          expect(revNum).toEqual(expected);
+          expect(result).toEqual(expected);
         });
       });
     });
@@ -235,8 +268,8 @@ describe('the charmcraft service', () => {
         });
 
         await expect(
-          charmcraft.getRevisionFromChannel(
-            'dummy-charm',
+          charmcraft.getRevisionInfoFromChannel(
+            'placeholder-charm',
             'latest',
             'candidate'
           )
@@ -251,14 +284,18 @@ describe('the charmcraft service', () => {
         });
 
         await expect(
-          charmcraft.getRevisionFromChannel('dummy-charm', '1.0.0', 'candidate')
+          charmcraft.getRevisionInfoFromChannel(
+            'placeholder-charm',
+            '1.0.0',
+            'candidate'
+          )
         ).rejects.toThrow(Error('No track with name 1.0.0'));
       });
       it('throws error if not provided with one of the default channels', async () => {
         const charmcraft = new Charmcraft('token');
         await expect(
-          charmcraft.getRevisionFromChannel(
-            'dummy-charm',
+          charmcraft.getRevisionInfoFromChannel(
+            'placeholder-charm',
             'latest',
             'stable/feature-123'
           )

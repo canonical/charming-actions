@@ -15,10 +15,7 @@ on:
         required: true
       origin-channel:
         description: 'Origin Channel'
-        required: false
-      rev:
-        description: 'Revision number'
-        required: false
+        required: true
 
 jobs:
   promote-charm:
@@ -33,7 +30,6 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           destination-channel: ${{ github.event.inputs.destination-channel }}
           origin-channel: ${{ github.event.inputs.origin-channel }}
-          revision: ${{ github.event.inputs.rev }}
 ```
 
 ![Manual dispatch release charm action form screenshot](dispatch_release_action_form.png "Manual dispatch release charm action form screenshot")
@@ -46,8 +42,7 @@ jobs:
 | `credentials`        | Credentials [exported](https://juju.is/docs/sdk/remote-env-auth) using `charmcraft login --export`.     | ✔️       |
 | `github-token`       | Github Token needed for automatic tagging when publishing                                               | ✔️       |
 | `destination-channel`| Channel to which the charm will be released. It must be in the format of `track/risk`.                  | ✔️       |
-| `origin-channel`     | Origin Channel from where the charm that needs to be promoted will be pulled.                           |          |
-| `revision`           | Revision number of charm that will be released. If this option is set `origin-channel` will be ignored. |          |
+| `origin-channel`     | Origin Channel from where the charm that needs to be promoted will be pulled.                           | ✔️       |
 | `tag-prefix`         | Tag prefix, useful when bundling multiple charms in the same repo using a matrix.                       |          |     
 | `charm-path`         | Path to the charm where `metadata.yaml` is located. Defaults to the current working directory.      |          |    
 | `charmcraft-channel` | Snap channel to use when installing charmcraft. Defaults to `latest/edge`.                              |          |
@@ -55,3 +50,9 @@ jobs:
 ### Outputs
 
 None
+
+### Limitations
+- Doesn't work with charm that support multiple bases
+- The origin channel must be in the format of `track/risk` for parsing the charmcraft status output.
+- Only works for charm. It does not support releasing bundles.
+- Does not support charm with channel branches as it would mess up the charmcraft status output.

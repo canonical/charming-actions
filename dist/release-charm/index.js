@@ -21324,39 +21324,6 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 1287:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getResourcesInfoByRelease = void 0;
-function getResourcesInfoByRelease(releaseData) {
-    var _a;
-    const body = (_a = releaseData.body) === null || _a === void 0 ? void 0 : _a.split('\n').map((line) => line.trim()).filter((line) => line.startsWith('-') || line.startsWith('resource-revision:'));
-    if (!body) {
-        throw new Error(`Cannot find release body in tag ${releaseData.tag_name}`);
-    }
-    const resourceNames = body
-        .filter((line) => line.startsWith('-'))
-        .map((line) => line.split(':')[0].split(' ')[2]);
-    const resourceRevs = body
-        .filter((line) => line.startsWith('resource-revision:'))
-        .map((line) => line.split(':')[1].trim());
-    if (resourceNames.length === 0 || resourceRevs.length === 0) {
-        throw new Error(`Cannot find resources info in release with tag ${releaseData.tag_name}`);
-    }
-    const result = resourceNames.reduce((acc, field, index) => {
-        acc.push({ resourceName: field, resourceRev: resourceRevs[index] });
-        return acc;
-    }, []);
-    return result;
-}
-exports.getResourcesInfoByRelease = getResourcesInfoByRelease;
-
-
-/***/ }),
-
 /***/ 797:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -21394,12 +21361,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ReleaseCharmAction = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const services_1 = __nccwpck_require__(720);
-const helpers_1 = __nccwpck_require__(1287);
 class ReleaseCharmAction {
     constructor() {
         this.destinationChannel = core.getInput('destination-channel');
         this.originChannel = core.getInput('origin-channel');
-        this.revision = core.getInput('revision');
         this.charmcraftChannel = core.getInput('charmcraft-channel');
         this.token = core.getInput('github-token');
         this.tagPrefix = core.getInput('tag-prefix');
@@ -21418,15 +21383,12 @@ class ReleaseCharmAction {
             try {
                 yield this.snap.install('charmcraft', this.charmcraftChannel);
                 process.chdir(this.charmPath);
-                const { name: charmName, images: charmImages } = this.charmcraft.metadata();
+                const { name: charmName } = this.charmcraft.metadata();
                 const [originTrack, originChannel] = this.originChannel.split('/');
-                const revision = this.revision
-                    ? this.revision
-                    : yield this.charmcraft.getRevisionFromChannel(charmName, originTrack, originChannel);
-                const tagName = `${this.tagPrefix ? `${this.tagPrefix}-` : ''}rev${revision}`;
+                const { charmRev, resources } = yield this.charmcraft.getRevisionInfoFromChannel(charmName, originTrack, originChannel);
+                yield this.charmcraft.release(charmName, charmRev, this.destinationChannel, resources);
+                const tagName = `${this.tagPrefix ? `${this.tagPrefix}-` : ''}rev${charmRev}`;
                 const release = yield this.tagger.getReleaseByTag(tagName);
-                const resourceInfo = charmImages.length === 0 ? [] : (0, helpers_1.getResourcesInfoByRelease)(release);
-                yield this.charmcraft.release(charmName, revision, this.destinationChannel, resourceInfo);
                 const newReleaseString = `Released to '${this.destinationChannel}' at ${this.tagger.get_date_text()}\n`;
                 // add release string between last release statement and generated release note (What's changed section)
                 const generateNotesIndex = (_a = release.body) === null || _a === void 0 ? void 0 : _a.indexOf("## What's Changed");
@@ -21831,7 +21793,7 @@ class Charmcraft {
             return result.stdout;
         });
     }
-    getRevisionFromChannel(charm, track, channel) {
+    getRevisionInfoFromChannel(charm, track, channel) {
         return __awaiter(this, void 0, void 0, function* () {
             // For now we have to parse the `charmcraft status` output this will soon be fixed
             // when we can get json output from charmcraft.
@@ -21849,16 +21811,27 @@ class Charmcraft {
             };
             const lines = charmcraftStatus.split('\n');
             for (let i = 1; i < lines.length; i += 4) {
+                // find line with track name
                 if (lines[i].includes(track)) {
                     i += channelLine[channel];
                     const targetLine = channel === 'stable'
                         ? lines[i].slice(lines[i].search(/stable/g))
                         : lines[i];
-                    const revision = targetLine.trim().split(/\s+/)[2];
+                    const splitLine = targetLine.trim().split(/\s{2,}/);
+                    const revision = splitLine[2];
                     if (revision === '-') {
                         throw new Error(`No revision available in ${track}/${channel}`);
                     }
-                    return revision;
+                    const resources = splitLine[3].split(',').reduce((acc, res) => {
+                        if (res === '-') {
+                            return acc;
+                        }
+                        const [resName, resRev] = res.trim().split(' ');
+                        const revisionNum = resRev.replace(/\D/g, '');
+                        acc.push({ resourceName: resName, resourceRev: revisionNum });
+                        return acc;
+                    }, []);
+                    return { charmRev: revision, resources };
                 }
             }
             throw new Error(`No track with name ${track}`);
