@@ -38,9 +38,9 @@ jobs:
           channel: '${{ steps.channel.outputs.name }}'
           github-token: '${{ secrets.GITHUB_TOKEN }}'
 
-      - name: Upload bundle to charmhub
-        uses: ./upload-bundle
-        with:
-          credentials: '${{ secrets.CHARMCRAFT_AUTH }}'
-          bundle-path: test-bundle/
-          github-token: '${{ secrets.GITHUB_TOKEN }}'
+#      - name: Upload bundle to charmhub
+#        uses: ./upload-bundle
+#        with:
+#          credentials: '${{ secrets.CHARMCRAFT_AUTH }}'
+#          bundle-path: test-bundle/
+#          github-token: '${{ secrets.GITHUB_TOKEN }}'
