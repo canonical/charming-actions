@@ -60,7 +60,7 @@ In multi charm repo, you would also need to provide the charm path and tag prefi
 None
 
 ### Limitations
-- Doesn't work with charm that support multiple bases
+- Doesn't work with charm that are built on multiple bases
 - The origin channel must be in the format of `track/risk` for parsing the charmcraft status output.
 - Only works for charm. It does not support releasing bundles.
 - Does not support charm with channel branches as it would mess up the charmcraft status output.
