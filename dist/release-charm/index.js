@@ -21324,7 +21324,7 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 51:
+/***/ 797:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -21358,17 +21358,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UploadCharmAction = void 0;
+exports.ReleaseCharmAction = void 0;
 const core = __importStar(__nccwpck_require__(2186));
-const process = __importStar(__nccwpck_require__(7282));
 const services_1 = __nccwpck_require__(720);
-class UploadCharmAction {
+class ReleaseCharmAction {
     constructor() {
-        this.channel = core.getInput('channel');
+        this.destinationChannel = core.getInput('destination-channel');
+        this.originChannel = core.getInput('origin-channel');
         this.charmcraftChannel = core.getInput('charmcraft-channel');
-        this.charmPath = core.getInput('charm-path');
-        this.tagPrefix = core.getInput('tag-prefix');
         this.token = core.getInput('github-token');
+        this.tagPrefix = core.getInput('tag-prefix');
+        this.charmPath = core.getInput('charm-path');
         if (!this.token) {
             throw new Error(`Input 'github-token' is missing`);
         }
@@ -21377,37 +21377,23 @@ class UploadCharmAction {
         this.tagger = new services_1.Tagger(this.token);
         this.charmcraft = new services_1.Charmcraft();
     }
-    get overrides() {
-        const raw = core.getInput('resource-overrides');
-        return !raw
-            ? {}
-            : raw.split(',').reduce((a, e) => {
-                const [name, rev] = e.split(':');
-                return Object.assign(Object.assign({}, a), { [name]: rev });
-            }, {});
-    }
     run() {
+        var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 yield this.snap.install('charmcraft', this.charmcraftChannel);
                 process.chdir(this.charmPath);
-                yield this.charmcraft.pack();
-                const overrides = this.overrides;
-                const imageResults = yield this.charmcraft.uploadResources(overrides);
-                const fileResults = yield this.charmcraft.fetchFileFlags(overrides);
-                const staticResults = this.charmcraft.buildStaticFlags(overrides);
-                const resourceInfo = [
-                    imageResults.resourceInfo,
-                    fileResults.resourceInfo,
-                    staticResults.resourceInfo,
-                ].join('\n');
-                const flags = [
-                    ...imageResults.flags,
-                    ...fileResults.flags,
-                    ...staticResults.flags,
-                ];
-                const rev = yield this.charmcraft.upload(this.channel, flags);
-                yield this.tagger.tag(rev, this.channel, resourceInfo, this.tagPrefix);
+                const { name: charmName } = this.charmcraft.metadata();
+                const [originTrack, originChannel] = this.originChannel.split('/');
+                const { charmRev, resources } = yield this.charmcraft.getRevisionInfoFromChannel(charmName, originTrack, originChannel);
+                yield this.charmcraft.release(charmName, charmRev, this.destinationChannel, resources);
+                const tagName = `${this.tagPrefix ? `${this.tagPrefix}-` : ''}rev${charmRev}`;
+                const release = yield this.tagger.getReleaseByTag(tagName);
+                const newReleaseString = `Released to '${this.destinationChannel}' at ${this.tagger.get_date_text()}\n`;
+                // add release string between last release statement and generated release note (What's changed section)
+                const generateNotesIndex = (_a = release.body) === null || _a === void 0 ? void 0 : _a.indexOf("## What's Changed");
+                const newReleaseBody = (_b = release.body) === null || _b === void 0 ? void 0 : _b.slice(0, generateNotesIndex).concat(newReleaseString, release.body.slice(generateNotesIndex));
+                yield this.tagger.updateRelease(release.id, newReleaseBody);
             }
             catch (error) {
                 core.setFailed(error.message);
@@ -21418,12 +21404,12 @@ class UploadCharmAction {
         });
     }
 }
-exports.UploadCharmAction = UploadCharmAction;
+exports.ReleaseCharmAction = ReleaseCharmAction;
 
 
 /***/ }),
 
-/***/ 1018:
+/***/ 1138:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -21438,9 +21424,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const upload_charm_1 = __nccwpck_require__(51);
+const release_charm_1 = __nccwpck_require__(797);
 (() => __awaiter(void 0, void 0, void 0, function* () {
-    yield new upload_charm_1.UploadCharmAction().run();
+    yield new release_charm_1.ReleaseCharmAction().run();
 }))();
 
 
@@ -22260,14 +22246,6 @@ module.exports = require("perf_hooks");
 
 /***/ }),
 
-/***/ 7282:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("process");
-
-/***/ }),
-
 /***/ 5477:
 /***/ ((module) => {
 
@@ -22382,7 +22360,7 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(1018);
+/******/ 	var __webpack_exports__ = __nccwpck_require__(1138);
 /******/ 	module.exports = __webpack_exports__;
 /******/ 	
 /******/ })()

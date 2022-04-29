@@ -4,7 +4,7 @@ import * as glob from '@actions/glob';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 
-import { Metadata } from '../../types';
+import { Metadata, ResourceInfo } from '../../types';
 
 /* eslint-disable camelcase */
 
@@ -214,6 +214,88 @@ class Charmcraft {
     const { stdout: out, stderr: err } = result;
 
     return { ok: lines.length <= 0, out, err };
+  }
+
+  async status(charm: string): Promise<string> {
+    const result = await getExecOutput(
+      'charmcraft',
+      ['status', charm],
+      this.execOptions
+    );
+    return result.stdout;
+  }
+
+  async getRevisionInfoFromChannel(
+    charm: string,
+    track: string,
+    channel: string
+  ): Promise<{ charmRev: string; resources: Array<ResourceInfo> }> {
+    // For now we have to parse the `charmcraft status` output this will soon be fixed
+    // when we can get json output from charmcraft.
+    // Issue tracked here: https://github.com/canonical/charmcraft/issues/183
+    const acceptedChannels = ['stable', 'candidate', 'beta', 'edge'];
+    if (!acceptedChannels.includes(channel)) {
+      throw new Error(
+        `Provided channel ${channel} is not supported. This actions currently only works with one of the following default channels: edge, beta, candidate, stable`
+      );
+    }
+    const charmcraftStatus = await this.status(charm);
+    const channelLine: Record<string, number> = {
+      stable: 0,
+      candidate: 1,
+      beta: 2,
+      edge: 3,
+    };
+    const lines = charmcraftStatus.split('\n');
+    for (let i = 1; i < lines.length; i += 4) {
+      // find line with track name
+      if (lines[i].includes(track)) {
+        i += channelLine[channel];
+        const targetLine =
+          channel === 'stable'
+            ? lines[i].slice(lines[i].search(/stable/g))
+            : lines[i];
+        const splitLine = targetLine.trim().split(/\s{2,}/);
+        const revision = splitLine[2];
+        if (revision === '-') {
+          throw new Error(`No revision available in ${track}/${channel}`);
+        }
+        const resources = splitLine[3].split(',').reduce((acc, res) => {
+          if (res === '-') {
+            return acc;
+          }
+          const [resName, resRev] = res.trim().split(' ');
+          const revisionNum = resRev.replace(/\D/g, '');
+          acc.push({ resourceName: resName, resourceRev: revisionNum });
+          return acc;
+        }, [] as Array<ResourceInfo>);
+        return { charmRev: revision, resources };
+      }
+    }
+    throw new Error(`No track with name ${track}`);
+  }
+
+  async release(
+    charm: string,
+    charmRevision: string,
+    destinationChannel: string,
+    resourceInfo: Array<ResourceInfo>
+  ) {
+    const resourceArgs: Array<string> = [];
+    resourceInfo.forEach((resource) => {
+      resourceArgs.push('--resource');
+      resourceArgs.push(`${resource.resourceName}:${resource.resourceRev}`);
+    });
+    const args = [
+      'release',
+      charm,
+      '--revision',
+      charmRevision,
+      '--channel',
+      destinationChannel,
+      ...resourceArgs,
+    ];
+    await exec('charmcraft', args, this.execOptions);
   }
 }
 

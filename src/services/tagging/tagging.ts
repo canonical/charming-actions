@@ -45,7 +45,7 @@ class Tagger {
     tagPrefix?: string
   ) {
     const name = `${tagPrefix ? `${tagPrefix}-` : ''}rev${revision}`;
-    const message = `${resources} Released to '${channel}' at ${this._get_date_text()}`;
+    const message = `${resources} Released to '${channel}' at ${this.get_date_text()}`;
 
     return {
       owner,
@@ -60,9 +60,38 @@ class Tagger {
     };
   }
 
-  _get_date_text() {
+  get_date_text() {
     // 12:00 UTC on 10 Feb 2022
     return dayjs().utc().format('HH:mm UTC on D MMM YYYY');
+  }
+
+  async getReleaseByTag(tagName: string) {
+    const { owner, repo } = context.repo;
+    try {
+      const { data } = await this.kit.rest.repos.getReleaseByTag({
+        owner,
+        repo,
+        tag: tagName,
+      });
+      return data;
+    } catch (error) {
+      throw new Error(`Cannot find release by tag ${tagName}`);
+    }
+  }
+
+  async updateRelease(release_id: number, newReleaseBody?: string) {
+    const { owner, repo } = context.repo;
+    try {
+      const { data } = await this.kit.rest.repos.updateRelease({
+        owner,
+        repo,
+        release_id,
+        body: newReleaseBody,
+      });
+      return data;
+    } catch (error) {
+      throw new Error(`Failed to update release with id ${release_id}`);
+    }
   }
 }
 
