@@ -115,7 +115,7 @@ function getReleaseFromReleaseArrayByChannelHandlingNull(
   }
   if (release.status === 'closed') {
     // No release exists.  Throw
-    throw new Error(`No revision available in channel ${channel}`);
+    throw new Error(`No revision available in risk level ${channel}`);
   }
   throw new Error(
     `Found unknown release status ${release.status} in charmcraft status results`
@@ -403,7 +403,7 @@ class Charmcraft {
     charm: string,
     track: string,
     channel: string,
-    base: any,
+    base: any
   ): Promise<{ charmRev: string; resources: Array<ResourceInfo> }> {
     const acceptedChannels = ['stable', 'candidate', 'beta', 'edge'];
     if (!acceptedChannels.includes(channel)) {
@@ -435,10 +435,24 @@ class Charmcraft {
     const { release: releaseObj } =
       getReleaseFromReleaseArrayByChannelHandlingNull(releasesArray, channel);
 
+    // console.log(`releaseObj: ${JSON.stringify(releaseObj)}`);
+
     const { revision } = releaseObj;
     const { resources } = releaseObj;
 
-    return { charmRev: revision, resources };
+    // console.log(`resources: ${JSON.stringify(resources)}`);
+
+    const resourceInfoArray = [] as Array<ResourceInfo>;
+
+    for (let i = 0; i < resources.length; i += 1) {
+      // console.log(`acting for i=${i} and ${JSON.stringify(resources[i])}`);
+      resourceInfoArray.push({
+        resourceName: resources[i].name,
+        resourceRev: resources[i].revision,
+      });
+    }
+
+    return { charmRev: revision, resources: resourceInfoArray };
   }
 
   async release(
