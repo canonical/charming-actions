@@ -21385,7 +21385,9 @@ class ReleaseCharmAction {
                 process.chdir(this.charmPath);
                 const { name: charmName } = this.charmcraft.metadata();
                 const [originTrack, originChannel] = this.originChannel.split('/');
-                const { charmRev, resources } = yield this.charmcraft.getRevisionInfoFromChannel(charmName, originTrack, originChannel);
+                // TODO: Handle base more robustly
+                const base = { name: 'ubuntu', channel: '20.04', architecture: 'amd64' };
+                const { charmRev, resources } = yield this.charmcraft.getRevisionInfoFromChannelJson(charmName, originTrack, originChannel, base);
                 yield this.charmcraft.release(charmName, charmRev, this.destinationChannel, resources);
                 const tagName = `${this.tagPrefix ? `${this.tagPrefix}-` : ''}rev${charmRev}`;
                 const release = yield this.tagger.getReleaseByTag(tagName);
@@ -21930,7 +21932,7 @@ class Charmcraft {
             throw new Error(`No track with name ${track}`);
         });
     }
-    getRevisionInfoFromChannel_json(charm, track, channel) {
+    getRevisionInfoFromChannelJson(charm, track, channel, base) {
         return __awaiter(this, void 0, void 0, function* () {
             const acceptedChannels = ['stable', 'candidate', 'beta', 'edge'];
             if (!acceptedChannels.includes(channel)) {
@@ -21939,8 +21941,6 @@ class Charmcraft {
             // Get status of this charm as a structured object
             const charmcraftStatus = yield this.statusJson(charm);
             const { track: trackObj } = getTrackByName(charmcraftStatus, track);
-            // TODO: make base an input arg
-            const base = { name: 'ubuntu', channel: '20.04', architecture: 'amd64' };
             const { releases: releasesArray } = getReleasesFromReleaseBaseArrayByBase(trackObj.channels, base);
             if (releasesArray === null) {
                 throw new Error(`Cannot find release for charm ${charm}, track ${track}, channel ${channel}, with base ${JSON.stringify(base)}`);

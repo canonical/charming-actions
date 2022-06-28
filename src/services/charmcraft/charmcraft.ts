@@ -399,10 +399,11 @@ class Charmcraft {
     throw new Error(`No track with name ${track}`);
   }
 
-  async getRevisionInfoFromChannel_json(
+  async getRevisionInfoFromChannelJson(
     charm: string,
     track: string,
-    channel: string
+    channel: string,
+    base: any,
   ): Promise<{ charmRev: string; resources: Array<ResourceInfo> }> {
     const acceptedChannels = ['stable', 'candidate', 'beta', 'edge'];
     if (!acceptedChannels.includes(channel)) {
@@ -416,8 +417,6 @@ class Charmcraft {
 
     const { track: trackObj } = getTrackByName(charmcraftStatus, track);
 
-    // TODO: make base an input arg
-    const base = { name: 'ubuntu', channel: '20.04', architecture: 'amd64' };
     const { releases: releasesArray } = getReleasesFromReleaseBaseArrayByBase(
       trackObj.channels,
       base

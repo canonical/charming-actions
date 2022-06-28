@@ -41,11 +41,15 @@ export class ReleaseCharmAction {
 
       const [originTrack, originChannel] = this.originChannel.split('/');
 
+      // TODO: Handle base more robustly
+      const base = { name: 'ubuntu', channel: '20.04', architecture: 'amd64' };
+
       const { charmRev, resources } =
-        await this.charmcraft.getRevisionInfoFromChannel(
+        await this.charmcraft.getRevisionInfoFromChannelJson(
           charmName,
           originTrack,
-          originChannel
+          originChannel,
+          base
         );
 
       await this.charmcraft.release(
