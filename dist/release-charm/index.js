@@ -21630,6 +21630,92 @@ const glob = __importStar(__nccwpck_require__(8090));
 const fs = __importStar(__nccwpck_require__(7147));
 const yaml = __importStar(__nccwpck_require__(1917));
 /* eslint-disable camelcase */
+function checkIfIsBase(baseRelease, base) {
+    const { name, channel: baseChannel, architecture } = base;
+    if (baseRelease.base === null) {
+        // This release has no base.  Nothing is here
+        return false;
+    }
+    return (baseRelease.base.name === name &&
+        baseRelease.base.channel === baseChannel &&
+        baseRelease.base.architecture === architecture);
+}
+function getSaferChannel(channel) {
+    // Returns name of the next less risky channel, or an empty string if none exist
+    // standard channel names, from least to most risk
+    const orderedChannels = ['stable', 'candidate', 'beta', 'edge'];
+    const iLessRisky = orderedChannels.findIndex((c) => c === channel) - 1;
+    if (iLessRisky > 0) {
+        return orderedChannels[iLessRisky];
+    }
+    return '';
+}
+function getTrackByName(trackArray, track) {
+    const i = trackArray.findIndex((trackStatus) => trackStatus.track === track);
+    if (i === -1) {
+        throw new Error(`No track with name ${track}`);
+    }
+    const trackObj = trackArray[i];
+    // console.log(`Found track ${track} at index ${i}: ${JSON.stringify(trackObj)}`);
+    return { i, track: trackObj };
+}
+function getReleasesFromReleaseBaseArrayByBase(baseReleaseArray, base) {
+    // Accepts an array of {base: base_spec, releases: [releaseOnChannelA, releaseOnChannelB, ...]} objects,
+    // returning the releasOnChannelX releases array corresponding to the specified base
+    //
+    // base should be of format {name: 'ubuntu', channel: '20.04', architecture: 'amd64'}
+    const i = baseReleaseArray.findIndex((baseRelease) => checkIfIsBase(baseRelease, base));
+    const releasesArray = baseReleaseArray[i].releases;
+    // console.log(`Found releases ${base} at index ${i}: ${JSON.stringify(releasesArray)}`);
+    return { i, releases: releasesArray };
+}
+function getReleaseFromReleaseArrayByChannel(releases, channel) {
+    // console.log(`releases: ${JSON.stringify(releases)}`)
+    const i = releases.findIndex((release) => release.channel === channel);
+    const releaseObj = releases[i];
+    // console.log(`Found release for channel ${channel} at index ${i}: ${JSON.stringify(releaseObj)}`);
+    return { i, release: releaseObj };
+}
+function getReleaseFromReleaseArrayByChannelHandlingNull(releases, channel) {
+    // Returns the release in an array of releases for a given channel, handling any null releases
+    //
+    // Some charmhub releases "point" to another release, for example:
+    //    `charmcraft status metacontroller-operator`:
+    //        Track    Base                  Channel                    Version    Revision    Expires at
+    //        latest   ubuntu 20.04 (amd64)  stable                      2          2
+    //                                       candidate                   5          5
+    //                                       beta                        ↑          ↑
+    //                                       edge                       13         13
+    //                                       edge/add-charming-actions   9          9           2022-06-30T01:00:00Z
+    //                                       edge/resources-removal     12         12           2022-07-09T01:00:00Z
+    //        0.3      -                     stable                      -          -
+    //                                       candidate                   -          -
+    //                                       beta                        -          -
+    //                                       edge                        -          -
+    // where we see latest/ubuntu-amd64/beta points to candidate, eg they have the same release.
+    // `charmcraft status charmName --format json` returns these pointer releases with
+    // `release.status == tracking` and `release.revision == null`.
+    // This function handles this case, recursively looking for a "safer" release (eg: if beta is null,
+    // check candidate).
+    //
+    // This function also handles the case where a track has no release (eg: for track 0.3 above), throwing
+    // an error for this case.  This situation is identified by `release.status == closed`.
+    const { i, release } = getReleaseFromReleaseArrayByChannel(releases, channel);
+    if (release.status === 'open') {
+        // Release exists.  Return it
+        return { i, release };
+    }
+    if (release.status === 'tracking') {
+        // Pointer to a safer channel.  Return that instead
+        const saferChannel = getSaferChannel(channel);
+        return getReleaseFromReleaseArrayByChannelHandlingNull(releases, saferChannel);
+    }
+    if (release.status === 'closed') {
+        // No release exists.  Throw
+        throw new Error(`No revision available in channel ${channel}`);
+    }
+    throw new Error(`Found unknown release status ${release.status} in charmcraft status results`);
+}
 class Charmcraft {
     constructor(token) {
         this.uploadImage = core.getInput('upload-image').toLowerCase() === 'true';
@@ -21793,6 +21879,13 @@ class Charmcraft {
             return result.stdout;
         });
     }
+    statusJson(charm) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const result = yield (0, exec_1.getExecOutput)('charmcraft', ['status', charm, '--format', 'json'], this.execOptions);
+            const parsedObj = JSON.parse(result.stdout);
+            return parsedObj;
+        });
+    }
     getRevisionInfoFromChannel(charm, track, channel) {
         return __awaiter(this, void 0, void 0, function* () {
             // For now we have to parse the `charmcraft status` output this will soon be fixed
@@ -21835,6 +21928,28 @@ class Charmcraft {
                 }
             }
             throw new Error(`No track with name ${track}`);
+        });
+    }
+    getRevisionInfoFromChannel_json(charm, track, channel) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const acceptedChannels = ['stable', 'candidate', 'beta', 'edge'];
+            if (!acceptedChannels.includes(channel)) {
+                throw new Error(`Provided channel ${channel} is not supported. This actions currently only works with one of the following default channels: edge, beta, candidate, stable`);
+            }
+            // Get status of this charm as a structured object
+            const charmcraftStatus = yield this.statusJson(charm);
+            const { track: trackObj } = getTrackByName(charmcraftStatus, track);
+            // TODO: make base an input arg
+            const base = { name: 'ubuntu', channel: '20.04', architecture: 'amd64' };
+            const { releases: releasesArray } = getReleasesFromReleaseBaseArrayByBase(trackObj.channels, base);
+            if (releasesArray === null) {
+                throw new Error(`Cannot find release for charm ${charm}, track ${track}, channel ${channel}, with base ${JSON.stringify(base)}`);
+            }
+            // console.log(`releasesArray in main: ${JSON.stringify(releasesArray)}`);
+            const { release: releaseObj } = getReleaseFromReleaseArrayByChannelHandlingNull(releasesArray, channel);
+            const { revision } = releaseObj;
+            const { resources } = releaseObj;
+            return { charmRev: revision, resources };
         });
     }
     release(charm, charmRevision, destinationChannel, resourceInfo) {
