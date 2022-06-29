@@ -28,14 +28,17 @@ function getSaferChannel(channel: string) {
 
   // standard channel names, from least to most risk
   const orderedChannels = ['stable', 'candidate', 'beta', 'edge'];
+  // console.log(`looking for safer channel than ${channel} from options ${orderedChannels} (leftmost is safest)`);
   const iLessRisky = orderedChannels.findIndex((c) => c === channel) - 1;
-  if (iLessRisky > 0) {
+  // console.log(`found less risky channel is at index ${iLessRisky}`);
+  if (iLessRisky >= 0) {
     return orderedChannels[iLessRisky];
   }
   return '';
 }
 
 function getTrackByName(trackArray: any, track: string) {
+  // console.log(`trackArray: ${JSON.stringify(trackArray)}`);
   const i = trackArray.findIndex(
     (trackStatus: any) => trackStatus.track === track
   );
@@ -98,9 +101,11 @@ function getReleaseFromReleaseArrayByChannelHandlingNull(
   //
   // This function also handles the case where a track has no release (eg: for track 0.3 above), throwing
   // an error for this case.  This situation is identified by `release.status == closed`.
+  // console.log(`releaseArray: ${JSON.stringify(releases)}`);
 
   const { i, release } = getReleaseFromReleaseArrayByChannel(releases, channel);
 
+  // console.log(`release: ${JSON.stringify(release)}`);
   if (release.status === 'open') {
     // Release exists.  Return it
     return { i, release };
@@ -108,6 +113,12 @@ function getReleaseFromReleaseArrayByChannelHandlingNull(
   if (release.status === 'tracking') {
     // Pointer to a safer channel.  Return that instead
     const saferChannel = getSaferChannel(channel);
+    if (saferChannel === '') {
+      // no safer channel exists.  Should we throw?
+      throw new Error(
+        `release.status == tracking for channel ${channel}, but no safer channel exists`
+      );
+    }
     return getReleaseFromReleaseArrayByChannelHandlingNull(
       releases,
       saferChannel
@@ -414,7 +425,7 @@ class Charmcraft {
 
     // Get status of this charm as a structured object
     const charmcraftStatus = await this.statusJson(charm);
-
+    // console.log(`charmcraftStatus: ${charmcraftStatus}`);
     const { track: trackObj } = getTrackByName(charmcraftStatus, track);
 
     const { releases: releasesArray } = getReleasesFromReleaseBaseArrayByBase(

@@ -21658,13 +21658,16 @@ function getSaferChannel(channel) {
     // Returns name of the next less risky channel, or an empty string if none exist
     // standard channel names, from least to most risk
     const orderedChannels = ['stable', 'candidate', 'beta', 'edge'];
+    // console.log(`looking for safer channel than ${channel} from options ${orderedChannels} (leftmost is safest)`);
     const iLessRisky = orderedChannels.findIndex((c) => c === channel) - 1;
-    if (iLessRisky > 0) {
+    // console.log(`found less risky channel is at index ${iLessRisky}`);
+    if (iLessRisky >= 0) {
         return orderedChannels[iLessRisky];
     }
     return '';
 }
 function getTrackByName(trackArray, track) {
+    // console.log(`trackArray: ${JSON.stringify(trackArray)}`);
     const i = trackArray.findIndex((trackStatus) => trackStatus.track === track);
     if (i === -1) {
         throw new Error(`No track with name ${track}`);
@@ -21714,7 +21717,9 @@ function getReleaseFromReleaseArrayByChannelHandlingNull(releases, channel) {
     //
     // This function also handles the case where a track has no release (eg: for track 0.3 above), throwing
     // an error for this case.  This situation is identified by `release.status == closed`.
+    // console.log(`releaseArray: ${JSON.stringify(releases)}`);
     const { i, release } = getReleaseFromReleaseArrayByChannel(releases, channel);
+    // console.log(`release: ${JSON.stringify(release)}`);
     if (release.status === 'open') {
         // Release exists.  Return it
         return { i, release };
@@ -21722,6 +21727,10 @@ function getReleaseFromReleaseArrayByChannelHandlingNull(releases, channel) {
     if (release.status === 'tracking') {
         // Pointer to a safer channel.  Return that instead
         const saferChannel = getSaferChannel(channel);
+        if (saferChannel === '') {
+            // no safer channel exists.  Should we throw?
+            throw new Error(`release.status == tracking for channel ${channel}, but no safer channel exists`);
+        }
         return getReleaseFromReleaseArrayByChannelHandlingNull(releases, saferChannel);
     }
     if (release.status === 'closed') {
@@ -21952,6 +21961,7 @@ class Charmcraft {
             }
             // Get status of this charm as a structured object
             const charmcraftStatus = yield this.statusJson(charm);
+            // console.log(`charmcraftStatus: ${charmcraftStatus}`);
             const { track: trackObj } = getTrackByName(charmcraftStatus, track);
             const { releases: releasesArray } = getReleasesFromReleaseBaseArrayByBase(trackObj.channels, base);
             if (releasesArray === null) {
