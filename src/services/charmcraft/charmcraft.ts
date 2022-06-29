@@ -297,12 +297,63 @@ class Charmcraft {
     ];
     await exec('charmcraft', args, this.execOptions);
   }
+
+  async listLib(
+    charm: string
+  ): Promise<LibInfo[]> {
+    const args = [
+      'list-lib', 
+      charm
+    ];
+    // example output:
+    
+    // Library name      API    Patch   
+    // ingress           0      7       
+    // ingress_per_unit  0      10      
+    const getLibs = await getExecOutput('charmcraft', args, this.execOptions);
+    
+    // ignore table headers
+    const libsRaw = getLibs.stdout.split('\n').slice(1); 
+    
+
+    const libs = libsRaw.map((line: string) => {
+      const values: string[] = line.trim().split(' ');
+      // purge excess whitespace
+      const [libName, libVersion, libRevision] = values.map((value: string) => {
+        return value.trim()
+      })
+      return {
+        libName,
+        version: parseInt(libVersion), 
+        revision:parseInt(libRevision),
+      } as LibInfo
+    });
+    return libs;
+  }
+
+  async publishLib(
+    charm: string,
+    majorVersion: string,
+    libName: string,
+  ) {
+    const args = [
+      'publish-lib', 
+      'charms.' + charm + '.' + majorVersion + '.' + libName
+    ];
+    await exec('charmcraft', args, this.execOptions);
+  }
 }
 
 export interface LibStatus {
   ok: boolean;
   out: string;
   err: string;
+}
+
+export interface LibInfo {
+  libName: string;
+  version: number;
+  revision: number;
 }
 
 export { Charmcraft };
