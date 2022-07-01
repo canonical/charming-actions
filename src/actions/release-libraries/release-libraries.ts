@@ -41,8 +41,9 @@ export class PublishLibrariesAction {
     this.context = context;
     this.github = getOctokit(this.tokens.github);
     this.charmcraft = new Charmcraft(this.tokens.charmhub);
-    const { name: charmName } = this.charmcraft.metadata();
-    this.charmName = charmName;
+    this.charmName = this.charmcraft
+      .metadata()
+      .name;
     this.snap = new Snap();
   }
   
