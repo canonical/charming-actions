@@ -25,7 +25,9 @@ export class PublishLibrariesAction {
       github: getInput('github-token'),
       charmhub: getInput('credentials'),
     };
-    if (!this.tokens.github) throw new Error(`Input 'github-token' is missing`);
+    if (!this.tokens.github) {
+      throw new Error(`Input 'github-token' is missing`);
+    } 
     
     this.checkOnly = getInput('check-only'),
     this.charmPath = getInput('charm-path');
