@@ -21658,22 +21658,18 @@ function getSaferChannel(channel) {
     // Returns name of the next less risky channel, or an empty string if none exist
     // standard channel names, from least to most risk
     const orderedChannels = ['stable', 'candidate', 'beta', 'edge'];
-    // console.log(`looking for safer channel than ${channel} from options ${orderedChannels} (leftmost is safest)`);
     const iLessRisky = orderedChannels.findIndex((c) => c === channel) - 1;
-    // console.log(`found less risky channel is at index ${iLessRisky}`);
     if (iLessRisky >= 0) {
         return orderedChannels[iLessRisky];
     }
     return '';
 }
 function getTrackByName(trackArray, track) {
-    // console.log(`trackArray: ${JSON.stringify(trackArray)}`);
     const i = trackArray.findIndex((trackStatus) => trackStatus.track === track);
     if (i === -1) {
         throw new Error(`No track with name ${track}`);
     }
     const trackObj = trackArray[i];
-    // console.log(`Found track ${track} at index ${i}: ${JSON.stringify(trackObj)}`);
     return { i, track: trackObj };
 }
 function getReleasesFromReleaseBaseArrayByBase(baseReleaseArray, base) {
@@ -21683,14 +21679,11 @@ function getReleasesFromReleaseBaseArrayByBase(baseReleaseArray, base) {
     // base should be of format {name: 'ubuntu', channel: '20.04', architecture: 'amd64'}
     const i = baseReleaseArray.findIndex((baseRelease) => checkIfIsBase(baseRelease, base));
     const releasesArray = baseReleaseArray[i].releases;
-    // console.log(`Found releases ${base} at index ${i}: ${JSON.stringify(releasesArray)}`);
     return { i, releases: releasesArray };
 }
 function getReleaseFromReleaseArrayByChannel(releases, channel) {
-    // console.log(`releases: ${JSON.stringify(releases)}`)
     const i = releases.findIndex((release) => release.channel === channel);
     const releaseObj = releases[i];
-    // console.log(`Found release for channel ${channel} at index ${i}: ${JSON.stringify(releaseObj)}`);
     return { i, release: releaseObj };
 }
 function getReleaseFromReleaseArrayByChannelHandlingNull(releases, channel) {
@@ -21717,9 +21710,7 @@ function getReleaseFromReleaseArrayByChannelHandlingNull(releases, channel) {
     //
     // This function also handles the case where a track has no release (eg: for track 0.3 above), throwing
     // an error for this case.  This situation is identified by `release.status == closed`.
-    // console.log(`releaseArray: ${JSON.stringify(releases)}`);
     const { i, release } = getReleaseFromReleaseArrayByChannel(releases, channel);
-    // console.log(`release: ${JSON.stringify(release)}`);
     if (release.status === 'open') {
         // Release exists.  Return it
         return { i, release };
@@ -21961,27 +21952,26 @@ class Charmcraft {
             }
             // Get status of this charm as a structured object
             const charmcraftStatus = yield this.statusJson(charm);
-            // console.log(`charmcraftStatus: ${charmcraftStatus}`);
             const { track: trackObj } = getTrackByName(charmcraftStatus, track);
+            // const trackObj = charmcraftStatus.filter((obj: any) => obj.track === track)
+            // const channelWithSpecifiedBase = trackObj.filter((releaseChannel: any) => releaseChannel.base.name === base.name && releaseChannel.base.channel === base.channel && releaseChannel.base.architecture === base.architecture)
+            // const targetRelease = channelWithSpecifiedBase.releases.filter((release: any) => release.channel === channel)
             const { releases: releasesArray } = getReleasesFromReleaseBaseArrayByBase(trackObj.channels, base);
             if (releasesArray === null) {
                 throw new Error(`Cannot find release for charm ${charm}, track ${track}, channel ${channel}, with base ${JSON.stringify(base)}`);
             }
             // console.log(`releasesArray in main: ${JSON.stringify(releasesArray)}`);
             const { release: releaseObj } = getReleaseFromReleaseArrayByChannelHandlingNull(releasesArray, channel);
-            // console.log(`releaseObj: ${JSON.stringify(releaseObj)}`);
             const { revision } = releaseObj;
             const { resources } = releaseObj;
-            // console.log(`resources: ${JSON.stringify(resources)}`);
             const resourceInfoArray = [];
             for (let i = 0; i < resources.length; i += 1) {
-                // console.log(`acting for i=${i} and ${JSON.stringify(resources[i])}`);
                 resourceInfoArray.push({
                     resourceName: resources[i].name,
-                    resourceRev: resources[i].revision,
+                    resourceRev: resources[i].revision.toString(),
                 });
             }
-            return { charmRev: revision, resources: resourceInfoArray };
+            return { charmRev: revision.toString(), resources: resourceInfoArray };
         });
     }
     release(charm, charmRevision, destinationChannel, resourceInfo) {

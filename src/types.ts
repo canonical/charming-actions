@@ -42,3 +42,9 @@ export interface ResourceInfo {
   resourceName: string;
   resourceRev: string;
 }
+
+export interface Base {
+  name: string;
+  channel: string;
+  architecture: string;
+}

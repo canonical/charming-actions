@@ -308,6 +308,505 @@ describe('the charmcraft service', () => {
     });
   });
 
+  describe.only('test getRevisionFromChannelJson', () => {
+    describe('returns correct revision details', () => {
+      it('with one base in track', async () => {
+        const charmcraftStatus = [
+          {
+            track: 'latest',
+            channels: [
+              {
+                base: {
+                  name: 'ubuntu',
+                  channel: '20.04',
+                  architecture: 'amd64',
+                },
+                releases: [
+                  {
+                    status: 'closed',
+                    channel: 'stable',
+                    version: null,
+                    revision: null,
+                    resources: null,
+                    expires_at: null,
+                  },
+                  {
+                    status: 'open',
+                    channel: 'candidate',
+                    version: '3',
+                    revision: 3,
+                    resources: [
+                      {
+                        name: 'httpbin-image',
+                        revision: 3,
+                      },
+                    ],
+                    expires_at: null,
+                  },
+                  {
+                    status: 'open',
+                    channel: 'beta',
+                    version: '10',
+                    revision: 10,
+                    resources: [
+                      {
+                        name: 'httpbin-image',
+                        revision: 10,
+                      },
+                    ],
+                    expires_at: null,
+                  },
+                  {
+                    status: 'open',
+                    channel: 'edge',
+                    version: '10',
+                    revision: 10,
+                    resources: [
+                      {
+                        name: 'httpbin-image',
+                        revision: 10,
+                      },
+                    ],
+                    expires_at: null,
+                  },
+                ],
+              },
+            ],
+          },
+        ];
+
+        const track = 'latest';
+        const channel = 'edge';
+        const base = {
+          name: 'ubuntu',
+          channel: '20.04',
+          architecture: 'amd64',
+        };
+        const expected = {
+          charmRev: '10',
+          resources: [{ resourceName: 'httpbin-image', resourceRev: '10' }],
+        };
+
+        const charmcraft = new Charmcraft('token');
+
+        jest.spyOn(exec, 'getExecOutput').mockResolvedValue({
+          exitCode: 0,
+          stderr: '',
+          stdout: JSON.stringify(charmcraftStatus),
+        });
+
+        const result = await charmcraft.getRevisionInfoFromChannelJson(
+          'placeholder-charm',
+          track,
+          channel,
+          base
+        );
+        expect(result).toEqual(expected);
+      });
+
+      it('with multiple bases in one track', async () => {
+        const charmcraftStatus = [
+          {
+            track: 'latest',
+            channels: [
+              {
+                base: {
+                  name: 'ubuntu',
+                  channel: '20.04',
+                  architecture: 'amd64',
+                },
+                releases: [
+                  {
+                    status: 'open',
+                    channel: 'edge',
+                    version: '10',
+                    revision: 10,
+                    resources: [
+                      {
+                        name: 'httpbin-image',
+                        revision: 10,
+                      },
+                    ],
+                    expires_at: null,
+                  },
+                ],
+              },
+              {
+                base: {
+                  name: 'ubuntu',
+                  channel: '18.04',
+                  architecture: 'amd64',
+                },
+                releases: [
+                  {
+                    status: 'open',
+                    channel: 'edge',
+                    version: '5',
+                    revision: 5,
+                    resources: [
+                      {
+                        name: 'httpbin-image',
+                        revision: 6,
+                      },
+                    ],
+                    expires_at: null,
+                  },
+                ],
+              },
+            ],
+          },
+        ];
+
+        const track = 'latest';
+        const channel = 'edge';
+        const base = {
+          name: 'ubuntu',
+          channel: '20.04',
+          architecture: 'amd64',
+        };
+        const expected = {
+          charmRev: '10',
+          resources: [{ resourceName: 'httpbin-image', resourceRev: '10' }],
+        };
+
+        const charmcraft = new Charmcraft('token');
+
+        jest.spyOn(exec, 'getExecOutput').mockResolvedValue({
+          exitCode: 0,
+          stderr: '',
+          stdout: JSON.stringify(charmcraftStatus),
+        });
+
+        const result = await charmcraft.getRevisionInfoFromChannelJson(
+          'placeholder-charm',
+          track,
+          channel,
+          base
+        );
+        expect(result).toEqual(expected);
+      });
+
+      it('returns results from a safer channel given the chosen channel is in tracking status', async () => {
+        const charmcraftStatus = [
+          {
+            track: 'latest',
+            channels: [
+              {
+                base: {
+                  name: 'ubuntu',
+                  channel: '20.04',
+                  architecture: 'amd64',
+                },
+                releases: [
+                  {
+                    status: 'open',
+                    channel: 'beta',
+                    version: '9',
+                    revision: 9,
+                    resources: [
+                      {
+                        name: 'httpbin-image',
+                        revision: 9,
+                      },
+                    ],
+                    expires_at: null,
+                  },
+                  {
+                    status: 'tracking',
+                    channel: 'edge',
+                    version: null,
+                    revision: null,
+                    resources: null,
+                    expires_at: null,
+                  },
+                ],
+              },
+            ],
+          },
+        ];
+
+        const track = 'latest';
+        const channel = 'edge';
+        const base = {
+          name: 'ubuntu',
+          channel: '20.04',
+          architecture: 'amd64',
+        };
+        const expected = {
+          charmRev: '9',
+          resources: [{ resourceName: 'httpbin-image', resourceRev: '9' }],
+        };
+
+        const charmcraft = new Charmcraft('token');
+
+        jest.spyOn(exec, 'getExecOutput').mockResolvedValue({
+          exitCode: 0,
+          stderr: '',
+          stdout: JSON.stringify(charmcraftStatus),
+        });
+
+        const result = await charmcraft.getRevisionInfoFromChannelJson(
+          'placeholder-charm',
+          track,
+          channel,
+          base
+        );
+        expect(result).toEqual(expected);
+      });
+    });
+
+    describe('throws correct error', () => {
+      it('when track not found', async () => {
+        const charmcraftStatus = [{ track: 'special-track' }];
+        const track = 'latest';
+        const channel = 'edge';
+        const base = {
+          name: 'ubuntu',
+          channel: '20.04',
+          architecture: 'amd64',
+        };
+
+        jest.spyOn(exec, 'getExecOutput').mockResolvedValue({
+          exitCode: 0,
+          stderr: '',
+          stdout: JSON.stringify(charmcraftStatus),
+        });
+
+        const charmcraft = new Charmcraft('token');
+
+        await expect(
+          charmcraft.getRevisionInfoFromChannelJson(
+            'placeholder-charm',
+            track,
+            channel,
+            base
+          )
+        ).rejects.toThrow(Error(`No track with name ${track}`));
+      });
+
+      it('when channel with matching base is not found', async () => {
+        const charmcraftStatus = [
+          {
+            track: 'latest',
+            channels: [
+              {
+                base: {
+                  name: 'ubuntu',
+                  channel: '18.04',
+                  architecture: 'amd64',
+                },
+                releases: [],
+              },
+            ],
+          },
+        ];
+        const track = 'latest';
+        const channel = 'edge';
+        const base = {
+          name: 'ubuntu',
+          channel: '20.04',
+          architecture: 'amd64',
+        };
+
+        jest.spyOn(exec, 'getExecOutput').mockResolvedValue({
+          exitCode: 0,
+          stderr: '',
+          stdout: JSON.stringify(charmcraftStatus),
+        });
+
+        const charmcraft = new Charmcraft('token');
+
+        await expect(
+          charmcraft.getRevisionInfoFromChannelJson(
+            'placeholder-charm',
+            track,
+            channel,
+            base
+          )
+        ).rejects.toThrowError();
+      });
+
+      it('when there are no channels with base', async () => {
+        const charmcraftStatus = [
+          {
+            track: 'latest',
+            channels: [
+              {
+                base: null,
+                releases: [],
+              },
+            ],
+          },
+        ];
+        const track = 'latest';
+        const channel = 'edge';
+        const base = {
+          name: 'ubuntu',
+          channel: '20.04',
+          architecture: 'amd64',
+        };
+
+        jest.spyOn(exec, 'getExecOutput').mockResolvedValue({
+          exitCode: 0,
+          stderr: '',
+          stdout: JSON.stringify(charmcraftStatus),
+        });
+
+        const charmcraft = new Charmcraft('token');
+
+        await expect(
+          charmcraft.getRevisionInfoFromChannelJson(
+            'placeholder-charm',
+            track,
+            channel,
+            base
+          )
+        ).rejects.toThrow(Error());
+      });
+
+      it('when release cannot be found', async () => {
+        const charmcraftStatus = [
+          {
+            track: 'latest',
+            channels: [
+              {
+                base: {
+                  name: 'ubuntu',
+                  channel: '20.04',
+                  architecture: 'amd64',
+                },
+                releases: [{ channel: 'beta' }],
+              },
+            ],
+          },
+        ];
+        const track = 'latest';
+        const channel = 'edge';
+        const base = {
+          name: 'ubuntu',
+          channel: '20.04',
+          architecture: 'amd64',
+        };
+
+        jest.spyOn(exec, 'getExecOutput').mockResolvedValue({
+          exitCode: 0,
+          stderr: '',
+          stdout: JSON.stringify(charmcraftStatus),
+        });
+
+        const charmcraft = new Charmcraft('token');
+
+        await expect(
+          charmcraft.getRevisionInfoFromChannelJson(
+            'placeholder-charm',
+            track,
+            channel,
+            base
+          )
+        ).rejects.toThrowError();
+      });
+
+      it('when release is closed', async () => {
+        const charmcraftStatus = [
+          {
+            track: 'latest',
+            channels: [
+              {
+                base: {
+                  name: 'ubuntu',
+                  channel: '20.04',
+                  architecture: 'amd64',
+                },
+                releases: [{ channel: 'edge', status: 'closed' }],
+              },
+            ],
+          },
+        ];
+        const track = 'latest';
+        const channel = 'edge';
+        const base = {
+          name: 'ubuntu',
+          channel: '20.04',
+          architecture: 'amd64',
+        };
+
+        jest.spyOn(exec, 'getExecOutput').mockResolvedValue({
+          exitCode: 0,
+          stderr: '',
+          stdout: JSON.stringify(charmcraftStatus),
+        });
+
+        const charmcraft = new Charmcraft('token');
+
+        await expect(
+          charmcraft.getRevisionInfoFromChannelJson(
+            'placeholder-charm',
+            track,
+            channel,
+            base
+          )
+        ).rejects.toThrow(
+          Error(`No revision available in risk level ${channel}`)
+        );
+      });
+
+      it('when no safer channel is found', async () => {
+        const charmcraftStatus = [
+          {
+            track: 'latest',
+            channels: [
+              {
+                base: {
+                  name: 'ubuntu',
+                  channel: '20.04',
+                  architecture: 'amd64',
+                },
+                releases: [
+                  {
+                    status: 'tracking',
+                    channel: 'stable',
+                    version: null,
+                    revision: null,
+                    resources: null,
+                    expires_at: null,
+                  },
+                ],
+              },
+            ],
+          },
+        ];
+        const track = 'latest';
+        const channel = 'stable';
+        const base = {
+          name: 'ubuntu',
+          channel: '20.04',
+          architecture: 'amd64',
+        };
+
+        jest.spyOn(exec, 'getExecOutput').mockResolvedValue({
+          exitCode: 0,
+          stderr: '',
+          stdout: JSON.stringify(charmcraftStatus),
+        });
+
+        const charmcraft = new Charmcraft('token');
+
+        await expect(
+          charmcraft.getRevisionInfoFromChannelJson(
+            'placeholder-charm',
+            track,
+            channel,
+            base
+          )
+        ).rejects.toThrow(
+          Error(
+            `release.status == tracking for channel ${channel}, but no safer channel exists`
+          )
+        );
+      });
+    });
+  });
+
   describe('test charmcraft release', () => {
     it('should be called with the correct arguments with resources', async () => {
       const charmcraft = new Charmcraft('token');
