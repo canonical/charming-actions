@@ -21365,6 +21365,9 @@ class ReleaseCharmAction {
     constructor() {
         this.destinationChannel = core.getInput('destination-channel');
         this.originChannel = core.getInput('origin-channel');
+        this.baseName = core.getInput('base-name');
+        this.baseChannel = core.getInput('base-channel');
+        this.baseArchitecture = core.getInput('base-architecture');
         this.charmcraftChannel = core.getInput('charmcraft-channel');
         this.token = core.getInput('github-token');
         this.tagPrefix = core.getInput('tag-prefix');
@@ -21386,7 +21389,11 @@ class ReleaseCharmAction {
                 const { name: charmName } = this.charmcraft.metadata();
                 const [originTrack, originChannel] = this.originChannel.split('/');
                 // TODO: Handle base more robustly
-                const base = { name: 'ubuntu', channel: '20.04', architecture: 'amd64' };
+                const base = {
+                    name: this.baseName,
+                    channel: this.baseChannel,
+                    architecture: this.baseArchitecture,
+                };
                 const { charmRev, resources } = yield this.charmcraft.getRevisionInfoFromChannelJson(charmName, originTrack, originChannel, base);
                 yield this.charmcraft.release(charmName, charmRev, this.destinationChannel, resources);
                 const tagName = `${this.tagPrefix ? `${this.tagPrefix}-` : ''}rev${charmRev}`;
@@ -21632,16 +21639,6 @@ const glob = __importStar(__nccwpck_require__(8090));
 const fs = __importStar(__nccwpck_require__(7147));
 const yaml = __importStar(__nccwpck_require__(1917));
 /* eslint-disable camelcase */
-function checkIfIsBase(baseRelease, base) {
-    const { name, channel: baseChannel, architecture } = base;
-    if (baseRelease.base === null) {
-        // This release has no base.  Nothing is here
-        return false;
-    }
-    return (baseRelease.base.name === name &&
-        baseRelease.base.channel === baseChannel &&
-        baseRelease.base.architecture === architecture);
-}
 function getSaferChannel(channel) {
     // Returns name of the next less risky channel, or an empty string if none exist
     // standard channel names, from least to most risk
@@ -21651,23 +21648,6 @@ function getSaferChannel(channel) {
         return orderedChannels[iLessRisky];
     }
     return '';
-}
-function getTrackByName(trackArray, track) {
-    const i = trackArray.findIndex((trackStatus) => trackStatus.track === track);
-    if (i === -1) {
-        throw new Error(`No track with name ${track}`);
-    }
-    const trackObj = trackArray[i];
-    return { i, track: trackObj };
-}
-function getReleasesFromReleaseBaseArrayByBase(baseReleaseArray, base) {
-    // Accepts an array of {base: base_spec, releases: [releaseOnChannelA, releaseOnChannelB, ...]} objects,
-    // returning the releasOnChannelX releases array corresponding to the specified base
-    //
-    // base should be of format {name: 'ubuntu', channel: '20.04', architecture: 'amd64'}
-    const i = baseReleaseArray.findIndex((baseRelease) => checkIfIsBase(baseRelease, base));
-    const releasesArray = baseReleaseArray[i].releases;
-    return { i, releases: releasesArray };
 }
 function getReleaseFromReleaseArrayByChannel(releases, channel) {
     const i = releases.findIndex((release) => release.channel === channel);
@@ -21932,24 +21912,30 @@ class Charmcraft {
             throw new Error(`No track with name ${track}`);
         });
     }
-    getRevisionInfoFromChannelJson(charm, track, channel, base) {
+    getRevisionInfoFromChannelJson(charm, targetTrack, targetChannel, targetBase) {
         return __awaiter(this, void 0, void 0, function* () {
             const acceptedChannels = ['stable', 'candidate', 'beta', 'edge'];
-            if (!acceptedChannels.includes(channel)) {
-                throw new Error(`Provided channel ${channel} is not supported. This actions currently only works with one of the following default channels: edge, beta, candidate, stable`);
+            if (!acceptedChannels.includes(targetChannel)) {
+                throw new Error(`Provided channel ${targetChannel} is not supported. This actions currently only works with one of the following default channels: edge, beta, candidate, stable`);
             }
             // Get status of this charm as a structured object
             const charmcraftStatus = yield this.statusJson(charm);
-            const { track: trackObj } = getTrackByName(charmcraftStatus, track);
-            // const trackObj = charmcraftStatus.filter((obj: any) => obj.track === track)
-            // const channelWithSpecifiedBase = trackObj.filter((releaseChannel: any) => releaseChannel.base.name === base.name && releaseChannel.base.channel === base.channel && releaseChannel.base.architecture === base.architecture)
-            // const targetRelease = channelWithSpecifiedBase.releases.filter((release: any) => release.channel === channel)
-            const { releases: releasesArray } = getReleasesFromReleaseBaseArrayByBase(trackObj.channels, base);
-            if (releasesArray === null) {
-                throw new Error(`Cannot find release for charm ${charm}, track ${track}, channel ${channel}, with base ${JSON.stringify(base)}`);
+            const trackIndex = charmcraftStatus.findIndex((track) => track.track === targetTrack);
+            if (trackIndex === -1) {
+                throw new Error(`No track with name ${targetTrack}`);
             }
-            // console.log(`releasesArray in main: ${JSON.stringify(releasesArray)}`);
-            const { release: releaseObj } = getReleaseFromReleaseArrayByChannelHandlingNull(releasesArray, channel);
+            const channelIndex = charmcraftStatus[trackIndex].channels.findIndex((channel) => channel.base &&
+                channel.base.name === targetBase.name &&
+                channel.base.channel === targetBase.channel &&
+                channel.base.architecture === targetBase.architecture);
+            if (channelIndex === -1) {
+                throw new Error(`No channel with base name ${targetBase.name}, base channel ${targetBase.channel} and base architecture ${targetBase.architecture}`);
+            }
+            const releaseIndex = charmcraftStatus[trackIndex].channels[channelIndex].releases.findIndex((release) => release.channel === targetChannel);
+            if (releaseIndex === -1) {
+                throw new Error(`Cannot find release with channel name ${targetChannel}, with base`);
+            }
+            const { release: releaseObj } = getReleaseFromReleaseArrayByChannelHandlingNull(charmcraftStatus[trackIndex].channels[channelIndex].releases, targetChannel);
             const { revision } = releaseObj;
             const { resources } = releaseObj;
             const resourceInfoArray = [];
