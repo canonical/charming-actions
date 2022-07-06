@@ -308,7 +308,7 @@ describe('the charmcraft service', () => {
     });
   });
 
-  describe.only('test getRevisionFromChannelJson', () => {
+  describe('test getRevisionFromChannelJson', () => {
     describe('returns correct revision details', () => {
       it('with one base in track', async () => {
         const charmcraftStatus = [
@@ -556,6 +556,29 @@ describe('the charmcraft service', () => {
     });
 
     describe('throws correct error', () => {
+      it('when an invalid channel was provided', async () => {
+        const base = {
+          name: 'ubuntu',
+          channel: '20.04',
+          architecture: 'amd64',
+        };
+
+        const charmcraft = new Charmcraft('token');
+
+        await expect(
+          charmcraft.getRevisionInfoFromChannelJson(
+            'placeholder-charm',
+            'valid track',
+            'invalid-channel',
+            base
+          )
+        ).rejects.toThrow(
+          Error(
+            `Provided channel invalid-channel is not supported. This actions currently only works with one of the following default channels: edge, beta, candidate, stable`
+          )
+        );
+      });
+
       it('when track not found', async () => {
         const charmcraftStatus = [{ track: 'special-track' }];
         const track = 'latest';
@@ -661,7 +684,11 @@ describe('the charmcraft service', () => {
             channel,
             base
           )
-        ).rejects.toThrow(Error());
+        ).rejects.toThrow(
+          Error(
+            `No channel with base name ${base.name}, base channel ${base.channel} and base architecture ${base.architecture}`
+          )
+        );
       });
 
       it('when release cannot be found', async () => {
