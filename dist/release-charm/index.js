@@ -21388,7 +21388,6 @@ class ReleaseCharmAction {
                 process.chdir(this.charmPath);
                 const { name: charmName } = this.charmcraft.metadata();
                 const [originTrack, originChannel] = this.originChannel.split('/');
-                // TODO: Handle base more robustly
                 const base = {
                     name: this.baseName,
                     channel: this.baseChannel,

@@ -10,6 +10,9 @@ export class ReleaseCharmAction {
 
   private destinationChannel: string;
   private originChannel: string;
+  private baseName: string;
+  private baseChannel: string;
+  private baseArchitecture: string;
 
   private charmcraftChannel: string;
   private token: string;
@@ -19,6 +22,9 @@ export class ReleaseCharmAction {
   constructor() {
     this.destinationChannel = core.getInput('destination-channel');
     this.originChannel = core.getInput('origin-channel');
+    this.baseName = core.getInput('base-name');
+    this.baseChannel = core.getInput('base-channel');
+    this.baseArchitecture = core.getInput('base-architecture');
     this.charmcraftChannel = core.getInput('charmcraft-channel');
     this.token = core.getInput('github-token');
     this.tagPrefix = core.getInput('tag-prefix');
@@ -41,8 +47,11 @@ export class ReleaseCharmAction {
 
       const [originTrack, originChannel] = this.originChannel.split('/');
 
-      // TODO: Handle base more robustly
-      const base = { name: 'ubuntu', channel: '20.04', architecture: 'amd64' };
+      const base = {
+        name: this.baseName,
+        channel: this.baseChannel,
+        architecture: this.baseArchitecture,
+      };
 
       const { charmRev, resources } =
         await this.charmcraft.getRevisionInfoFromChannelJson(
