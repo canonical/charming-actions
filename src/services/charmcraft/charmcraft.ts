@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 
 import { Metadata, ResourceInfo } from '../../types';
-import { Base, Channel, Status, Track } from './types';
+import { Base, Mapping, Status, Track } from './types';
 
 /* eslint-disable camelcase */
 
@@ -310,22 +310,22 @@ class Charmcraft {
       throw new Error(`No track with name ${targetTrack}`);
     }
 
-    const channelIndex = charmcraftStatus[trackIndex].channels.findIndex(
-      (channel: Channel) =>
+    const mappingIndex = charmcraftStatus[trackIndex].mappings.findIndex(
+      (channel: Mapping) =>
         channel.base &&
         channel.base.name === targetBase.name &&
         channel.base.channel === targetBase.channel &&
         channel.base.architecture === targetBase.architecture
     );
 
-    if (channelIndex === -1) {
+    if (mappingIndex === -1) {
       throw new Error(
         `No channel with base name ${targetBase.name}, base channel ${targetBase.channel} and base architecture ${targetBase.architecture}`
       );
     }
 
-    const releaseIndex = charmcraftStatus[trackIndex].channels[
-      channelIndex
+    const releaseIndex = charmcraftStatus[trackIndex].mappings[
+      mappingIndex
     ].releases.findIndex(
       (release: any) => release.channel === `${targetTrack}/${targetChannel}`
     );
@@ -337,7 +337,7 @@ class Charmcraft {
     }
 
     const releaseObj =
-      charmcraftStatus[trackIndex].channels[channelIndex].releases[
+      charmcraftStatus[trackIndex].mappings[mappingIndex].releases[
         releaseIndex
       ];
 

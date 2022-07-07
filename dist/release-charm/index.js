@@ -21864,18 +21864,18 @@ class Charmcraft {
             if (trackIndex === -1) {
                 throw new Error(`No track with name ${targetTrack}`);
             }
-            const channelIndex = charmcraftStatus[trackIndex].channels.findIndex((channel) => channel.base &&
+            const mappingIndex = charmcraftStatus[trackIndex].mappings.findIndex((channel) => channel.base &&
                 channel.base.name === targetBase.name &&
                 channel.base.channel === targetBase.channel &&
                 channel.base.architecture === targetBase.architecture);
-            if (channelIndex === -1) {
+            if (mappingIndex === -1) {
                 throw new Error(`No channel with base name ${targetBase.name}, base channel ${targetBase.channel} and base architecture ${targetBase.architecture}`);
             }
-            const releaseIndex = charmcraftStatus[trackIndex].channels[channelIndex].releases.findIndex((release) => release.channel === `${targetTrack}/${targetChannel}`);
+            const releaseIndex = charmcraftStatus[trackIndex].mappings[mappingIndex].releases.findIndex((release) => release.channel === `${targetTrack}/${targetChannel}`);
             if (releaseIndex === -1) {
                 throw new Error(`Cannot find release with channel name ${targetChannel}, with base`);
             }
-            const releaseObj = charmcraftStatus[trackIndex].channels[channelIndex].releases[releaseIndex];
+            const releaseObj = charmcraftStatus[trackIndex].mappings[mappingIndex].releases[releaseIndex];
             if (releaseObj.status !== 'open') {
                 throw new Error('Channel is not open. Make sure there was a release made to this channel previously.');
             }

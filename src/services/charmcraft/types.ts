@@ -17,14 +17,14 @@ export interface Release {
   resources: Array<Resource>;
 }
 
-export interface Channel {
+export interface Mapping {
   base: Base;
   releases: Array<Release>;
 }
 
 export interface Track {
   track: string;
-  channels: Array<Channel>;
+  mappings: Array<Mapping>;
 }
 
 export type Status = Array<Track>;

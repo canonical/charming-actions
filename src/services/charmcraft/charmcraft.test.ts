@@ -314,7 +314,7 @@ describe('the charmcraft service', () => {
         const charmcraftStatus = [
           {
             track: 'latest',
-            channels: [
+            mappings: [
               {
                 base: {
                   name: 'ubuntu',
@@ -408,7 +408,7 @@ describe('the charmcraft service', () => {
         const charmcraftStatus = [
           {
             track: 'latest',
-            channels: [
+            mappings: [
               {
                 base: {
                   name: 'ubuntu',
@@ -543,7 +543,7 @@ describe('the charmcraft service', () => {
         const charmcraftStatus = [
           {
             track: 'latest',
-            channels: [
+            mappings: [
               {
                 base: {
                   name: 'ubuntu',
@@ -585,7 +585,7 @@ describe('the charmcraft service', () => {
         const charmcraftStatus = [
           {
             track: 'latest',
-            channels: [
+            mappings: [
               {
                 base: null,
                 releases: [],
@@ -627,7 +627,7 @@ describe('the charmcraft service', () => {
         const charmcraftStatus = [
           {
             track: 'latest',
-            channels: [
+            mappings: [
               {
                 base: {
                   name: 'ubuntu',
@@ -669,7 +669,7 @@ describe('the charmcraft service', () => {
         const charmcraftStatus = [
           {
             track: 'latest',
-            channels: [
+            mappings: [
               {
                 base: {
                   name: 'ubuntu',
@@ -715,7 +715,7 @@ describe('the charmcraft service', () => {
         const charmcraftStatus = [
           {
             track: 'latest',
-            channels: [
+            mappings: [
               {
                 base: {
                   name: 'ubuntu',
