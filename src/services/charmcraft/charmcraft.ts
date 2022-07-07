@@ -9,84 +9,6 @@ import { Base, Channel, Status, Track } from './types';
 
 /* eslint-disable camelcase */
 
-function getSaferChannel(channel: string) {
-  // Returns name of the next less risky channel, or an empty string if none exist
-
-  // standard channel names, from least to most risk
-  const orderedChannels = ['stable', 'candidate', 'beta', 'edge'];
-
-  const iLessRisky = orderedChannels.findIndex((c) => c === channel) - 1;
-
-  if (iLessRisky >= 0) {
-    return orderedChannels[iLessRisky];
-  }
-  return '';
-}
-
-function getReleaseFromReleaseArrayByChannel(releases: any, channel: string) {
-  const i = releases.findIndex((release: any) => release.channel === channel);
-  const releaseObj = releases[i];
-
-  return { i, release: releaseObj };
-}
-
-function getReleaseFromReleaseArrayByChannelHandlingNull(
-  releases: any,
-  channel: string
-): any {
-  // Returns the release in an array of releases for a given channel, handling any null releases
-  //
-  // Some charmhub releases "point" to another release, for example:
-  //    `charmcraft status metacontroller-operator`:
-  //        Track    Base                  Channel                    Version    Revision    Expires at
-  //        latest   ubuntu 20.04 (amd64)  stable                      2          2
-  //                                       candidate                   5          5
-  //                                       beta                        ↑          ↑
-  //                                       edge                       13         13
-  //                                       edge/add-charming-actions   9          9           2022-06-30T01:00:00Z
-  //                                       edge/resources-removal     12         12           2022-07-09T01:00:00Z
-  //        0.3      -                     stable                      -          -
-  //                                       candidate                   -          -
-  //                                       beta                        -          -
-  //                                       edge                        -          -
-  // where we see latest/ubuntu-amd64/beta points to candidate, eg they have the same release.
-  // `charmcraft status charmName --format json` returns these pointer releases with
-  // `release.status == tracking` and `release.revision == null`.
-  // This function handles this case, recursively looking for a "safer" release (eg: if beta is null,
-  // check candidate).
-  //
-  // This function also handles the case where a track has no release (eg: for track 0.3 above), throwing
-  // an error for this case.  This situation is identified by `release.status == closed`.
-
-  const { i, release } = getReleaseFromReleaseArrayByChannel(releases, channel);
-
-  if (release.status === 'open') {
-    // Release exists.  Return it
-    return { i, release };
-  }
-  if (release.status === 'tracking') {
-    // Pointer to a safer channel.  Return that instead
-    const saferChannel = getSaferChannel(channel);
-    if (saferChannel === '') {
-      // no safer channel exists.  Should we throw?
-      throw new Error(
-        `release.status == tracking for channel ${channel}, but no safer channel exists`
-      );
-    }
-    return getReleaseFromReleaseArrayByChannelHandlingNull(
-      releases,
-      saferChannel
-    );
-  }
-  if (release.status === 'closed') {
-    // No release exists.  Throw
-    throw new Error(`No revision available in risk level ${channel}`);
-  }
-  throw new Error(
-    `Found unknown release status ${release.status} in charmcraft status results`
-  );
-}
-
 class Charmcraft {
   private uploadImage: boolean;
   private token: string;
@@ -404,7 +326,9 @@ class Charmcraft {
 
     const releaseIndex = charmcraftStatus[trackIndex].channels[
       channelIndex
-    ].releases.findIndex((release: any) => release.channel === targetChannel);
+    ].releases.findIndex(
+      (release: any) => release.channel === `${targetTrack}/${targetChannel}`
+    );
 
     if (releaseIndex === -1) {
       throw new Error(
@@ -412,14 +336,18 @@ class Charmcraft {
       );
     }
 
-    const { release: releaseObj } =
-      getReleaseFromReleaseArrayByChannelHandlingNull(
-        charmcraftStatus[trackIndex].channels[channelIndex].releases,
-        targetChannel
-      );
+    const releaseObj =
+      charmcraftStatus[trackIndex].channels[channelIndex].releases[
+        releaseIndex
+      ];
 
-    const { revision } = releaseObj;
-    const { resources } = releaseObj;
+    if (releaseObj.status !== 'open') {
+      throw new Error(
+        'Channel is not open. Make sure there was a release made to this channel previously.'
+      );
+    }
+
+    const { revision, resources } = releaseObj;
 
     const resourceInfoArray = [] as Array<ResourceInfo>;
 

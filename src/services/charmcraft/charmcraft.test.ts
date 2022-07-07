@@ -324,7 +324,7 @@ describe('the charmcraft service', () => {
                 releases: [
                   {
                     status: 'closed',
-                    channel: 'stable',
+                    channel: 'latest/stable',
                     version: null,
                     revision: null,
                     resources: null,
@@ -332,7 +332,7 @@ describe('the charmcraft service', () => {
                   },
                   {
                     status: 'open',
-                    channel: 'candidate',
+                    channel: 'latest/candidate',
                     version: '3',
                     revision: 3,
                     resources: [
@@ -345,7 +345,7 @@ describe('the charmcraft service', () => {
                   },
                   {
                     status: 'open',
-                    channel: 'beta',
+                    channel: 'latest/beta',
                     version: '10',
                     revision: 10,
                     resources: [
@@ -358,7 +358,7 @@ describe('the charmcraft service', () => {
                   },
                   {
                     status: 'open',
-                    channel: 'edge',
+                    channel: 'latest/edge',
                     version: '10',
                     revision: 10,
                     resources: [
@@ -418,7 +418,7 @@ describe('the charmcraft service', () => {
                 releases: [
                   {
                     status: 'open',
-                    channel: 'edge',
+                    channel: 'latest/edge',
                     version: '10',
                     revision: 10,
                     resources: [
@@ -440,7 +440,7 @@ describe('the charmcraft service', () => {
                 releases: [
                   {
                     status: 'open',
-                    channel: 'edge',
+                    channel: 'latest/edge',
                     version: '5',
                     revision: 5,
                     resources: [
@@ -467,74 +467,6 @@ describe('the charmcraft service', () => {
         const expected = {
           charmRev: '10',
           resources: [{ resourceName: 'httpbin-image', resourceRev: '10' }],
-        };
-
-        const charmcraft = new Charmcraft('token');
-
-        jest.spyOn(exec, 'getExecOutput').mockResolvedValue({
-          exitCode: 0,
-          stderr: '',
-          stdout: JSON.stringify(charmcraftStatus),
-        });
-
-        const result = await charmcraft.getRevisionInfoFromChannelJson(
-          'placeholder-charm',
-          track,
-          channel,
-          base
-        );
-        expect(result).toEqual(expected);
-      });
-
-      it('returns results from a safer channel given the chosen channel is in tracking status', async () => {
-        const charmcraftStatus = [
-          {
-            track: 'latest',
-            channels: [
-              {
-                base: {
-                  name: 'ubuntu',
-                  channel: '20.04',
-                  architecture: 'amd64',
-                },
-                releases: [
-                  {
-                    status: 'open',
-                    channel: 'beta',
-                    version: '9',
-                    revision: 9,
-                    resources: [
-                      {
-                        name: 'httpbin-image',
-                        revision: 9,
-                      },
-                    ],
-                    expires_at: null,
-                  },
-                  {
-                    status: 'tracking',
-                    channel: 'edge',
-                    version: null,
-                    revision: null,
-                    resources: null,
-                    expires_at: null,
-                  },
-                ],
-              },
-            ],
-          },
-        ];
-
-        const track = 'latest';
-        const channel = 'edge';
-        const base = {
-          name: 'ubuntu',
-          channel: '20.04',
-          architecture: 'amd64',
-        };
-        const expected = {
-          charmRev: '9',
-          resources: [{ resourceName: 'httpbin-image', resourceRev: '9' }],
         };
 
         const charmcraft = new Charmcraft('token');
@@ -649,7 +581,7 @@ describe('the charmcraft service', () => {
         ).rejects.toThrowError();
       });
 
-      it('when there are no channels with base', async () => {
+      it('when channel base is null', async () => {
         const charmcraftStatus = [
           {
             track: 'latest',
@@ -702,7 +634,7 @@ describe('the charmcraft service', () => {
                   channel: '20.04',
                   architecture: 'amd64',
                 },
-                releases: [{ channel: 'beta' }],
+                releases: [{ channel: 'latest/beta' }],
               },
             ],
           },
@@ -733,7 +665,7 @@ describe('the charmcraft service', () => {
         ).rejects.toThrowError();
       });
 
-      it('when release is closed', async () => {
+      it('when release channel is closed', async () => {
         const charmcraftStatus = [
           {
             track: 'latest',
@@ -744,7 +676,7 @@ describe('the charmcraft service', () => {
                   channel: '20.04',
                   architecture: 'amd64',
                 },
-                releases: [{ channel: 'edge', status: 'closed' }],
+                releases: [{ channel: 'latest/edge', status: 'closed' }],
               },
             ],
           },
@@ -773,11 +705,13 @@ describe('the charmcraft service', () => {
             base
           )
         ).rejects.toThrow(
-          Error(`No revision available in risk level ${channel}`)
+          Error(
+            'Channel is not open. Make sure there was a release made to this channel previously.'
+          )
         );
       });
 
-      it('when no safer channel is found', async () => {
+      it('when release is closed', async () => {
         const charmcraftStatus = [
           {
             track: 'latest',
@@ -789,21 +723,15 @@ describe('the charmcraft service', () => {
                   architecture: 'amd64',
                 },
                 releases: [
-                  {
-                    status: 'tracking',
-                    channel: 'stable',
-                    version: null,
-                    revision: null,
-                    resources: null,
-                    expires_at: null,
-                  },
+                  { channel: 'latest/beta', status: 'open' },
+                  { channel: 'latest/edge', status: 'tracking' },
                 ],
               },
             ],
           },
         ];
         const track = 'latest';
-        const channel = 'stable';
+        const channel = 'edge';
         const base = {
           name: 'ubuntu',
           channel: '20.04',
@@ -827,7 +755,7 @@ describe('the charmcraft service', () => {
           )
         ).rejects.toThrow(
           Error(
-            `release.status == tracking for channel ${channel}, but no safer channel exists`
+            'Channel is not open. Make sure there was a release made to this channel previously.'
           )
         );
       });
