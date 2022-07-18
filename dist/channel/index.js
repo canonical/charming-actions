@@ -21679,13 +21679,15 @@ class Charmcraft {
             const args = [
                 'upload',
                 '--quiet',
+                '--format',
+                'json',
                 '--release',
                 channel,
                 paths[0],
                 ...flags,
             ];
             const result = yield (0, exec_1.getExecOutput)('charmcraft', args, this.execOptions);
-            const newRevision = result.stdout.split(' ')[1];
+            const newRevision = JSON.parse(result.stdout).revision;
             return newRevision;
         });
     }
