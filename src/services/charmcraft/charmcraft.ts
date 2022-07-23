@@ -175,7 +175,7 @@ class Charmcraft {
   }
 
   async pack() {
-    const args = ['charmcraft', 'pack', '--destructive-mode', '--verbose'];
+    const args = ['charmcraft', 'pack', '--verbose'];
     await exec('sudo', args, this.execOptions);
   }
 

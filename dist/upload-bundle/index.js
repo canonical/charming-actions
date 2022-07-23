@@ -21736,7 +21736,7 @@ class Charmcraft {
     }
     pack() {
         return __awaiter(this, void 0, void 0, function* () {
-            const args = ['charmcraft', 'pack', '--destructive-mode', '--verbose'];
+            const args = ['charmcraft', 'pack', '--verbose'];
             yield (0, exec_1.exec)('sudo', args, this.execOptions);
         });
     }
