@@ -37,6 +37,7 @@ jobs:
           upload-image: 'true'
           channel: '${{ steps.channel.outputs.name }}'
           github-token: '${{ secrets.GITHUB_TOKEN }}'
+          charmcraft-channel: latest/candidate
 
 #      - name: Upload bundle to charmhub
 #        uses: ./upload-bundle
