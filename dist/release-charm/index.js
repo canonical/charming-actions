@@ -21365,6 +21365,9 @@ class ReleaseCharmAction {
     constructor() {
         this.destinationChannel = core.getInput('destination-channel');
         this.originChannel = core.getInput('origin-channel');
+        this.baseName = core.getInput('base-name');
+        this.baseChannel = core.getInput('base-channel');
+        this.baseArchitecture = core.getInput('base-architecture');
         this.charmcraftChannel = core.getInput('charmcraft-channel');
         this.token = core.getInput('github-token');
         this.tagPrefix = core.getInput('tag-prefix');
@@ -21385,7 +21388,12 @@ class ReleaseCharmAction {
                 process.chdir(this.charmPath);
                 const { name: charmName } = this.charmcraft.metadata();
                 const [originTrack, originChannel] = this.originChannel.split('/');
-                const { charmRev, resources } = yield this.charmcraft.getRevisionInfoFromChannel(charmName, originTrack, originChannel);
+                const base = {
+                    name: this.baseName,
+                    channel: this.baseChannel,
+                    architecture: this.baseArchitecture,
+                };
+                const { charmRev, resources } = yield this.charmcraft.getRevisionInfoFromChannelJson(charmName, originTrack, originChannel, base);
                 yield this.charmcraft.release(charmName, charmRev, this.destinationChannel, resources);
                 const tagName = `${this.tagPrefix ? `${this.tagPrefix}-` : ''}rev${charmRev}`;
                 const release = yield this.tagger.getReleaseByTag(tagName);
@@ -21794,6 +21802,13 @@ class Charmcraft {
             return result.stdout;
         });
     }
+    statusJson(charm) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const result = yield (0, exec_1.getExecOutput)('charmcraft', ['status', charm, '--format', 'json'], this.execOptions);
+            const parsedObj = JSON.parse(result.stdout);
+            return parsedObj;
+        });
+    }
     getRevisionInfoFromChannel(charm, track, channel) {
         return __awaiter(this, void 0, void 0, function* () {
             // For now we have to parse the `charmcraft status` output this will soon be fixed
@@ -21836,6 +21851,44 @@ class Charmcraft {
                 }
             }
             throw new Error(`No track with name ${track}`);
+        });
+    }
+    getRevisionInfoFromChannelJson(charm, targetTrack, targetChannel, targetBase) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const acceptedChannels = ['stable', 'candidate', 'beta', 'edge'];
+            if (!acceptedChannels.includes(targetChannel)) {
+                throw new Error(`Provided channel ${targetChannel} is not supported. This actions currently only works with one of the following default channels: edge, beta, candidate, stable`);
+            }
+            // Get status of this charm as a structured object
+            const charmcraftStatus = yield this.statusJson(charm);
+            const trackIndex = charmcraftStatus.findIndex((track) => track.track === targetTrack);
+            if (trackIndex === -1) {
+                throw new Error(`No track with name ${targetTrack}`);
+            }
+            const mappingIndex = charmcraftStatus[trackIndex].mappings.findIndex((channel) => channel.base &&
+                channel.base.name === targetBase.name &&
+                channel.base.channel === targetBase.channel &&
+                channel.base.architecture === targetBase.architecture);
+            if (mappingIndex === -1) {
+                throw new Error(`No channel with base name ${targetBase.name}, base channel ${targetBase.channel} and base architecture ${targetBase.architecture}`);
+            }
+            const releaseIndex = charmcraftStatus[trackIndex].mappings[mappingIndex].releases.findIndex((release) => release.channel === `${targetTrack}/${targetChannel}`);
+            if (releaseIndex === -1) {
+                throw new Error(`Cannot find release with channel name ${targetChannel}, with base`);
+            }
+            const releaseObj = charmcraftStatus[trackIndex].mappings[mappingIndex].releases[releaseIndex];
+            if (releaseObj.status !== 'open') {
+                throw new Error('Channel is not open. Make sure there was a release made to this channel previously.');
+            }
+            const { revision, resources } = releaseObj;
+            const resourceInfoArray = [];
+            for (let i = 0; i < resources.length; i += 1) {
+                resourceInfoArray.push({
+                    resourceName: resources[i].name,
+                    resourceRev: resources[i].revision.toString(),
+                });
+            }
+            return { charmRev: revision.toString(), resources: resourceInfoArray };
         });
     }
     release(charm, charmRevision, destinationChannel, resourceInfo) {

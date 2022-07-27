@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 
 import { Metadata, ResourceInfo } from '../../types';
+import { Base, Mapping, Status, Track } from './types';
 
 /* eslint-disable camelcase */
 
@@ -226,6 +227,16 @@ class Charmcraft {
     return result.stdout;
   }
 
+  async statusJson(charm: string): Promise<Status> {
+    const result = await getExecOutput(
+      'charmcraft',
+      ['status', charm, '--format', 'json'],
+      this.execOptions
+    );
+    const parsedObj = JSON.parse(result.stdout);
+    return parsedObj;
+  }
+
   async getRevisionInfoFromChannel(
     charm: string,
     track: string,
@@ -274,6 +285,81 @@ class Charmcraft {
       }
     }
     throw new Error(`No track with name ${track}`);
+  }
+
+  async getRevisionInfoFromChannelJson(
+    charm: string,
+    targetTrack: string,
+    targetChannel: string,
+    targetBase: Base
+  ): Promise<{ charmRev: string; resources: Array<ResourceInfo> }> {
+    const acceptedChannels = ['stable', 'candidate', 'beta', 'edge'];
+    if (!acceptedChannels.includes(targetChannel)) {
+      throw new Error(
+        `Provided channel ${targetChannel} is not supported. This actions currently only works with one of the following default channels: edge, beta, candidate, stable`
+      );
+    }
+
+    // Get status of this charm as a structured object
+    const charmcraftStatus = await this.statusJson(charm);
+
+    const trackIndex = charmcraftStatus.findIndex(
+      (track: Track) => track.track === targetTrack
+    );
+
+    if (trackIndex === -1) {
+      throw new Error(`No track with name ${targetTrack}`);
+    }
+
+    const mappingIndex = charmcraftStatus[trackIndex].mappings.findIndex(
+      (channel: Mapping) =>
+        channel.base &&
+        channel.base.name === targetBase.name &&
+        channel.base.channel === targetBase.channel &&
+        channel.base.architecture === targetBase.architecture
+    );
+
+    if (mappingIndex === -1) {
+      throw new Error(
+        `No channel with base name ${targetBase.name}, base channel ${targetBase.channel} and base architecture ${targetBase.architecture}`
+      );
+    }
+
+    const releaseIndex = charmcraftStatus[trackIndex].mappings[
+      mappingIndex
+    ].releases.findIndex(
+      (release: any) => release.channel === `${targetTrack}/${targetChannel}`
+    );
+
+    if (releaseIndex === -1) {
+      throw new Error(
+        `Cannot find release with channel name ${targetChannel}, with base`
+      );
+    }
+
+    const releaseObj =
+      charmcraftStatus[trackIndex].mappings[mappingIndex].releases[
+        releaseIndex
+      ];
+
+    if (releaseObj.status !== 'open') {
+      throw new Error(
+        'Channel is not open. Make sure there was a release made to this channel previously.'
+      );
+    }
+
+    const { revision, resources } = releaseObj;
+
+    const resourceInfoArray = [] as Array<ResourceInfo>;
+
+    for (let i = 0; i < resources.length; i += 1) {
+      resourceInfoArray.push({
+        resourceName: resources[i].name,
+        resourceRev: resources[i].revision.toString(),
+      });
+    }
+
+    return { charmRev: revision.toString(), resources: resourceInfoArray };
   }
 
   async release(

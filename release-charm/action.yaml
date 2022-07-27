@@ -11,7 +11,22 @@ inputs:
     required: true
     description: |
       Origin Channel from where the charm that needs to be promoted will be
-      pulled unless `revision` is set.
+      pulled.
+  base-name:
+    required: true
+    description: |
+      Charmcraft Base Name
+    default: 'ubuntu'
+  base-channel:
+    required: true
+    description: |
+      Charmcraft Base Channel
+    default: '20.04'
+  base-architecture:
+    required: true
+    description: |
+      Charmcraft Base Architecture
+    default: 'amd64'
   tag-prefix:
     required: false
     description: |
