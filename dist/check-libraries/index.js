@@ -21813,7 +21813,6 @@ class Charmcraft {
             const paths = yield globber.glob();
             const args = [
                 'upload',
-                '--quiet',
                 '--format',
                 'json',
                 '--release',
@@ -21822,7 +21821,6 @@ class Charmcraft {
                 ...flags,
             ];
             const result = yield (0, exec_1.getExecOutput)('charmcraft', args, this.execOptions);
-            console.log(result.stdout, '---', args);
             const newRevision = JSON.parse(result.stdout).revision;
             return newRevision;
         });
