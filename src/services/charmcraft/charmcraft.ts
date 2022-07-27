@@ -196,6 +196,7 @@ class Charmcraft {
       ...flags,
     ];
     const result = await getExecOutput('charmcraft', args, this.execOptions);
+    console.log(result.stdout, '---', args);
     const newRevision = JSON.parse(result.stdout).revision;
     return newRevision;
   }
