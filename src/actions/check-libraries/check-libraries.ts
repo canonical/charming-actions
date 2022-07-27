@@ -77,7 +77,7 @@ export class CheckLibrariesAction {
   private getCommentBody = (status: LibStatus): string =>
     `
 Libraries are not up to date with their remote counterparts. If this was 
-not intentional, run \`charmcraft fetch-libs\` and commit the updated libs 
+not intentional, run \`charmcraft fetch-lib\` and commit the updated libs 
 to your PR branch.
 
 <details>
