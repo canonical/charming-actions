@@ -12,10 +12,18 @@ runs:
   main: ../dist/check-libraries/index.js
 
 inputs:
+  # Charmcraft 
   charm-path:
     default: "."
     description: >
       Path to the charm we want to fetch libs for. Defaults to the current working directory.
+  charmcraft-channel:
+    required: false
+    default: 'latest/stable'
+    description: |
+      Snap channel to use when installing charmcraft
+  
+  # Tokens
   credentials:
     required: true
     description: >
@@ -24,19 +32,35 @@ inputs:
     required: true
     description: >
       GitHub token used to post to the pull request that is being checked.
-  comment-on-pr:
+  
+  # Reporting: Labels
+  use-labels:
     required: false
     default: true
     description: >
+      Whether to use PR labels to show the status of the charm libraries.
+  label-success:
+    required: false
+    default: "Libraries: OK"
+    description: >
+      The label to use when all libraries are in sync
+  label-fail:
+    required: false
+    default: "Libraries: Out of sync"
+    description: >
+      The label to use when libraries are out of sync.
+
+  # Reporting: Comments
+  comment-on-pr:
+    required: false
+    default: false
+    description: >
       Whether to post a warning as a comment when drift is detected as part of checking a PR.
+  
+  # Reporting: Failing
   fail-build:
     required: false
     default: false
     description: >
       Whether to fail the entire build if there are any drift between the libraries
       checked in and their remote counterparts.
-  charmcraft-channel:
-    required: false
-    default: 'latest/stable'
-    description: |
-      Snap channel to use when installing charmcraft
