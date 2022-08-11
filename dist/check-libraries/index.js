@@ -21366,10 +21366,10 @@ const exec = __importStar(__nccwpck_require__(1514));
 const services_1 = __nccwpck_require__(720);
 class CheckLibrariesAction {
     constructor() {
-        this.getCommentBody = (status) => `
-Libraries are not up to date with their remote counterparts. If this was 
-not intentional, run \`charmcraft fetch-libs\` and commit the updated libs 
-to your PR branch.
+        this.getCommentBody = (status, charmPath) => `
+Libraries at path '${charmPath}' are not up to date with their remote 
+counterparts. If this was not intentional, run \`charmcraft fetch-lib\` 
+and commit the updated libs to your PR branch.
 
 <details>
   <summary>stdout</summary>\n
@@ -21417,7 +21417,7 @@ to your PR branch.
                         issue_number: this.context.issue.number,
                         owner: this.context.repo.owner,
                         repo: this.context.repo.repo,
-                        body: this.getCommentBody(status),
+                        body: this.getCommentBody(status, this.charmPath),
                     });
                 }
                 yield exec.exec('git', ['checkout', 'HEAD', '--', 'lib']);
