@@ -40,10 +40,7 @@ describe('the charmcraft service', () => {
         mockExec.mockResolvedValue({
           exitCode: 0,
           stderr: '',
-          stdout:
-            'Revision    Created at    Size\n' +
-            '2           2021-07-22    512B\n' +
-            '1           2021-07-19    512B\n',
+          stdout: '{"revision": 2}',
         });
 
         await charmcraft.upload('edge', ['--resource=resource_1:2']);
@@ -53,7 +50,8 @@ describe('the charmcraft service', () => {
           'charmcraft',
           [
             'upload',
-            '--quiet',
+            '--format',
+            'json',
             '--release',
             'edge',
             undefined,

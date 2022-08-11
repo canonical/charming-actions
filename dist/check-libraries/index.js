@@ -21395,6 +21395,7 @@ and commit the updated libs to your PR branch.
         this.outcomes = {
             fail: (0, core_1.getInput)('fail-build').toLowerCase() === 'true',
             comment: (0, core_1.getInput)('comment-on-pr').toLowerCase() === 'true',
+            labels: (0, core_1.getInput)('use-labels').toLowerCase() === 'true',
         };
         this.context = github_1.context;
         this.github = (0, github_1.getOctokit)(this.tokens.github);
@@ -21411,14 +21412,15 @@ and commit the updated libs to your PR branch.
                 }
                 yield this.snap.install('charmcraft', this.channel);
                 const status = yield this.charmcraft.hasDriftingLibs();
+                if (this.shouldAddLabels) {
+                    const success = (0, core_1.getInput)('label-success');
+                    const fail = (0, core_1.getInput)('label-fail');
+                    yield this.configureLabels(success, fail);
+                    yield this.replaceLabel(status.ok ? success : fail, status.ok ? fail : success);
+                }
                 // we do this using includes to catch both `pull_request` and `pull_request_target`
                 if (!status.ok && this.shouldPostComment) {
-                    this.github.rest.issues.createComment({
-                        issue_number: this.context.issue.number,
-                        owner: this.context.repo.owner,
-                        repo: this.context.repo.repo,
-                        body: this.getCommentBody(status, this.charmPath),
-                    });
+                    yield this.github.rest.issues.createComment(Object.assign(Object.assign({}, this.identifiers), { body: this.getCommentBody(status, this.charmPath) }));
                 }
                 yield exec.exec('git', ['checkout', 'HEAD', '--', 'lib']);
                 if (!status.ok && this.outcomes.fail) {
@@ -21430,6 +21432,57 @@ and commit the updated libs to your PR branch.
                 (0, core_1.error)(e.stack);
             }
         });
+    }
+    configureLabels(success, fail) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { owner, repo } = this.identifiers;
+            yield Promise.all([
+                { name: success, color: '00ff00' },
+                { name: fail, color: 'ff0000' },
+            ].map((label) => __awaiter(this, void 0, void 0, function* () {
+                const identifier = { owner, repo, name: label.name };
+                let exists;
+                try {
+                    const response = yield this.github.rest.issues.getLabel(identifier);
+                    exists = response.status === 200;
+                }
+                catch (_a) {
+                    exists = false;
+                }
+                if (exists) {
+                    yield this.github.rest.issues.updateLabel(Object.assign(Object.assign({}, identifier), { color: label.color }));
+                }
+                else {
+                    yield this.github.rest.issues.createLabel(Object.assign(Object.assign({}, identifier), { color: label.color }));
+                }
+            })));
+        });
+    }
+    replaceLabel(newLabel, oldLabel) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const labels = (yield this.github.rest.issues.listLabelsOnIssue(Object.assign({}, this.identifiers))).data;
+            const hasOldLabel = labels && labels.find((x) => x.name === oldLabel);
+            const hasNewLabel = labels && labels.find((x) => x.name === newLabel);
+            if (!hasNewLabel) {
+                yield this.github.rest.issues.addLabels(Object.assign(Object.assign({}, this.identifiers), { labels: [newLabel] }));
+            }
+            if (hasOldLabel) {
+                yield this.github.rest.issues.removeLabel(Object.assign(Object.assign({}, this.identifiers), { name: oldLabel }));
+            }
+        });
+    }
+    get identifiers() {
+        const { owner, repo } = this.context.repo;
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        const issue_number = this.context.issue.number;
+        return {
+            owner,
+            repo,
+            issue_number,
+        };
+    }
+    get shouldAddLabels() {
+        return (this.outcomes.labels && this.context.eventName.includes('pull_request'));
     }
     get shouldPostComment() {
         return (this.outcomes.comment && this.context.eventName.includes('pull_request'));
@@ -22191,12 +22244,13 @@ class Tagger {
         });
     }
     _build(owner, repo, hash, revision, channel, resources, tagPrefix) {
-        const name = `${tagPrefix ? `${tagPrefix}-` : ''}rev${revision}`;
+        const suffix = revision || (0, dayjs_1.default)().utc().format('YYYYMMDDHHmmss');
+        const name = `${tagPrefix ? `${tagPrefix}-` : ''}rev${suffix}`;
         const message = `${resources} Released to '${channel}' at ${this.get_date_text()}`;
         return {
             owner,
             repo,
-            name: `Revision ${revision}`,
+            name: `Revision ${suffix}`,
             tag_name: name,
             body: message,
             draft: false,

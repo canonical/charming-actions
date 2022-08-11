@@ -22153,12 +22153,13 @@ class Tagger {
         });
     }
     _build(owner, repo, hash, revision, channel, resources, tagPrefix) {
-        const name = `${tagPrefix ? `${tagPrefix}-` : ''}rev${revision}`;
+        const suffix = revision || (0, dayjs_1.default)().utc().format('YYYYMMDDHHmmss');
+        const name = `${tagPrefix ? `${tagPrefix}-` : ''}rev${suffix}`;
         const message = `${resources} Released to '${channel}' at ${this.get_date_text()}`;
         return {
             owner,
             repo,
-            name: `Revision ${revision}`,
+            name: `Revision ${suffix}`,
             tag_name: name,
             body: message,
             draft: false,

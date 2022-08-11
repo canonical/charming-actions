@@ -1,6 +1,6 @@
 {
   "name": "charmhub-upload-action",
-  "version": "0.2.2",
+  "version": "2.0.0",
   "description": "Uploads a charm to charmhub.io",
   "main": "main.js",
   "author": "Kenneth Koski <kenneth.koski@canonical.com>",
