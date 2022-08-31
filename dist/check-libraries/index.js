@@ -21423,8 +21423,12 @@ and commit the updated libs to your PR branch.
                     yield this.github.rest.issues.createComment(Object.assign(Object.assign({}, this.identifiers), { body: this.getCommentBody(status, this.charmPath) }));
                 }
                 yield exec.exec('git', ['checkout', 'HEAD', '--', 'lib']);
-                if (!status.ok && this.outcomes.fail) {
-                    (0, core_1.setFailed)('Charmcraft libraries are not up to date.');
+                if (!status.ok) {
+                    (0, core_1.setOutput)('libs-ok', false);
+                    if (this.outcomes.fail) {
+                        (0, core_1.setFailed)('Charmcraft libraries are not up to date.');
+                    }
+                    return;
                 }
             }
             catch (e) {

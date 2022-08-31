@@ -1,4 +1,4 @@
-import { error, getInput, setFailed, warning } from '@actions/core';
+import { error, getInput, setFailed, setOutput, warning } from '@actions/core';
 import { context, getOctokit } from '@actions/github';
 import { Context } from '@actions/github/lib/context';
 import { GitHub } from '@actions/github/lib/utils';
@@ -69,8 +69,12 @@ export class CheckLibrariesAction {
       }
       await exec.exec('git', ['checkout', 'HEAD', '--', 'lib']);
 
-      if (!status.ok && this.outcomes.fail) {
-        setFailed('Charmcraft libraries are not up to date.');
+      if (!status.ok) {
+        setOutput('libs-ok', false);
+        if (this.outcomes.fail) {
+          setFailed('Charmcraft libraries are not up to date.');
+        }
+        return;
       }
     } catch (e: any) {
       setFailed(e.message);
