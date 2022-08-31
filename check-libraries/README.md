@@ -30,4 +30,4 @@ but it can also be configured to fail the entire build.
 
 ### Outputs
 
-None
+- `libs-ok`: `true` if all libraries are up to date, `false` if any library is behind
