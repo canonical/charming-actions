@@ -46,15 +46,21 @@ def emit_to_github_action(name, data):
 	print(f"::set-output name={name}::{data}")
 
 
+def main(base_dir: str):
+	charm_dirs = find_charms_in_dir(base_dir)
+	charm_dirs = stringify_paths(charm_dirs)
+	emit_to_github_action(name=OUTPUT_VARIABLE_NAME, data=charm_dirs)
+
+
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(
 		description="Find charm directories.  Searches for either nested charms or whether the "
-					"directory is itself a charm, printing a Github Action compatible output of a "
-					"JSON list of the found charm directories"
+					"directory is itself a charm, printing a Github Action compatible output of a"
+					" JSON list of the found charm directories.  Note that if no charm "
+					"directories are found, this emits an empty list and does not fail.  "
 	)
 
 	parser.add_argument("base_dir", help="Directory to search for charms")
 	args = parser.parse_args()
-	charm_dirs = find_charms_in_dir(args.base_dir)
-	charm_dirs = stringify_paths(charm_dirs)
-	emit_to_github_action(name=OUTPUT_VARIABLE_NAME, data=charm_dirs)
+	main(args.base_dir)
+
