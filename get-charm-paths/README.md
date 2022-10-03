@@ -11,6 +11,9 @@ The search logic is applied to find charms is:
 * if no charms are found in `./charms/`, check if the root directory of the repository is itself a charm.  If yes, return `["./"]`
 * if still nothing is found, return `[]`
 
+In the case where no directories are found to match, the action will emit an empty list.  If chained together with a matrix
+as shown in the example below, this will result in a matrix of length 0 and no errors thrown.   
+
 Directories are identified as charm directories by the presence of a "metadata.yaml" file.
 
 
