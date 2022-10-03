@@ -6,7 +6,7 @@ from pathlib import Path
 OUTPUT_VARIABLE_NAME = "charm_paths"
 
 
-def find_charms_in_dir(base_dir: str, charms_subdir="charms"):
+def find_charms_in_dir(base_dir: str, charms_subdir: str = "charms"):
 	"""Returns a list of paths to charm directories in base_dir.
 
 	Searches for:
@@ -16,6 +16,10 @@ def find_charms_in_dir(base_dir: str, charms_subdir="charms"):
 
 	Directories are identified as charm directories by the presence of a "metadata.yaml" file.
 	Returned paths include base_dir and charms_subdir in their path, as applicable.
+
+	Args:
+		base_dir: The base directory of a charm repo to search in
+		charms_subdir: The subdirectory of base_dir in which to search for nested charms
 	"""
 	base_dir = Path(base_dir)
 	charms_dir = base_dir / charms_subdir
