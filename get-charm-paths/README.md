@@ -59,6 +59,21 @@ jobs:
           echo "Got charm path: ${{ matrix.charm-path }}"
 ```
 
+# Testing
+
+To execute tests:
+```bash
+cd get-charms-paths
+pip install pytest
+pytest ./tests
+```
+
+Or to manually test using one of the included test directories, do:
+```bash
+cd tests/multi_charm_with_charms
+python ../../src/get_charm_paths.py ./
+```
+
 # Todo
 
 * [] Expose input to flexibly define the name of the charms directory
