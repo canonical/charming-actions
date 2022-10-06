@@ -1,0 +1,14 @@
+name: 'Get Charm Paths'
+description: 'Emits a list of relative paths to charms in the repository'
+outputs:
+  charm-paths:
+    description: 'JSON string of relative paths to charms in the repository'
+    value: ${{ steps.get-charm-paths.outputs.charm_paths }}
+runs:
+  using: 'composite'
+  steps:
+    - uses: 'actions/checkout@v2'
+    - name: 'Get paths for all charms in repo'
+      id: get-charm-paths
+      shell: bash
+      run: python ${{ github.action_path }}/src/get_charm_paths.py ./
