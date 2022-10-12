@@ -21637,6 +21637,7 @@ const exec_1 = __nccwpck_require__(1514);
 const glob = __importStar(__nccwpck_require__(8090));
 const fs = __importStar(__nccwpck_require__(7147));
 const yaml = __importStar(__nccwpck_require__(1917));
+const docker_1 = __nccwpck_require__(7585);
 /* eslint-disable camelcase */
 class Charmcraft {
     constructor(token) {
@@ -21705,7 +21706,9 @@ class Charmcraft {
             if (pullExitCode !== 0) {
                 throw new Error('Could not pull the docker image.');
             }
-            const result = yield (0, exec_1.getExecOutput)('docker', ['image', 'ls', '-q', resource_image], this.execOptions);
+            // strip any repository details from the image name, as this will confuse `docker image ls`
+            const resourceImageNameOnly = (0, docker_1.getImageName)(resource_image);
+            const result = yield (0, exec_1.getExecOutput)('docker', ['image', 'ls', '-q', resourceImageNameOnly], this.execOptions);
             const resourceDigests = result.stdout.trim().split('\n');
             if (resourceDigests.length < 1) {
                 throw new Error(`No digest found for pulled resource_image '${resource_image}'`);
@@ -21945,6 +21948,60 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 __exportStar(__nccwpck_require__(6432), exports);
+
+
+/***/ }),
+
+/***/ 9999:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getImageName = void 0;
+/**
+ * Returns a the image name given a container image URI, removing any leading repository info
+ *
+ * For uri's that contain slashes, the text before the first slash is inspected and discarded
+ * if contains any '.' or ':' characters, as these indicate it defines a registry and is not
+ * part of the image name.  This procedure is documented in a note here:
+ * https://www.docker.com/blog/how-to-use-your-own-registry-2/
+ *
+ * @param uri Container image URI, which may or may not include a leading repository.  For example, `some.repo:port/imageName:imageTag` or `someUser/imageName:imageTag`
+ */
+function getImageName(uri) {
+    const uriParts = uri.split('/');
+    if (uriParts.length === 1) {
+        return uri;
+    }
+    if (uriParts[0].indexOf('.') > 0 || uriParts[0].indexOf(':') > 0) {
+        // First segment of the URI is a registry.  Remove it
+        return uriParts.slice(1).join('/');
+    }
+    return uri;
+}
+exports.getImageName = getImageName;
+
+
+/***/ }),
+
+/***/ 7585:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__nccwpck_require__(9999), exports);
 
 
 /***/ }),

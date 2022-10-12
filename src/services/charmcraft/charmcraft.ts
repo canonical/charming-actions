@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 
 import { Metadata, ResourceInfo } from '../../types';
+import { getImageName } from '../docker';
 import { Base, Mapping, Status, Track } from './types';
 
 /* eslint-disable camelcase */
@@ -115,9 +116,12 @@ class Charmcraft {
       throw new Error('Could not pull the docker image.');
     }
 
+    // strip any repository details from the image name, as this will confuse `docker image ls`
+    const resourceImageNameOnly = getImageName(resource_image);
+
     const result = await getExecOutput(
       'docker',
-      ['image', 'ls', '-q', resource_image],
+      ['image', 'ls', '-q', resourceImageNameOnly],
       this.execOptions
     );
     const resourceDigests = result.stdout.trim().split('\n');
