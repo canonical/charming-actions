@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 
 import { Metadata, ResourceInfo } from '../../types';
-import { getImageName } from '../docker';
+import { getImageDigest } from '../docker';
 import { Base, Mapping, Status, Track } from './types';
 
 /* eslint-disable camelcase */
@@ -116,31 +116,7 @@ class Charmcraft {
       throw new Error('Could not pull the docker image.');
     }
 
-    // strip any repository details from the image name, as this will confuse `docker image ls`
-    const resourceImageNameOnly = getImageName(resource_image);
-
-    const result = await getExecOutput(
-      'docker',
-      ['image', 'ls', '-q', resourceImageNameOnly],
-      this.execOptions
-    );
-    const resourceDigests = result.stdout.trim().split('\n');
-    if (resourceDigests.length < 1) {
-      throw new Error(
-        `No digest found for pulled resource_image '${resource_image}'`
-      );
-    } else if (resourceDigests.length > 1) {
-      throw new Error(
-        `Found too many digests for pulled resource_image '${resource_image}'.  Expected single output, got multiline output '${result.stdout}'.`
-      );
-    }
-    const resourceDigest = resourceDigests[0];
-
-    if (resourceDigest.length < 1) {
-      throw new Error(
-        `No digest found for pulled resource_image '${resource_image}'`
-      );
-    }
+    const resourceDigest = await getImageDigest(resource_image);
 
     const args = [
       'upload-resource',

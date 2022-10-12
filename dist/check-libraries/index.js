@@ -21807,20 +21807,7 @@ class Charmcraft {
             if (pullExitCode !== 0) {
                 throw new Error('Could not pull the docker image.');
             }
-            // strip any repository details from the image name, as this will confuse `docker image ls`
-            const resourceImageNameOnly = (0, docker_1.getImageName)(resource_image);
-            const result = yield (0, exec_1.getExecOutput)('docker', ['image', 'ls', '-q', resourceImageNameOnly], this.execOptions);
-            const resourceDigests = result.stdout.trim().split('\n');
-            if (resourceDigests.length < 1) {
-                throw new Error(`No digest found for pulled resource_image '${resource_image}'`);
-            }
-            else if (resourceDigests.length > 1) {
-                throw new Error(`Found too many digests for pulled resource_image '${resource_image}'.  Expected single output, got multiline output '${result.stdout}'.`);
-            }
-            const resourceDigest = resourceDigests[0];
-            if (resourceDigest.length < 1) {
-                throw new Error(`No digest found for pulled resource_image '${resource_image}'`);
-            }
+            const resourceDigest = yield (0, docker_1.getImageDigest)(resource_image);
             const args = [
                 'upload-resource',
                 '--quiet',
@@ -22054,12 +22041,22 @@ __exportStar(__nccwpck_require__(6432), exports);
 /***/ }),
 
 /***/ 9999:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getImageName = void 0;
+exports.getImageDigest = exports.getImageName = void 0;
+const exec_1 = __nccwpck_require__(1514);
 /**
  * Returns a the image name given a container image URI, removing any leading repository info
  *
@@ -22082,6 +22079,30 @@ function getImageName(uri) {
     return uri;
 }
 exports.getImageName = getImageName;
+function getImageDigest(uri) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const imageName = getImageName(uri);
+        const result = yield (0, exec_1.getExecOutput)('docker', [
+            'image',
+            'ls',
+            '-q',
+            imageName,
+        ]);
+        const resourceDigests = result.stdout.trim().split('\n');
+        if (resourceDigests.length < 1) {
+            throw new Error(`No digest found for pulled resource_image '${uri}'`);
+        }
+        else if (resourceDigests.length > 1) {
+            throw new Error(`Found too many digests for pulled resource_image '${uri}'.  Expected single output, got multiline output '${result.stdout}'.`);
+        }
+        const resourceDigest = resourceDigests[0];
+        if (resourceDigest.length < 1) {
+            throw new Error(`No digest found for pulled resource_image '${uri}'`);
+        }
+        return resourceDigest;
+    });
+}
+exports.getImageDigest = getImageDigest;
 
 
 /***/ }),
