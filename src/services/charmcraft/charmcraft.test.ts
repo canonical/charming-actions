@@ -92,6 +92,76 @@ describe('the charmcraft service', () => {
         const mockGetExecOutput = jest.spyOn(exec, 'getExecOutput');
         expect(mockGetExecOutput).not.toHaveBeenCalled();
       });
+
+      describe('pulling images', () => {
+        it('should succeed when image digest is available', () => {
+          const dockerReturn = `somedigest`;
+          const charmcraft = new Charmcraft('token');
+
+          jest.spyOn(exec, 'exec').mockResolvedValue(0);
+
+          jest.spyOn(exec, 'getExecOutput').mockResolvedValue({
+            exitCode: 0,
+            stderr: '',
+            stdout: dockerReturn,
+          });
+
+          charmcraft.uploadResource(
+            'placeholder-image',
+            'placeholder-name',
+            'placeholder-resource-name'
+          );
+          // expect(result).toEqual(expected);
+        });
+
+        it('should throw when digest is empty', () => {
+          const dockerReturn = ``;
+          const charmcraft = new Charmcraft('token');
+
+          jest.spyOn(exec, 'exec').mockResolvedValue(0);
+
+          jest.spyOn(exec, 'getExecOutput').mockResolvedValue({
+            exitCode: 0,
+            stderr: '',
+            stdout: dockerReturn,
+          });
+
+          const expectedError = `No digest found for pulled resource_image 'placeholder-image'`;
+
+          expect(
+            charmcraft.uploadResource(
+              'placeholder-image',
+              'placeholder-name',
+              'placeholder-resource-name'
+            )
+          ).rejects.toThrow(Error(expectedError));
+        });
+
+        it('should throw when digest returns as multiline string', () => {
+          const dockerReturn = `stuff
+          more stuff
+          more stuff`;
+          const charmcraft = new Charmcraft('token');
+
+          jest.spyOn(exec, 'exec').mockResolvedValue(0);
+
+          jest.spyOn(exec, 'getExecOutput').mockResolvedValue({
+            exitCode: 0,
+            stderr: '',
+            stdout: dockerReturn,
+          });
+
+          const expectedError = `Found too many digests for pulled resource_image 'placeholder-image'.  Expected single output, got multiline output '${dockerReturn}'.`;
+
+          expect(
+            charmcraft.uploadResource(
+              'placeholder-image',
+              'placeholder-name',
+              'placeholder-resource-name'
+            )
+          ).rejects.toThrow(Error(expectedError));
+        });
+      }); // is this a mistake?
     });
   });
 

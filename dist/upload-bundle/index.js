@@ -21684,13 +21684,25 @@ class Charmcraft {
             if (pullExitCode !== 0) {
                 throw new Error('Could not pull the docker image.');
             }
+            const result = yield (0, exec_1.getExecOutput)('docker', ['image', 'ls', '-q', resource_image], this.execOptions);
+            const resourceDigests = result.stdout.trim().split('\n');
+            if (resourceDigests.length < 1) {
+                throw new Error(`No digest found for pulled resource_image '${resource_image}'`);
+            }
+            else if (resourceDigests.length > 1) {
+                throw new Error(`Found too many digests for pulled resource_image '${resource_image}'.  Expected single output, got multiline output '${result.stdout}'.`);
+            }
+            const resourceDigest = resourceDigests[0];
+            if (resourceDigest.length < 1) {
+                throw new Error(`No digest found for pulled resource_image '${resource_image}'`);
+            }
             const args = [
                 'upload-resource',
                 '--quiet',
                 name,
                 resource_name,
                 '--image',
-                resource_image,
+                resourceDigest,
             ];
             yield (0, exec_1.exec)('charmcraft', args, this.execOptions);
         });
