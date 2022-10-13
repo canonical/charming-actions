@@ -92,6 +92,37 @@ describe('the charmcraft service', () => {
         const mockGetExecOutput = jest.spyOn(exec, 'getExecOutput');
         expect(mockGetExecOutput).not.toHaveBeenCalled();
       });
+
+      describe('pulling images', () => {
+        it('should succeed when image digest is available', async () => {
+          const digest = `somedigest`;
+          const charmcraft = new Charmcraft('token');
+
+          const mockedExec = jest.spyOn(exec, 'exec').mockResolvedValue(0);
+
+          jest.spyOn(exec, 'getExecOutput').mockResolvedValue({
+            exitCode: 0,
+            stderr: '',
+            stdout: digest,
+          });
+
+          await charmcraft.uploadResource(
+            'placeholder-image',
+            'placeholder-name',
+            'placeholder-resource-name'
+          );
+
+          const calledProgram = mockedExec.mock.calls[1][0];
+          expect(calledProgram).toEqual('charmcraft');
+          const charmcraftArgs = mockedExec.mock.calls[1][1];
+          if (charmcraftArgs) {
+            const calledDigest = charmcraftArgs.at(-1);
+            expect(calledDigest).toEqual(digest);
+          } else {
+            fail('charmcraft not called with expected arguments');
+          }
+        });
+      });
     });
   });
 

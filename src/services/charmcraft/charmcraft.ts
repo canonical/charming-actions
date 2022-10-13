@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 
 import { Metadata, ResourceInfo } from '../../types';
+import { getImageDigest } from '../docker';
 import { Base, Mapping, Status, Track } from './types';
 
 /* eslint-disable camelcase */
@@ -115,13 +116,15 @@ class Charmcraft {
       throw new Error('Could not pull the docker image.');
     }
 
+    const resourceDigest = await getImageDigest(resource_image);
+
     const args = [
       'upload-resource',
       '--quiet',
       name,
       resource_name,
       '--image',
-      resource_image,
+      resourceDigest,
     ];
     await exec('charmcraft', args, this.execOptions);
   }

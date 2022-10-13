@@ -21637,6 +21637,7 @@ const exec_1 = __nccwpck_require__(1514);
 const glob = __importStar(__nccwpck_require__(8090));
 const fs = __importStar(__nccwpck_require__(7147));
 const yaml = __importStar(__nccwpck_require__(1917));
+const docker_1 = __nccwpck_require__(7585);
 /* eslint-disable camelcase */
 class Charmcraft {
     constructor(token) {
@@ -21705,13 +21706,14 @@ class Charmcraft {
             if (pullExitCode !== 0) {
                 throw new Error('Could not pull the docker image.');
             }
+            const resourceDigest = yield (0, docker_1.getImageDigest)(resource_image);
             const args = [
                 'upload-resource',
                 '--quiet',
                 name,
                 resource_name,
                 '--image',
-                resource_image,
+                resourceDigest,
             ];
             yield (0, exec_1.exec)('charmcraft', args, this.execOptions);
         });
@@ -21933,6 +21935,94 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 __exportStar(__nccwpck_require__(6432), exports);
+
+
+/***/ }),
+
+/***/ 9999:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getImageDigest = exports.getImageName = void 0;
+const exec_1 = __nccwpck_require__(1514);
+/**
+ * Returns a the image name given a container image URI, removing any leading repository info
+ *
+ * For uri's that contain slashes, the text before the first slash is inspected and discarded
+ * if contains any '.' or ':' characters, as these indicate it defines a registry and is not
+ * part of the image name.  This procedure is documented in a note here:
+ * https://www.docker.com/blog/how-to-use-your-own-registry-2/
+ *
+ * @param uri Container image URI, which may or may not include a leading repository.  For example, `some.repo:port/imageName:imageTag` or `someUser/imageName:imageTag`
+ */
+function getImageName(uri) {
+    const uriParts = uri.split('/');
+    if (uriParts.length === 1) {
+        return uri;
+    }
+    if (uriParts[0].indexOf('.') > 0 || uriParts[0].indexOf(':') > 0) {
+        // First segment of the URI is a registry.  Remove it
+        return uriParts.slice(1).join('/');
+    }
+    return uri;
+}
+exports.getImageName = getImageName;
+function getImageDigest(uri) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const imageName = getImageName(uri);
+        const result = yield (0, exec_1.getExecOutput)('docker', [
+            'image',
+            'ls',
+            '-q',
+            imageName,
+        ]);
+        const resourceDigests = result.stdout.trim().split('\n');
+        if (resourceDigests.length < 1) {
+            throw new Error(`No digest found for pulled resource_image '${uri}'`);
+        }
+        else if (resourceDigests.length > 1) {
+            throw new Error(`Found too many digests for pulled resource_image '${uri}'.  Expected single output, got multiline output '${result.stdout}'.`);
+        }
+        const resourceDigest = resourceDigests[0];
+        if (resourceDigest.length < 1) {
+            throw new Error(`No digest found for pulled resource_image '${uri}'`);
+        }
+        return resourceDigest;
+    });
+}
+exports.getImageDigest = getImageDigest;
+
+
+/***/ }),
+
+/***/ 7585:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__nccwpck_require__(9999), exports);
 
 
 /***/ }),
