@@ -24,7 +24,7 @@ export function getImageName(uri: string): string {
 
 export async function getImageDigest(uri: string): Promise<string> {
   // String docker.io/ from any image name, as they get removed in the `docker images` list
-  const imageName = uri.replace(/^docker.io/, '');
+  const imageName = uri.replace(/^docker.io\//, '');
 
   const result = await getExecOutput('docker', [
     'image',

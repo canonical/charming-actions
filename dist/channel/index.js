@@ -21890,7 +21890,7 @@ exports.getImageName = getImageName;
 function getImageDigest(uri) {
     return __awaiter(this, void 0, void 0, function* () {
         // String docker.io/ from any image name, as they get removed in the `docker images` list
-        const imageName = uri.replace(/^docker.io/, '');
+        const imageName = uri.replace(/^docker.io\//, '');
         const result = yield (0, exec_1.getExecOutput)('docker', [
             'image',
             'ls',
