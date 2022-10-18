@@ -30,7 +30,7 @@ class Charmcraft {
     let resourceInfo = 'resources:\n';
     if (!this.uploadImage) {
       const msg =
-        `No resources where uploaded as part of this build.\n` +
+        `No resources were uploaded as part of this build.\n` +
         `If you wish to upload the OCI image, set 'upload-image' to 'true'`;
       core.warning(msg);
     }
