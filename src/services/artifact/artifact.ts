@@ -6,18 +6,22 @@ class Artifact {
   async uploadLogs() {
     // We're running some charmcraft commands as sudo as others as a
     // regular user - we want to capture both.
-    const basePaths = ['/home/runner/snap/charmcraft/common/cache/charmcraft/log', '/root/snap/charmcraft/common/cache/charmcraft/log/'];
-    var msg = [];
+    const basePaths: string[] = [
+      '/home/runner/snap/charmcraft/common/cache/charmcraft/log',
+      '/root/snap/charmcraft/common/cache/charmcraft/log/',
+    ];
+    const msg: string[] = [];
 
-    basePaths.forEach(function(basePath){
-
+    basePaths.forEach(async (basePath) => {
       if (!fs.existsSync(basePath)) {
-        msg.push(`No charmcraft logs found at ${basePath}, skipping artifact upload.`);
+        msg.push(
+          `No charmcraft logs found at ${basePath}, skipping artifact upload.`
+        );
       } else {
         const globber = await glob.create(`${basePath}/*.log`);
         const files = await globber.glob();
         const artifacts = artifact.create();
-        const artifactName = 'charmcraft-logs-'+basePath.split('/')[1];
+        const artifactName = `charmcraft-logs-${basePath.split('/')[1]}`;
 
         const result = await artifacts.uploadArtifact(
           artifactName,
@@ -25,7 +29,9 @@ class Artifact {
           basePath
         );
 
-        msg.push(`Artifact ${artifactName} upload result: ${JSON.stringify(result)}`);
+        msg.push(
+          `Artifact ${artifactName} upload result: ${JSON.stringify(result)}`
+        );
       }
     });
 
