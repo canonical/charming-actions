@@ -21584,14 +21584,19 @@ class Artifact {
     uploadLogs() {
         return __awaiter(this, void 0, void 0, function* () {
             const basePath = '/home/runner/snap/charmcraft/common/cache/charmcraft/log';
+            const sudoPath = '/root/snap/charmcraft/common/cache/charmcraft/log';
             // We're running some charmcraft commands as sudo as others as a
             // regular user - we want to capture both.
-            const args = [
-                'cp',
-                '/root/snap/charmcraft/common/cache/charmcraft/log/*log',
-                basePath,
-            ];
-            yield (0, exec_1.exec)('sudo', args);
+            // First check if the path created by sudo invocations of charmcraft
+            // exists.
+            const dirExistsExitCode = yield (0, exec_1.exec)('sudo', ['test', '-d', sudoPath]);
+            if (dirExistsExitCode === 0) {
+                // Make sure the directory we're copying to exists as well.
+                if (!fs.existsSync(basePath)) {
+                    yield (0, exec_1.exec)('mkdir', ['-p', basePath]);
+                }
+                yield (0, exec_1.exec)('sudo', ['cp', `${sudoPath}/.`, basePath]);
+            }
             if (!fs.existsSync(basePath)) {
                 return 'No charmcraft logs generated, skipping artifact upload.';
             }

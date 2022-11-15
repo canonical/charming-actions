@@ -6,14 +6,20 @@ import * as glob from '@actions/glob';
 class Artifact {
   async uploadLogs() {
     const basePath = '/home/runner/snap/charmcraft/common/cache/charmcraft/log';
+    const sudoPath = '/root/snap/charmcraft/common/cache/charmcraft/log';
     // We're running some charmcraft commands as sudo as others as a
     // regular user - we want to capture both.
-    const args = [
-      'cp',
-      '/root/snap/charmcraft/common/cache/charmcraft/log/*log',
-      basePath,
-    ];
-    await exec('sudo', args);
+
+    // First check if the path created by sudo invocations of charmcraft
+    // exists.
+    const dirExistsExitCode = await exec('sudo', ['test', '-d', sudoPath]);
+    if (dirExistsExitCode === 0) {
+      // Make sure the directory we're copying to exists as well.
+      if (!fs.existsSync(basePath)) {
+        await exec('mkdir', ['-p', basePath]);
+      }
+      await exec('sudo', ['cp', `${sudoPath}/.`, basePath]);
+    }
 
     if (!fs.existsSync(basePath)) {
       return 'No charmcraft logs generated, skipping artifact upload.';
