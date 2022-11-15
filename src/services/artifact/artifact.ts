@@ -18,6 +18,7 @@ class Artifact {
     if (!fs.existsSync(basePath)) {
       return 'No charmcraft logs generated, skipping artifact upload.';
     }
+
     const globber = await glob.create(`${basePath}/*.log`);
     const files = await globber.glob();
     const artifacts = artifact.create();
@@ -27,6 +28,7 @@ class Artifact {
       files,
       basePath
     );
+
     return `Artifact upload result: ${JSON.stringify(result)}`;
   }
 }
