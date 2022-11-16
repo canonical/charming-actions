@@ -12,13 +12,15 @@ class Artifact {
 
     // First check if the path created by sudo invocations of charmcraft
     // exists.
-    const dirExistsExitCode = await exec('sudo', ['test', '-d', sudoPath]);
+    const dirExistsExitCode = await exec('sudo', ['test', '-d', sudoPath], {
+      ignoreReturnCode: true,
+    });
     if (dirExistsExitCode === 0) {
       // Make sure the directory we're copying to exists as well.
       if (!fs.existsSync(basePath)) {
         await exec('mkdir', ['-p', basePath]);
       }
-      await exec('sudo', ['cp', `${sudoPath}/.`, basePath]);
+      await exec('sudo', ['cp', '-r', `${sudoPath}/.`, basePath]);
     }
 
     if (!fs.existsSync(basePath)) {

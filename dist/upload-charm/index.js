@@ -21494,13 +21494,15 @@ class Artifact {
             // regular user - we want to capture both.
             // First check if the path created by sudo invocations of charmcraft
             // exists.
-            const dirExistsExitCode = yield (0, exec_1.exec)('sudo', ['test', '-d', sudoPath]);
+            const dirExistsExitCode = yield (0, exec_1.exec)('sudo', ['test', '-d', sudoPath], {
+                ignoreReturnCode: true,
+            });
             if (dirExistsExitCode === 0) {
                 // Make sure the directory we're copying to exists as well.
                 if (!fs.existsSync(basePath)) {
                     yield (0, exec_1.exec)('mkdir', ['-p', basePath]);
                 }
-                yield (0, exec_1.exec)('sudo', ['cp', `${sudoPath}/.`, basePath]);
+                yield (0, exec_1.exec)('sudo', ['cp', '-r', `${sudoPath}/.`, basePath]);
             }
             if (!fs.existsSync(basePath)) {
                 return 'No charmcraft logs generated, skipping artifact upload.';
