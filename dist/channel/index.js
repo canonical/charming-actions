@@ -21385,12 +21385,28 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Artifact = void 0;
 const artifact = __importStar(__nccwpck_require__(2605));
+const exec_1 = __nccwpck_require__(1514);
 const fs = __importStar(__nccwpck_require__(7147));
 const glob = __importStar(__nccwpck_require__(8090));
 class Artifact {
     uploadLogs() {
         return __awaiter(this, void 0, void 0, function* () {
             const basePath = '/home/runner/snap/charmcraft/common/cache/charmcraft/log';
+            const sudoPath = '/root/snap/charmcraft/common/cache/charmcraft/log';
+            // We're running some charmcraft commands as sudo as others as a
+            // regular user - we want to capture both.
+            // First check if the path created by sudo invocations of charmcraft
+            // exists.
+            const dirExistsExitCode = yield (0, exec_1.exec)('sudo', ['test', '-d', sudoPath], {
+                ignoreReturnCode: true,
+            });
+            if (dirExistsExitCode === 0) {
+                // Make sure the directory we're copying to exists as well.
+                if (!fs.existsSync(basePath)) {
+                    yield (0, exec_1.exec)('mkdir', ['-p', basePath]);
+                }
+                yield (0, exec_1.exec)('sudo', ['cp', '-r', `${sudoPath}/.`, basePath]);
+            }
             if (!fs.existsSync(basePath)) {
                 return 'No charmcraft logs generated, skipping artifact upload.';
             }
@@ -21863,33 +21879,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getImageDigest = exports.getImageName = void 0;
+exports.getImageDigest = void 0;
 const exec_1 = __nccwpck_require__(1514);
-/**
- * Returns a the image name given a container image URI, removing any leading repository info
- *
- * For uri's that contain slashes, the text before the first slash is inspected and discarded
- * if contains any '.' or ':' characters, as these indicate it defines a registry and is not
- * part of the image name.  This procedure is documented in a note here:
- * https://www.docker.com/blog/how-to-use-your-own-registry-2/
- *
- * @param uri Container image URI, which may or may not include a leading repository.  For example, `some.repo:port/imageName:imageTag` or `someUser/imageName:imageTag`
- */
-function getImageName(uri) {
-    const uriParts = uri.split('/');
-    if (uriParts.length === 1) {
-        return uri;
-    }
-    if (uriParts[0].indexOf('.') > 0 || uriParts[0].indexOf(':') > 0) {
-        // First segment of the URI is a registry.  Remove it
-        return uriParts.slice(1).join('/');
-    }
-    return uri;
-}
-exports.getImageName = getImageName;
 function getImageDigest(uri) {
     return __awaiter(this, void 0, void 0, function* () {
-        const imageName = getImageName(uri);
+        // String docker.io/ from any image name, as they get removed in the `docker images` list
+        const imageName = uri.replace(/^docker.io\//, '');
         const result = yield (0, exec_1.getExecOutput)('docker', [
             'image',
             'ls',
