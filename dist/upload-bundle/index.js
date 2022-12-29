@@ -21646,7 +21646,7 @@ class Charmcraft {
         return __awaiter(this, void 0, void 0, function* () {
             let resourceInfo = 'resources:\n';
             if (!this.uploadImage) {
-                const msg = `No resources where uploaded as part of this build.\n` +
+                const msg = `No resources were uploaded as part of this build.\n` +
                     `If you wish to upload the OCI image, set 'upload-image' to 'true'`;
                 core.warning(msg);
             }
