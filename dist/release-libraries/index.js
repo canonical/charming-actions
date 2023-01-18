@@ -21324,7 +21324,7 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 7443:
+/***/ 8778:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -21358,45 +21358,199 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UploadBundleAction = void 0;
-const core = __importStar(__nccwpck_require__(2186));
+exports.ReleaseLibrariesAction = void 0;
+const core_1 = __nccwpck_require__(2186);
+const github_1 = __nccwpck_require__(5438);
+const fs = __importStar(__nccwpck_require__(7147));
 const services_1 = __nccwpck_require__(720);
-class UploadBundleAction {
+class ReleaseLibrariesAction {
     constructor() {
-        this.bundle = new services_1.Bundle();
-        this.bundlePath = core.getInput('bundle-path');
-        this.channel = core.getInput('channel');
-        this.charmcraftChannel = core.getInput('charmcraft-channel');
-        this.token = core.getInput('github-token');
-        if (!this.token) {
-            throw new Error(`Input 'github-token' is missing, and not provided in environment`);
+        this.aboutToUpdateCommentBody = (diff) => {
+            let msg = `Preparing to publish or bump the following libraries:`;
+            diff.changes.forEach((change) => {
+                const fmtV = (v) => {
+                    if (v == null) {
+                        return `(new)`; // no previous version: lib is new.
+                    }
+                    return `${v.major}.${v.minor}`;
+                };
+                msg = msg.concat(`\n ${change.libName} \t 
+      (${fmtV(change.old)} + '-->' +${fmtV(change.new)} )`);
+            });
+            if (!diff.ok) {
+                msg = msg.concat(`\n\nERRORS PRESENT: ${diff.errors}\n: nothing will be updated.`);
+            }
+            return msg;
+        };
+        this.tokens = {
+            github: (0, core_1.getInput)('github-token'),
+            charmhub: (0, core_1.getInput)('credentials'),
+        };
+        if (!this.tokens.github) {
+            throw new Error(`Input 'github-token' is missing`);
         }
-        this.artifacts = new services_1.Artifact();
+        this.charmPath = (0, core_1.getInput)('charm-path');
+        this.channel = (0, core_1.getInput)('charmcraft-channel');
+        this.outcomes = {
+            fail: (0, core_1.getInput)('fail-build').toLowerCase() === 'true',
+            comment: (0, core_1.getInput)('comment-on-pr').toLowerCase() === 'true',
+        };
+        this.context = github_1.context;
+        this.github = (0, github_1.getOctokit)(this.tokens.github);
+        this.charmcraft = new services_1.Charmcraft(this.tokens.charmhub);
+        this.charmName = this.charmcraft.metadata().name;
         this.snap = new services_1.Snap();
+    }
+    parseCharmLibFile(data, versionInt, version, libName) {
+        const v = data.match('LIBAPI[ ]?=[ ]?d*');
+        let LIBAPI = null;
+        if (v) {
+            LIBAPI = parseInt(v[1], 10);
+            if (LIBAPI !== versionInt) {
+                return new Error(`lib ${libName} declares LIBAPI=${LIBAPI} but is 
+      in ./lib/charms/${this.charmName}/${version}/. No good.`);
+            }
+        }
+        else {
+            return new Error(`could not find LIBAPI statement in ${libName}`);
+        }
+        const r = data.match('LIBPATCH[ ]?=[ ]?d*');
+        let LIBPATCH = null;
+        if (r) {
+            LIBPATCH = parseInt(r[1], 10);
+        }
+        else {
+            return new Error(`could not find LIBPATCH statement in ${libName}`);
+        }
+        if (LIBPATCH && LIBAPI) {
+            return {
+                version: LIBAPI,
+                revision: LIBPATCH,
+            };
+        }
+        return new Error(`could not extract LIBPATCH and LIBAPI from ${libName} .`);
+    }
+    getVersionInfo(libFile, versionInt, version, libName) {
+        const data = fs.readFileSync(libFile, 'utf-8');
+        return this.parseCharmLibFile(data, versionInt, version, libName);
+    }
+    getCharmLibs() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const errors = [];
+            const libsFound = [];
+            let ok = true;
+            const versions = fs.readdirSync(`./lib/charms/${this.charmName}/`);
+            versions.forEach((version) => {
+                const versionInt = parseInt(version.slice(1), 10); // 'v1' --> 1
+                const libs = fs.readdirSync(`./lib/charms/${this.charmName}/${version}/`);
+                libs.forEach((libNamePy) => {
+                    const libName = libNamePy.slice(-3);
+                    const libFile = `./lib/charms/${this.charmName}/${version}/${libNamePy}`;
+                    try {
+                        const vinfo = this.getVersionInfo(libFile, versionInt, version, libName);
+                        if (vinfo instanceof Error) {
+                            errors.push(vinfo.message);
+                        }
+                        else {
+                            // VersionInfo
+                            libsFound.push(Object.assign({ libName }, vinfo));
+                        }
+                    }
+                    catch (e) {
+                        (0, core_1.setFailed)(e.message);
+                        (0, core_1.error)(e.stack);
+                        ok = false;
+                    }
+                });
+            });
+            return { ok, libs: libsFound, errors };
+        });
+    }
+    getLibStatus(old) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let ok = true;
+            const errors = [];
+            const changes = [];
+            // gather the libs that this charm has at the moment
+            const current = yield this.getCharmLibs();
+            current.libs.forEach((currentLib) => {
+                const oldLib = old.find((value) => value.libName === currentLib.libName);
+                if (oldLib === undefined) {
+                    changes.push({
+                        libName: currentLib.libName,
+                        old: null,
+                        new: { minor: currentLib.revision, major: currentLib.version },
+                    });
+                }
+                else if (oldLib.revision > currentLib.revision ||
+                    oldLib.version > currentLib.version) {
+                    ok = false;
+                    errors.push(`the local ${currentLib.libName} is at 
+                  ${currentLib.version}.${currentLib.revision}, but 
+                  ${oldLib.version}.${oldLib.revision} is present on 
+                  charmhub.`);
+                }
+                else if (oldLib.revision !== currentLib.revision &&
+                    oldLib.version !== currentLib.version) {
+                    changes.push({
+                        libName: currentLib.libName,
+                        old: {
+                            major: oldLib.version,
+                            minor: oldLib.revision,
+                        },
+                        new: { minor: currentLib.revision, major: currentLib.version },
+                    });
+                }
+            });
+            return { ok, errors, changes };
+        });
     }
     run() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                yield this.snap.install('charmcraft', this.charmcraftChannel);
-                yield this.snap.install('juju-bundle');
-                yield this.bundle.publish(this.bundlePath, this.channel);
-                // TODO: add tagging of bundles -SA 2022-02-18
+                process.chdir(this.charmPath);
+                if (!fs.existsSync('./lib')) {
+                    (0, core_1.warning)('No lib folder detected. Skipping action.');
+                    return;
+                }
+                if (!fs.existsSync(`./lib/${this.charmName}`)) {
+                    (0, core_1.warning)('This charm has no libs. Skipping action.');
+                    return;
+                }
+                yield this.snap.install('charmcraft', this.channel);
+                // these are the most up-to-date libs as charmhub knows them
+                const currentLibs = yield this.charmcraft.listLib(this.charmName);
+                const status = yield this.getLibStatus(currentLibs);
+                // Add a pr comment that says what's going to be updated.
+                this.github.rest.issues.createComment({
+                    issue_number: this.context.issue.number,
+                    owner: this.context.repo.owner,
+                    repo: this.context.repo.repo,
+                    body: this.aboutToUpdateCommentBody(status),
+                });
+                if (!status.ok && this.outcomes.fail) {
+                    (0, core_1.setFailed)('Something went wrong. Please check the logs. Aborting: no changes committed.');
+                    return;
+                }
+                // publish libs
+                status.changes.map((change) => {
+                    const versionID = `v${change.new.major}`;
+                    return this.charmcraft.publishLib(this.charmName, versionID, change.libName);
+                });
             }
-            catch (error) {
-                core.setFailed(error.message);
-                core.error(error.stack);
+            catch (e) {
+                (0, core_1.setFailed)(e.message);
+                (0, core_1.error)(e.stack);
             }
-            const result = yield this.artifacts.uploadLogs();
-            core.info(result);
         });
     }
 }
-exports.UploadBundleAction = UploadBundleAction;
+exports.ReleaseLibrariesAction = ReleaseLibrariesAction;
 
 
 /***/ }),
 
-/***/ 6651:
+/***/ 5252:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -21411,9 +21565,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const upload_bundle_1 = __nccwpck_require__(7443);
+const release_libraries_1 = __nccwpck_require__(8778);
 (() => __awaiter(void 0, void 0, void 0, function* () {
-    yield new upload_bundle_1.UploadBundleAction().run();
+    yield new release_libraries_1.ReleaseLibrariesAction().run();
 }))();
 
 
@@ -22376,7 +22530,7 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(6651);
+/******/ 	var __webpack_exports__ = __nccwpck_require__(5252);
 /******/ 	module.exports = __webpack_exports__;
 /******/ 	
 /******/ })()

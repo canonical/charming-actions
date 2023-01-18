@@ -21908,6 +21908,35 @@ class Charmcraft {
             yield (0, exec_1.exec)('charmcraft', args, this.execOptions);
         });
     }
+    listLib(charm) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const args = ['list-lib', charm];
+            // example output:
+            // Library name      API    Patch
+            // ingress           0      7
+            // ingress_per_unit  0      10
+            const getLibs = yield (0, exec_1.getExecOutput)('charmcraft', args, this.execOptions);
+            // ignore table headers
+            const libsRaw = getLibs.stdout.split('\n').slice(1);
+            const libs = libsRaw.map((line) => {
+                const values = line.trim().split(' ');
+                // purge excess whitespace
+                const [libName, libVersion, libRevision] = values.map((value) => value.trim());
+                return {
+                    libName,
+                    version: parseInt(libVersion, 10),
+                    revision: parseInt(libRevision, 10),
+                };
+            });
+            return libs;
+        });
+    }
+    publishLib(charm, majorVersion, libName) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const args = ['publish-lib', `charms.${charm}.${majorVersion}.${libName}`];
+            yield (0, exec_1.exec)('charmcraft', args, this.execOptions);
+        });
+    }
 }
 exports.Charmcraft = Charmcraft;
 

@@ -1,0 +1,29 @@
+name: Release Libraries
+description: Automatically releases charm libraries when their version/revision have been bumped
+author: Pietro Pasotti
+inputs:
+  charm-path:
+    required: false
+    default: '.'
+    description: |
+      Path to charm directory
+  charmcraft-channel:
+    required: false
+    default: 'latest/stable'
+    description: |
+      Snap channel to use when installing charmcraft
+  credentials:
+    required: true
+    description: |
+      Credentials exported from `charmcraft login --export`. See
+      https://juju.is/docs/sdk/remote-env-auth for more info
+  github-token:
+    required: true
+    description: |
+      Github Token needed for automatic tagging when publishing
+runs:
+  using: node12
+  main: ../dist/release-libraries/index.js
+branding:
+  icon: upload-cloud
+  color: orange
