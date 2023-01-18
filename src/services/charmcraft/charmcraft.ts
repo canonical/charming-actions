@@ -350,10 +350,15 @@ export interface LibStatus {
   err: string;
 }
 
-export interface LibInfo {
-  libName: string;
+
+export interface VersionInfo {
   version: number;
   revision: number;
+}
+
+
+export interface LibInfo extends VersionInfo {
+  libName: string;
 }
 
 export { Charmcraft };

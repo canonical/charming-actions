@@ -3,9 +3,8 @@ import { context, getOctokit } from '@actions/github';
 import { Context } from '@actions/github/lib/context';
 import { GitHub } from '@actions/github/lib/utils';
 import * as fs from 'fs';
-import * as exec from '@actions/exec';
 
-import { Charmcraft, LibInfo, Snap } from '../../services';
+import { Charmcraft, LibInfo, Snap, VersionInfo } from '../../services';
 import { Outcomes, Tokens } from '../../types';
 
 export class PublishLibrariesAction {
@@ -16,7 +15,6 @@ export class PublishLibrariesAction {
   private outcomes: Outcomes;
   private context: Context;
   private charmPath: string;
-  private checkOnly: boolean;
   private charmName: string;
   private snap: Snap;
 
@@ -28,8 +26,6 @@ export class PublishLibrariesAction {
     if (!this.tokens.github) {
       throw new Error(`Input 'github-token' is missing`);
     } 
-    
-    this.checkOnly = getInput('check-only'),
     this.charmPath = getInput('charm-path');
     this.channel = getInput('charmcraft-channel');
 
@@ -47,6 +43,39 @@ export class PublishLibrariesAction {
     this.snap = new Snap();
   }
   
+  getVersionInfo(libFile: string, versionInt: Number, version: string, libName: string): VersionInfo {
+    return fs.readFile(libFile, 'utf8',
+      (data: string) => {
+        const v = data.match("LIBAPI[ ]?=[ ]?\d*");
+        var LIBAPI: number | null = null;
+        if (v) {
+          LIBAPI = parseInt(v[1]);
+          if (LIBAPI != versionInt) {
+            throw new Error(`lib ${libName} declares LIBAPI=${LIBAPI} but is 
+          in ./lib/charms/${this.charmName}/${version}/. No good.`);
+          }
+        } else {
+          throw new Error(`could not find LIBAPI statement in ${libName}`);
+        }
+
+        const r = data.match("LIBPATCH[ ]?=[ ]?\d*");
+        var LIBPATCH: number | null = null;
+        if (r) {
+          LIBPATCH = parseInt(r[1]);
+        } else {
+          throw new Error(`could not find LIBPATCH statement in ${libName}`);
+        }
+        if (LIBPATCH && LIBAPI) {
+          return {
+            version: LIBAPI,
+            revision: LIBPATCH
+          };
+        }
+
+        throw new Error(`could not extract LIBPATCH and LIBAPI from ${libName} (@ ${libFile}).`);
+      });
+  }
+
   async getCharmLibs(): Promise<LibrariesStatus> {
     const err: string[] = [];
     const libsFound: LibInfo[] = [];
@@ -58,38 +87,16 @@ export class PublishLibrariesAction {
       const libs: string[] = fs.readdirSync(`./lib/charms/${this.charmName}/${version}/`);
 
       libs.map((libNamePy: string) => {
-        const libName = libNamePy.slice(0, -3)
+        const libName = libNamePy.slice(-3)
         const libFile = `./lib/charms/${this.charmName}/${version}/${libNamePy}`;
-        
-        fs.readFile(libFile, 'utf8', 
-        (error: any, data: string) => {
-          const v = data.match("LIBAPI[ ]?=[ ]?\d*")
-          var LIBAPI: number | null = null;
-          if (v) {
-            LIBAPI = parseInt(v[1])
-            if (LIBAPI != versionInt) {
-              err.push(`lib ${libName} declares LIBAPI=${LIBAPI} but is 
-              in ./lib/charms/${this.charmName}/${version}/. No good.`)
-            }
-            ok = false;
-          } else {
-            err.push(`could not find LIBAPI statement in ${libName}`)
-          }
-  
-          const r = data.match("LIBPATCH[ ]?=[ ]?\d*")
-          var LIBPATCH: number | null = null;
-          if (r) {
-            LIBPATCH = parseInt(r[1])
-          } else {
-            err.push(`could not find LIBPATCH statement in ${libName}`)
-          }
-          if (LIBPATCH && LIBAPI) {
-            libsFound.push(
-              {libName:libName, 
-              version:LIBAPI, 
-              revision:LIBPATCH})
-          }
-        })
+        try {
+          const vinfo = this.getVersionInfo(libFile, versionInt, version, libName)
+          libsFound.push({libName: libName, ...vinfo})
+        } catch (e: any) {
+          setFailed(e.message);
+          error(e.stack);
+          return
+        } 
       })
     })
     return {ok: ok, libs:libsFound, err:err};
@@ -107,7 +114,6 @@ export class PublishLibrariesAction {
       const oldLib: LibInfo | undefined = old.find(
         (value:LibInfo) => value.libName == currentLib.libName
         )
-      var oldVersion: null | Version;
 
       if (oldLib == undefined) {
         changes.push({
@@ -158,24 +164,25 @@ export class PublishLibrariesAction {
       // these are the most up-to-date libs as charmhub knows them
       const currentLibs = await this.charmcraft.listLib(this.charmName)
       const status = await this.getLibStatus(currentLibs);
-      // we do this using includes to catch both `pull_request` and `pull_request_target`
-      if (this.context.eventName.includes('pull_request')) {
-        // on PR we do a check only and print a message
-        this.github.rest.issues.createComment({
-          issue_number: this.context.issue.number,
-          owner: this.context.repo.owner,
-          repo: this.context.repo.repo,
-          body: this.getCommentBody(status),
-        });
 
-        if (!status.ok && this.outcomes.fail) {
-          setFailed('Something went wrong. Merging this PR will not update all libs.');
-        } 
-      } else if (this.context.eventName == 'push') {
-        // We have merged: now we're not only checking, we're doing **business**.
+      // Add a pr comment that says what's going to be updated.
+      this.github.rest.issues.createComment({
+        issue_number: this.context.issue.number,
+        owner: this.context.repo.owner,
+        repo: this.context.repo.repo,
+        body: this.getCommentBody(status),
+      });
 
-        this.charmcraft.publishLib(this.charmName, )
-      }
+      if (!status.ok && this.outcomes.fail) {
+        setFailed('Something went wrong. Merging this PR will not update all libs.');
+      } 
+      
+      // publish libs
+      status.changes.map((change:Change) => {
+        const versionID: string = `v${change.new.major}`;
+        this.charmcraft.publishLib(this.charmName, versionID, change.libName);
+      })
+      
 
     } catch (e: any) {
       setFailed(e.message);
@@ -184,7 +191,7 @@ export class PublishLibrariesAction {
   }
 
   private getCommentBody = (diff: LibrariesDiff): string => {
-    let msg: string = `Merging this PR will publish or bump the following libraries:`;
+    let msg: string = `Preparing to publish or bump the following libraries:`;
     diff.changes.map((change: Change) => {
       const fmtV = (v:Version|null): string => {
         if (v == null) {
@@ -196,7 +203,7 @@ export class PublishLibrariesAction {
       (${fmtV(change.old)} + '-->' +${fmtV(change.new)} )`)
     });
     if (!diff.ok) {
-      msg = msg.concat(`\n\nERRORS PRESENT: ${diff.err}\n on merge, nothing will be updated.`)
+      msg = msg.concat(`\n\nERRORS PRESENT: ${diff.err}\n: nothing will be updated.`)
     }
     return msg;
   }
