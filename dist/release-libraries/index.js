@@ -21399,6 +21399,7 @@ class ReleaseLibrariesAction {
         this.github = (0, github_1.getOctokit)(this.tokens.github);
         this.charmcraft = new services_1.Charmcraft(this.tokens.charmhub);
         this.charmName = this.charmcraft.metadata().name;
+        this.charmNamePy = this.charmcraft.metadata().name.replace('-', '_');
         this.snap = new services_1.Snap();
     }
     parseCharmLibFile(data, versionInt, version, libName) {
@@ -21408,7 +21409,7 @@ class ReleaseLibrariesAction {
             LIBAPI = parseInt(v[1], 10);
             if (LIBAPI !== versionInt) {
                 return new Error(`lib ${libName} declares LIBAPI=${LIBAPI} but is 
-      in ./lib/charms/${this.charmName}/${version}/. No good.`);
+      in ./lib/charms/${this.charmNamePy}/${version}/. No good.`);
             }
         }
         else {
@@ -21439,13 +21440,13 @@ class ReleaseLibrariesAction {
             const errors = [];
             const libsFound = [];
             let ok = true;
-            const versions = fs.readdirSync(`./lib/charms/${this.charmName}/`);
+            const versions = fs.readdirSync(`./lib/charms/${this.charmNamePy}/`);
             versions.forEach((version) => {
                 const versionInt = parseInt(version.slice(1), 10); // 'v1' --> 1
-                const libs = fs.readdirSync(`./lib/charms/${this.charmName}/${version}/`);
+                const libs = fs.readdirSync(`./lib/charms/${this.charmNamePy}/${version}/`);
                 libs.forEach((libNamePy) => {
                     const libName = libNamePy.slice(-3);
-                    const libFile = `./lib/charms/${this.charmName}/${version}/${libNamePy}`;
+                    const libFile = `./lib/charms/${this.charmNamePy}/${version}/${libNamePy}`;
                     try {
                         const vinfo = this.getVersionInfo(libFile, versionInt, version, libName);
                         if (vinfo instanceof Error) {
@@ -21513,8 +21514,8 @@ class ReleaseLibrariesAction {
                     (0, core_1.warning)('No lib folder detected. Skipping action.');
                     return;
                 }
-                if (!fs.existsSync(`./lib/${this.charmName}`)) {
-                    (0, core_1.warning)('This charm has no libs. Skipping action.');
+                if (!fs.existsSync(`./lib/${this.charmNamePy}`)) {
+                    (0, core_1.warning)(`Charm ${this.charmName} has no libs (not found in ./lib/${this.charmNamePy}, where expected). Skipping action.`);
                     return;
                 }
                 yield this.snap.install('charmcraft', this.channel);
