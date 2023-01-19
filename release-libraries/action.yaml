@@ -23,7 +23,7 @@ inputs:
       Github Token needed for automatic tagging when publishing
 runs:
   using: node12
-  main: ../dist/release-libraries/index.js
+  main: ../dist/release-libraries/index.js --unhandled-rejections=strict
 branding:
   icon: upload-cloud
   color: orange
