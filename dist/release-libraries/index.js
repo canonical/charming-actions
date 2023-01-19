@@ -21447,6 +21447,7 @@ class ReleaseLibrariesAction {
                 libs.forEach((libNamePy) => {
                     const libName = libNamePy.slice(-3);
                     const libFile = `./lib/charms/${this.charmNamePy}/${version}/${libNamePy}`;
+                    (0, core_1.info)(`found lib file: ${libFile}`);
                     try {
                         const vinfo = this.getVersionInfo(libFile, versionInt, version, libName);
                         if (vinfo instanceof Error) {
@@ -21455,6 +21456,7 @@ class ReleaseLibrariesAction {
                         else {
                             // VersionInfo
                             libsFound.push(Object.assign({ libName }, vinfo));
+                            (0, core_1.info)(`lib file could be parsed: VersionInfo=${vinfo}`);
                         }
                     }
                     catch (e) {
@@ -21475,6 +21477,7 @@ class ReleaseLibrariesAction {
             // gather the libs that this charm has at the moment
             const current = yield this.getCharmLibs();
             current.libs.forEach((currentLib) => {
+                (0, core_1.info)(`checking status for ${currentLib}`);
                 const oldLib = old.find((value) => value.libName === currentLib.libName);
                 if (oldLib === undefined) {
                     changes.push({
@@ -21518,6 +21521,7 @@ class ReleaseLibrariesAction {
                     (0, core_1.warning)(`Charm ${this.charmName} has no libs (not found in ./lib/charms/${this.charmNamePy}, where expected). Skipping action.`);
                     return;
                 }
+                (0, core_1.info)('installing charmcraft...');
                 yield this.snap.install('charmcraft', this.channel);
                 // these are the most up-to-date libs as charmhub knows them
                 const currentLibs = yield this.charmcraft.listLib(this.charmName);
@@ -21533,11 +21537,15 @@ class ReleaseLibrariesAction {
                     (0, core_1.setFailed)('Something went wrong. Please check the logs. Aborting: no changes committed.');
                     return;
                 }
+                (0, core_1.info)(`status OK; publishing changes: ${status.changes}`);
                 // publish libs
                 status.changes.map((change) => {
                     const versionID = `v${change.new.major}`;
                     return this.charmcraft.publishLib(this.charmName, versionID, change.libName);
                 });
+                if (!status.changes) {
+                    (0, core_1.info)('nothing to update.');
+                }
             }
             catch (e) {
                 (0, core_1.setFailed)(e.message);

@@ -1,4 +1,4 @@
-import { error, getInput, setFailed, warning } from '@actions/core';
+import { error, getInput, info, setFailed, warning } from '@actions/core';
 import { context, getOctokit } from '@actions/github';
 import { Context } from '@actions/github/lib/context';
 import { GitHub } from '@actions/github/lib/utils';
@@ -104,6 +104,8 @@ export class ReleaseLibrariesAction {
       libs.forEach((libNamePy: string) => {
         const libName = libNamePy.slice(-3);
         const libFile = `./lib/charms/${this.charmNamePy}/${version}/${libNamePy}`;
+        info(`found lib file: ${libFile}`);
+
         try {
           const vinfo = this.getVersionInfo(
             libFile,
@@ -116,6 +118,7 @@ export class ReleaseLibrariesAction {
           } else {
             // VersionInfo
             libsFound.push({ libName, ...vinfo });
+            info(`lib file could be parsed: VersionInfo=${vinfo}`);
           }
         } catch (e: any) {
           setFailed(e.message);
@@ -136,6 +139,8 @@ export class ReleaseLibrariesAction {
     const current = await this.getCharmLibs();
 
     current.libs.forEach((currentLib: LibInfo) => {
+      info(`checking status for ${currentLib}`);
+
       const oldLib: LibInfo | undefined = old.find(
         (value: LibInfo) => value.libName === currentLib.libName
       );
@@ -185,6 +190,8 @@ export class ReleaseLibrariesAction {
         );
         return;
       }
+
+      info('installing charmcraft...');
       await this.snap.install('charmcraft', this.channel);
 
       // these are the most up-to-date libs as charmhub knows them
@@ -206,6 +213,8 @@ export class ReleaseLibrariesAction {
         return;
       }
 
+      info(`status OK; publishing changes: ${status.changes}`);
+
       // publish libs
       status.changes.map((change: Change) => {
         const versionID: string = `v${change.new.major}`;
@@ -215,6 +224,10 @@ export class ReleaseLibrariesAction {
           change.libName
         );
       });
+
+      if (!status.changes) {
+        info('nothing to update.');
+      }
     } catch (e: any) {
       setFailed(e.message);
       error(e.stack);

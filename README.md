@@ -5,6 +5,7 @@ want to introduce automation into their release workflow. The collection current
 of the following actions:
 
 - [canonical/charming-actions/check-libraries](check-libraries/README.md)
+- [canonical/charming-actions/release-libraries](release-libraries/README.md)
 - [canonical/charming-actions/channel](channel/README.md)
 - [canonical/charming-actions/upload-charm](upload-charm/README.md)
 - [canonical/charming-actions/upload-bundle](upload-bundle/README.md)
@@ -43,6 +44,11 @@ jobs:
           fetch-depth: 0  
       - name: Check libraries
         uses: canonical/charming-actions/check-libraries@1.0.0
+        with:
+          credentials: "${{ secrets.CHARMHUB_TOKEN }}"
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Release any bumped charm libs
+        uses: PietroPasotti/charming-actions/release-libraries@release-libs
         with:
           credentials: "${{ secrets.CHARMHUB_TOKEN }}"
           github-token: "${{ secrets.GITHUB_TOKEN }}"
