@@ -49,12 +49,12 @@ export class ReleaseLibrariesAction {
     version: string,
     libName: string
   ): VersionInfo | Error {
-    const libapiStr = data.match('LIBAPI[ ]?=[ ]?d*')?.input;
+    const libapiStr = data.match(/LIBAPI = (\d+)/i)?.input;
     if (!libapiStr) {
       return new Error(`no LIBAPI found in ${libName}`);
     }
 
-    const LIBAPI = parseInt(libapiStr.split('=')[1], 10);
+    const LIBAPI = parseInt(libapiStr[1], 10);
 
     info(`libapi str: ${libapiStr}`);
 
@@ -63,13 +63,13 @@ export class ReleaseLibrariesAction {
     under /${version}/. No good?`);
     }
 
-    const libpatchStr = data.match('LIBPATCH[ ]?=[ ]?d*')?.input;
+    const libpatchStr = data.match(/LIBPATCH = (\d+)/i)?.input;
 
     if (!libpatchStr) {
       return new Error(`no LIBPATCH found in ${libName}`);
     }
 
-    const LIBPATCH = parseInt(libpatchStr.split('=')[1], 10);
+    const LIBPATCH = parseInt(libpatchStr[1], 10);
 
     return {
       version: LIBAPI,

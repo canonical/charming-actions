@@ -21404,21 +21404,21 @@ class ReleaseLibrariesAction {
     }
     parseCharmLibFile(data, versionInt, version, libName) {
         var _a, _b;
-        const libapiStr = (_a = data.match('LIBAPI[ ]?=[ ]?d*')) === null || _a === void 0 ? void 0 : _a.input;
+        const libapiStr = (_a = data.match(/LIBAPI = (\d+)/i)) === null || _a === void 0 ? void 0 : _a.input;
         if (!libapiStr) {
             return new Error(`no LIBAPI found in ${libName}`);
         }
-        const LIBAPI = parseInt(libapiStr.split('=')[1], 10);
+        const LIBAPI = parseInt(libapiStr[1], 10);
         (0, core_1.info)(`libapi str: ${libapiStr}`);
         if (LIBAPI !== versionInt) {
             return new Error(`lib ${libName} declares LIBAPI=${LIBAPI} but is 
     under /${version}/. No good?`);
         }
-        const libpatchStr = (_b = data.match('LIBPATCH[ ]?=[ ]?d*')) === null || _b === void 0 ? void 0 : _b.input;
+        const libpatchStr = (_b = data.match(/LIBPATCH = (\d+)/i)) === null || _b === void 0 ? void 0 : _b.input;
         if (!libpatchStr) {
             return new Error(`no LIBPATCH found in ${libName}`);
         }
-        const LIBPATCH = parseInt(libpatchStr.split('=')[1], 10);
+        const LIBPATCH = parseInt(libpatchStr[1], 10);
         return {
             version: LIBAPI,
             revision: LIBPATCH,
