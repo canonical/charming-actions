@@ -21409,9 +21409,10 @@ class ReleaseLibrariesAction {
             return new Error(`no LIBAPI found in ${libName}`);
         }
         const LIBAPI = parseInt(libapiStr.split('=')[1], 10);
+        (0, core_1.info)(`libapi str: ${libapiStr}`);
         if (LIBAPI !== versionInt) {
             return new Error(`lib ${libName} declares LIBAPI=${LIBAPI} but is 
-    in ./lib/charms/${this.charmNamePy}/${version}/. No good.`);
+    under /${version}/. No good?`);
         }
         const libpatchStr = (_b = data.match('LIBPATCH[ ]?=[ ]?d*')) === null || _b === void 0 ? void 0 : _b.input;
         if (!libpatchStr) {

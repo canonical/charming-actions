@@ -56,9 +56,11 @@ export class ReleaseLibrariesAction {
 
     const LIBAPI = parseInt(libapiStr.split('=')[1], 10);
 
+    info(`libapi str: ${libapiStr}`);
+
     if (LIBAPI !== versionInt) {
       return new Error(`lib ${libName} declares LIBAPI=${LIBAPI} but is 
-    in ./lib/charms/${this.charmNamePy}/${version}/. No good.`);
+    under /${version}/. No good?`);
     }
 
     const libpatchStr = data.match('LIBPATCH[ ]?=[ ]?d*')?.input;
