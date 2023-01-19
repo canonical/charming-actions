@@ -213,12 +213,14 @@ export class ReleaseLibrariesAction {
         return;
       }
 
-      info(`status OK; publishing changes: ${status.changes}`);
-
       if (!status.changes) {
-        info('nothing to update.');
+        info('Status OK; nothing to update. Exiting...');
         return;
       }
+
+      info(`status OK; publishing changes: ${status.changes}...`);
+
+      const failures: string[] = [];
 
       // publish libs in parallel
       await Promise.all(
@@ -228,12 +230,20 @@ export class ReleaseLibrariesAction {
           this.charmcraft
             .publishLib(this.charmNamePy, versionID, change.libName)
             .catch((reason) => {
-              error(
-                `publishing ${change.libName} (${change.new.major}.${change.new.major}) failed with reason=${reason}`
-              );
+              const msg: string = `publishing ${change.libName} (${change.new.major}.${change.new.major}) failures with reason=${reason}`;
+              error(msg);
+              failures.push(msg);
             });
         })
       );
+
+      if (failures) {
+        setFailed(
+          `Failed to publish some libs: ${failures}. See the logs for more info.`
+        );
+      } else {
+        info('All good. Changes are live.');
+      }
     } catch (e: any) {
       setFailed(e.message);
       error(e.stack);

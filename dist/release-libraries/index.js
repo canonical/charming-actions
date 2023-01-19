@@ -21537,11 +21537,12 @@ class ReleaseLibrariesAction {
                     (0, core_1.setFailed)('Something went wrong. Please check the logs. Aborting: no changes committed.');
                     return;
                 }
-                (0, core_1.info)(`status OK; publishing changes: ${status.changes}`);
                 if (!status.changes) {
-                    (0, core_1.info)('nothing to update.');
+                    (0, core_1.info)('Status OK; nothing to update. Exiting...');
                     return;
                 }
+                (0, core_1.info)(`status OK; publishing changes: ${status.changes}...`);
+                const failures = [];
                 // publish libs in parallel
                 yield Promise.all(status.changes.map((change) => __awaiter(this, void 0, void 0, function* () {
                     const versionID = `v${change.new.major}`;
@@ -21549,9 +21550,17 @@ class ReleaseLibrariesAction {
                     this.charmcraft
                         .publishLib(this.charmNamePy, versionID, change.libName)
                         .catch((reason) => {
-                        (0, core_1.error)(`publishing ${change.libName} (${change.new.major}.${change.new.major}) failed with reason=${reason}`);
+                        const msg = `publishing ${change.libName} (${change.new.major}.${change.new.major}) failures with reason=${reason}`;
+                        (0, core_1.error)(msg);
+                        failures.push(msg);
                     });
                 })));
+                if (failures) {
+                    (0, core_1.setFailed)(`Failed to publish some libs: ${failures}. See the logs for more info.`);
+                }
+                else {
+                    (0, core_1.info)('All good. Changes are live.');
+                }
             }
             catch (e) {
                 (0, core_1.setFailed)(e.message);
