@@ -87,10 +87,8 @@ export class ReleaseLibrariesAction {
     return this.parseCharmLibFile(data, versionInt, version, libName);
   }
 
-  async getCharmLibs(): Promise<LibrariesStatus> {
-    const errors: string[] = [];
+  async getCharmLibs(): Promise<LibInfo[]> {
     const libsFound: LibInfo[] = [];
-    let ok: boolean = true;
 
     const versions: string[] = fs.readdirSync(
       `./lib/charms/${this.charmNamePy}/`
@@ -104,7 +102,7 @@ export class ReleaseLibrariesAction {
       libs.forEach((libNamePy: string) => {
         const libName = libNamePy.slice(-3);
         const libFile = `./lib/charms/${this.charmNamePy}/${version}/${libNamePy}`;
-        info(`found lib file: ${libFile}`);
+        info(`found lib file: ${libFile}. Parsing...`);
 
         try {
           const vinfo = this.getVersionInfo(
@@ -114,7 +112,9 @@ export class ReleaseLibrariesAction {
             libName
           );
           if (vinfo instanceof Error) {
-            errors.push(vinfo.message);
+            error(
+              `lib file could not be parsed: error ${vinfo.name} with msg = ${vinfo.message}`
+            );
           } else {
             // VersionInfo
             libsFound.push({ libName, ...vinfo });
@@ -123,22 +123,20 @@ export class ReleaseLibrariesAction {
         } catch (e: any) {
           setFailed(e.message);
           error(e.stack);
-          ok = false;
         }
       });
     });
-    return { ok, libs: libsFound, errors };
+    return libsFound;
   }
 
   async getLibStatus(old: LibInfo[]): Promise<LibrariesDiff> {
-    let ok: boolean = true;
     const errors: string[] = [];
     const changes: Change[] = [];
 
     // gather the libs that this charm has at the moment
     const current = await this.getCharmLibs();
 
-    current.libs.forEach((currentLib: LibInfo) => {
+    current.forEach((currentLib: LibInfo) => {
       info(`checking status for ${currentLib}`);
 
       const oldLib: LibInfo | undefined = old.find(
@@ -155,7 +153,6 @@ export class ReleaseLibrariesAction {
         oldLib.revision > currentLib.revision ||
         oldLib.version > currentLib.version
       ) {
-        ok = false;
         errors.push(`the local ${currentLib.libName} is at 
                   ${currentLib.version}.${currentLib.revision}, but 
                   ${oldLib.version}.${oldLib.revision} is present on 
@@ -174,7 +171,7 @@ export class ReleaseLibrariesAction {
         });
       }
     });
-    return { ok, errors, changes };
+    return { errors, changes };
   }
 
   async run() {
@@ -206,19 +203,23 @@ export class ReleaseLibrariesAction {
         body: this.aboutToUpdateCommentBody(status),
       });
 
-      if (!status.ok && this.outcomes.fail) {
+      if (!!status.errors && this.outcomes.fail) {
         setFailed(
           'Something went wrong. Please check the logs. Aborting: no changes committed.'
         );
         return;
       }
 
-      if (status.changes.length === 0) {
-        info('Status OK; nothing to update. Exiting...');
+      const statusMsg = !!status.errors
+        ? 'OK'
+        : 'NOT OK (errors found: see logs)';
+
+      if (!status.changes.length) {
+        info(`Status ${statusMsg}; nothing to update. Exiting...`);
         return;
       }
 
-      info(`status OK; publishing changes: ${status.changes}...`);
+      info(`status ${statusMsg}; publishing changes: ${status.changes}...`);
 
       const failures: string[] = [];
 
@@ -237,7 +238,7 @@ export class ReleaseLibrariesAction {
         })
       );
 
-      if (failures.length !== 0) {
+      if (!!failures.length) {
         setFailed(
           `Failed to publish some libs: ${failures}. See the logs for more info.`
         );
@@ -262,7 +263,7 @@ export class ReleaseLibrariesAction {
       msg = msg.concat(`\n ${change.libName} \t 
       (${fmtV(change.old)} + '-->' +${fmtV(change.new)} )`);
     });
-    if (!diff.ok) {
+    if (!!diff.errors) {
       msg = msg.concat(
         `\n\nERRORS PRESENT: ${diff.errors}\n: nothing will be updated.`
       );
@@ -283,13 +284,6 @@ export interface Change {
 }
 
 export interface LibrariesDiff {
-  ok: boolean;
   errors: string[];
   changes: Change[];
-}
-
-export interface LibrariesStatus {
-  ok: boolean;
-  libs: LibInfo[];
-  errors: string[];
 }

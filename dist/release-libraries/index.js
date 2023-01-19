@@ -21377,7 +21377,7 @@ class ReleaseLibrariesAction {
                 msg = msg.concat(`\n ${change.libName} \t 
       (${fmtV(change.old)} + '-->' +${fmtV(change.new)} )`);
             });
-            if (!diff.ok) {
+            if (!!diff.errors) {
                 msg = msg.concat(`\n\nERRORS PRESENT: ${diff.errors}\n: nothing will be updated.`);
             }
             return msg;
@@ -21437,9 +21437,7 @@ class ReleaseLibrariesAction {
     }
     getCharmLibs() {
         return __awaiter(this, void 0, void 0, function* () {
-            const errors = [];
             const libsFound = [];
-            let ok = true;
             const versions = fs.readdirSync(`./lib/charms/${this.charmNamePy}/`);
             versions.forEach((version) => {
                 const versionInt = parseInt(version.slice(1), 10); // 'v1' --> 1
@@ -21447,11 +21445,11 @@ class ReleaseLibrariesAction {
                 libs.forEach((libNamePy) => {
                     const libName = libNamePy.slice(-3);
                     const libFile = `./lib/charms/${this.charmNamePy}/${version}/${libNamePy}`;
-                    (0, core_1.info)(`found lib file: ${libFile}`);
+                    (0, core_1.info)(`found lib file: ${libFile}. Parsing...`);
                     try {
                         const vinfo = this.getVersionInfo(libFile, versionInt, version, libName);
                         if (vinfo instanceof Error) {
-                            errors.push(vinfo.message);
+                            (0, core_1.error)(`lib file could not be parsed: error ${vinfo.name} with msg = ${vinfo.message}`);
                         }
                         else {
                             // VersionInfo
@@ -21462,21 +21460,19 @@ class ReleaseLibrariesAction {
                     catch (e) {
                         (0, core_1.setFailed)(e.message);
                         (0, core_1.error)(e.stack);
-                        ok = false;
                     }
                 });
             });
-            return { ok, libs: libsFound, errors };
+            return libsFound;
         });
     }
     getLibStatus(old) {
         return __awaiter(this, void 0, void 0, function* () {
-            let ok = true;
             const errors = [];
             const changes = [];
             // gather the libs that this charm has at the moment
             const current = yield this.getCharmLibs();
-            current.libs.forEach((currentLib) => {
+            current.forEach((currentLib) => {
                 (0, core_1.info)(`checking status for ${currentLib}`);
                 const oldLib = old.find((value) => value.libName === currentLib.libName);
                 if (oldLib === undefined) {
@@ -21488,7 +21484,6 @@ class ReleaseLibrariesAction {
                 }
                 else if (oldLib.revision > currentLib.revision ||
                     oldLib.version > currentLib.version) {
-                    ok = false;
                     errors.push(`the local ${currentLib.libName} is at 
                   ${currentLib.version}.${currentLib.revision}, but 
                   ${oldLib.version}.${oldLib.revision} is present on 
@@ -21506,7 +21501,7 @@ class ReleaseLibrariesAction {
                     });
                 }
             });
-            return { ok, errors, changes };
+            return { errors, changes };
         });
     }
     run() {
@@ -21533,15 +21528,18 @@ class ReleaseLibrariesAction {
                     repo: this.context.repo.repo,
                     body: this.aboutToUpdateCommentBody(status),
                 });
-                if (!status.ok && this.outcomes.fail) {
+                if (!!status.errors && this.outcomes.fail) {
                     (0, core_1.setFailed)('Something went wrong. Please check the logs. Aborting: no changes committed.');
                     return;
                 }
-                if (status.changes.length === 0) {
-                    (0, core_1.info)('Status OK; nothing to update. Exiting...');
+                const statusMsg = !!status.errors
+                    ? 'OK'
+                    : 'NOT OK (errors found: see logs)';
+                if (!status.changes.length) {
+                    (0, core_1.info)(`Status ${statusMsg}; nothing to update. Exiting...`);
                     return;
                 }
-                (0, core_1.info)(`status OK; publishing changes: ${status.changes}...`);
+                (0, core_1.info)(`status ${statusMsg}; publishing changes: ${status.changes}...`);
                 const failures = [];
                 // publish libs in parallel
                 yield Promise.all(status.changes.map((change) => __awaiter(this, void 0, void 0, function* () {
@@ -21555,7 +21553,7 @@ class ReleaseLibrariesAction {
                         failures.push(msg);
                     });
                 })));
-                if (failures.length !== 0) {
+                if (!!failures.length) {
                     (0, core_1.setFailed)(`Failed to publish some libs: ${failures}. See the logs for more info.`);
                 }
                 else {
