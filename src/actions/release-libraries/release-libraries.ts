@@ -49,7 +49,7 @@ export class ReleaseLibrariesAction {
     version: string,
     libName: string
   ): VersionInfo | Error {
-    const libapiStr = data.match(/LIBAPI = (\d+)/i)?.input;
+    const libapiStr = data.match(/LIBAPI = (\d+)/i);
     if (!libapiStr) {
       return new Error(`no LIBAPI found in ${libName}`);
     }
@@ -63,7 +63,7 @@ export class ReleaseLibrariesAction {
     under /${version}/. No good?`);
     }
 
-    const libpatchStr = data.match(/LIBPATCH = (\d+)/i)?.input;
+    const libpatchStr = data.match(/LIBPATCH = (\d+)/i);
 
     if (!libpatchStr) {
       return new Error(`no LIBPATCH found in ${libName}`);

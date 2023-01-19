@@ -21403,8 +21403,7 @@ class ReleaseLibrariesAction {
         this.snap = new services_1.Snap();
     }
     parseCharmLibFile(data, versionInt, version, libName) {
-        var _a, _b;
-        const libapiStr = (_a = data.match(/LIBAPI = (\d+)/i)) === null || _a === void 0 ? void 0 : _a.input;
+        const libapiStr = data.match(/LIBAPI = (\d+)/i);
         if (!libapiStr) {
             return new Error(`no LIBAPI found in ${libName}`);
         }
@@ -21414,7 +21413,7 @@ class ReleaseLibrariesAction {
             return new Error(`lib ${libName} declares LIBAPI=${LIBAPI} but is 
     under /${version}/. No good?`);
         }
-        const libpatchStr = (_b = data.match(/LIBPATCH = (\d+)/i)) === null || _b === void 0 ? void 0 : _b.input;
+        const libpatchStr = data.match(/LIBPATCH = (\d+)/i);
         if (!libpatchStr) {
             return new Error(`no LIBPATCH found in ${libName}`);
         }
