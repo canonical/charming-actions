@@ -21537,7 +21537,7 @@ class ReleaseLibrariesAction {
                     (0, core_1.setFailed)('Something went wrong. Please check the logs. Aborting: no changes committed.');
                     return;
                 }
-                if (!status.changes) {
+                if (status.changes.length === 0) {
                     (0, core_1.info)('Status OK; nothing to update. Exiting...');
                     return;
                 }
@@ -21555,7 +21555,7 @@ class ReleaseLibrariesAction {
                         failures.push(msg);
                     });
                 })));
-                if (failures) {
+                if (failures.length !== 0) {
                     (0, core_1.setFailed)(`Failed to publish some libs: ${failures}. See the logs for more info.`);
                 }
                 else {

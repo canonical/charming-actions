@@ -213,7 +213,7 @@ export class ReleaseLibrariesAction {
         return;
       }
 
-      if (!status.changes) {
+      if (status.changes.length === 0) {
         info('Status OK; nothing to update. Exiting...');
         return;
       }
@@ -237,7 +237,7 @@ export class ReleaseLibrariesAction {
         })
       );
 
-      if (failures) {
+      if (failures.length !== 0) {
         setFailed(
           `Failed to publish some libs: ${failures}. See the logs for more info.`
         );
