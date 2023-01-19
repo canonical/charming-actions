@@ -39,7 +39,7 @@ export class ReleaseLibrariesAction {
     this.github = getOctokit(this.tokens.github);
     this.charmcraft = new Charmcraft(this.tokens.charmhub);
     this.charmName = this.charmcraft.metadata().name;
-    this.charmNamePy = this.charmcraft.metadata().name.replace('-', '_');
+    this.charmNamePy = this.charmName.split('-').join('_'); // replace all
     this.snap = new Snap();
   }
 

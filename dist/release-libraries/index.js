@@ -21399,7 +21399,7 @@ class ReleaseLibrariesAction {
         this.github = (0, github_1.getOctokit)(this.tokens.github);
         this.charmcraft = new services_1.Charmcraft(this.tokens.charmhub);
         this.charmName = this.charmcraft.metadata().name;
-        this.charmNamePy = this.charmcraft.metadata().name.replace('-', '_');
+        this.charmNamePy = this.charmName.split('-').join('_'); // replace all
         this.snap = new services_1.Snap();
     }
     parseCharmLibFile(data, versionInt, version, libName) {
