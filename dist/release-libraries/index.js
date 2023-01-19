@@ -21538,8 +21538,12 @@ class ReleaseLibrariesAction {
                     return;
                 }
                 (0, core_1.info)(`status OK; publishing changes: ${status.changes}`);
-                // publish libs
-                status.changes.forEach((change) => {
+                if (!status.changes) {
+                    (0, core_1.info)('nothing to update.');
+                    return;
+                }
+                // publish libs in parallel
+                yield Promise.all(status.changes.map((change) => __awaiter(this, void 0, void 0, function* () {
                     const versionID = `v${change.new.major}`;
                     (0, core_1.info)(`publishing ${change.libName}`);
                     this.charmcraft
@@ -21547,10 +21551,7 @@ class ReleaseLibrariesAction {
                         .catch((reason) => {
                         (0, core_1.error)(`publishing ${change.libName} (${change.new.major}.${change.new.major}) failed with reason=${reason}`);
                     });
-                });
-                if (!status.changes) {
-                    (0, core_1.info)('nothing to update.');
-                }
+                })));
             }
             catch (e) {
                 (0, core_1.setFailed)(e.message);

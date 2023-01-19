@@ -215,22 +215,25 @@ export class ReleaseLibrariesAction {
 
       info(`status OK; publishing changes: ${status.changes}`);
 
-      // publish libs
-      status.changes.forEach((change: Change) => {
-        const versionID: string = `v${change.new.major}`;
-        info(`publishing ${change.libName}`);
-        this.charmcraft
-          .publishLib(this.charmNamePy, versionID, change.libName)
-          .catch((reason) => {
-            error(
-              `publishing ${change.libName} (${change.new.major}.${change.new.major}) failed with reason=${reason}`
-            );
-          });
-      });
-
       if (!status.changes) {
         info('nothing to update.');
+        return;
       }
+
+      // publish libs in parallel
+      await Promise.all(
+        status.changes.map(async (change: Change) => {
+          const versionID: string = `v${change.new.major}`;
+          info(`publishing ${change.libName}`);
+          this.charmcraft
+            .publishLib(this.charmNamePy, versionID, change.libName)
+            .catch((reason) => {
+              error(
+                `publishing ${change.libName} (${change.new.major}.${change.new.major}) failed with reason=${reason}`
+              );
+            });
+        })
+      );
     } catch (e: any) {
       setFailed(e.message);
       error(e.stack);
