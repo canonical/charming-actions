@@ -21514,8 +21514,8 @@ class ReleaseLibrariesAction {
                     (0, core_1.warning)('No lib folder detected. Skipping action.');
                     return;
                 }
-                if (!fs.existsSync(`./lib/${this.charmNamePy}`)) {
-                    (0, core_1.warning)(`Charm ${this.charmName} has no libs (not found in ./lib/${this.charmNamePy}, where expected). Skipping action.`);
+                if (!fs.existsSync(`./lib/charms/${this.charmNamePy}`)) {
+                    (0, core_1.warning)(`Charm ${this.charmName} has no libs (not found in ./lib/charms/${this.charmNamePy}, where expected). Skipping action.`);
                     return;
                 }
                 yield this.snap.install('charmcraft', this.channel);

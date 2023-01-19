@@ -179,9 +179,9 @@ export class ReleaseLibrariesAction {
         warning('No lib folder detected. Skipping action.');
         return;
       }
-      if (!fs.existsSync(`./lib/${this.charmNamePy}`)) {
+      if (!fs.existsSync(`./lib/charms/${this.charmNamePy}`)) {
         warning(
-          `Charm ${this.charmName} has no libs (not found in ./lib/${this.charmNamePy}, where expected). Skipping action.`
+          `Charm ${this.charmName} has no libs (not found in ./lib/charms/${this.charmNamePy}, where expected). Skipping action.`
         );
         return;
       }
