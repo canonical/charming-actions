@@ -56,8 +56,6 @@ export class ReleaseLibrariesAction {
 
     const LIBAPI = parseInt(libapiStr[1], 10);
 
-    info(`libapi str: ${libapiStr}`);
-
     if (LIBAPI !== versionInt) {
       return new Error(`lib ${libName} declares LIBAPI=${LIBAPI} but is 
     under /${version}/. No good?`);
@@ -100,7 +98,7 @@ export class ReleaseLibrariesAction {
       );
 
       libs.forEach((libNamePy: string) => {
-        const libName = libNamePy.slice(-3);
+        const libName = libNamePy.slice(0, -3);
         const libFile = `./lib/charms/${this.charmNamePy}/${version}/${libNamePy}`;
         info(`found lib file: ${libFile}. Parsing...`);
 

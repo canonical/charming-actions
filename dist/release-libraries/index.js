@@ -21408,7 +21408,6 @@ class ReleaseLibrariesAction {
             return new Error(`no LIBAPI found in ${libName}`);
         }
         const LIBAPI = parseInt(libapiStr[1], 10);
-        (0, core_1.info)(`libapi str: ${libapiStr}`);
         if (LIBAPI !== versionInt) {
             return new Error(`lib ${libName} declares LIBAPI=${LIBAPI} but is 
     under /${version}/. No good?`);
@@ -21435,7 +21434,7 @@ class ReleaseLibrariesAction {
                 const versionInt = parseInt(version.slice(1), 10); // 'v1' --> 1
                 const libs = fs.readdirSync(`./lib/charms/${this.charmNamePy}/${version}/`);
                 libs.forEach((libNamePy) => {
-                    const libName = libNamePy.slice(-3);
+                    const libName = libNamePy.slice(0, -3);
                     const libFile = `./lib/charms/${this.charmNamePy}/${version}/${libNamePy}`;
                     (0, core_1.info)(`found lib file: ${libFile}. Parsing...`);
                     try {
