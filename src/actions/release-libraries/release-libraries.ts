@@ -208,7 +208,7 @@ export class ReleaseLibrariesAction {
         return;
       }
 
-      const statusMsg = !!status.errors
+      const statusMsg = status.errors
         ? 'OK'
         : 'NOT OK (errors found: see logs)';
 
@@ -236,7 +236,7 @@ export class ReleaseLibrariesAction {
         })
       );
 
-      if (!!failures.length) {
+      if (failures.length) {
         setFailed(
           `Failed to publish some libs: ${failures}. See the logs for more info.`
         );
@@ -261,7 +261,7 @@ export class ReleaseLibrariesAction {
       msg = msg.concat(`\n ${change.libName} \t 
       (${fmtV(change.old)} + '-->' +${fmtV(change.new)} )`);
     });
-    if (!!diff.errors) {
+    if (diff.errors) {
       msg = msg.concat(
         `\n\nERRORS PRESENT: ${diff.errors}\n: nothing will be updated.`
       );

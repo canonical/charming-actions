@@ -21377,7 +21377,7 @@ class ReleaseLibrariesAction {
                 msg = msg.concat(`\n ${change.libName} \t 
       (${fmtV(change.old)} + '-->' +${fmtV(change.new)} )`);
             });
-            if (!!diff.errors) {
+            if (diff.errors) {
                 msg = msg.concat(`\n\nERRORS PRESENT: ${diff.errors}\n: nothing will be updated.`);
             }
             return msg;
@@ -21523,7 +21523,7 @@ class ReleaseLibrariesAction {
                     (0, core_1.setFailed)('Something went wrong. Please check the logs. Aborting: no changes committed.');
                     return;
                 }
-                const statusMsg = !!status.errors
+                const statusMsg = status.errors
                     ? 'OK'
                     : 'NOT OK (errors found: see logs)';
                 if (!status.changes.length) {
@@ -21544,7 +21544,7 @@ class ReleaseLibrariesAction {
                         failures.push(msg);
                     });
                 })));
-                if (!!failures.length) {
+                if (failures.length) {
                     (0, core_1.setFailed)(`Failed to publish some libs: ${failures}. See the logs for more info.`);
                 }
                 else {
