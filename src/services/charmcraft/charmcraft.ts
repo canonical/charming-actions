@@ -1,4 +1,5 @@
 import * as core from '@actions/core';
+import { debug } from '@actions/core';
 import { exec, ExecOptions, getExecOutput } from '@actions/exec';
 import * as glob from '@actions/glob';
 import * as fs from 'fs';
@@ -327,7 +328,14 @@ class Charmcraft {
 
   async publishLib(charm: string, majorVersion: string, libName: string) {
     const args = ['publish-lib', `charms.${charm}.${majorVersion}.${libName}`];
-    await exec('charmcraft', args, this.execOptions);
+    debug(`about to publish lib with ${args}`);
+    await exec('charmcraft', args, this.execOptions).catch((reason: any) => {
+      const msg: string = `charmcraft ${args} ${this.execOptions} failed with ${reason}`;
+      debug(msg);
+      core.setFailed(msg);
+      return false;
+    });
+    return true;
   }
 }
 

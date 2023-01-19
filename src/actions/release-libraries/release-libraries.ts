@@ -218,8 +218,9 @@ export class ReleaseLibrariesAction {
       // publish libs
       status.changes.map((change: Change) => {
         const versionID: string = `v${change.new.major}`;
+        info(`publishing ${change.libName}`);
         return this.charmcraft.publishLib(
-          this.charmName,
+          this.charmNamePy,
           versionID,
           change.libName
         );

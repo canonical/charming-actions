@@ -21625,6 +21625,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Charmcraft = void 0;
 const core = __importStar(__nccwpck_require__(2186));
+const core_1 = __nccwpck_require__(2186);
 const exec_1 = __nccwpck_require__(1514);
 const glob = __importStar(__nccwpck_require__(8090));
 const fs = __importStar(__nccwpck_require__(7147));
@@ -21882,7 +21883,14 @@ class Charmcraft {
     publishLib(charm, majorVersion, libName) {
         return __awaiter(this, void 0, void 0, function* () {
             const args = ['publish-lib', `charms.${charm}.${majorVersion}.${libName}`];
-            yield (0, exec_1.exec)('charmcraft', args, this.execOptions);
+            (0, core_1.debug)(`about to publish lib with ${args}`);
+            yield (0, exec_1.exec)('charmcraft', args, this.execOptions).catch((reason) => {
+                const msg = `charmcraft ${args} ${this.execOptions} failed with ${reason}`;
+                (0, core_1.debug)(msg);
+                core.setFailed(msg);
+                return false;
+            });
+            return true;
         });
     }
 }
