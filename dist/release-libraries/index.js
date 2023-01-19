@@ -21539,10 +21539,14 @@ class ReleaseLibrariesAction {
                 }
                 (0, core_1.info)(`status OK; publishing changes: ${status.changes}`);
                 // publish libs
-                status.changes.map((change) => {
+                status.changes.forEach((change) => {
                     const versionID = `v${change.new.major}`;
                     (0, core_1.info)(`publishing ${change.libName}`);
-                    return this.charmcraft.publishLib(this.charmNamePy, versionID, change.libName);
+                    this.charmcraft
+                        .publishLib(this.charmNamePy, versionID, change.libName)
+                        .catch((reason) => {
+                        (0, core_1.error)(`publishing ${change.libName} (${change.new.major}.${change.new.major}) failed with reason=${reason}`);
+                    });
                 });
                 if (!status.changes) {
                     (0, core_1.info)('nothing to update.');

@@ -216,14 +216,16 @@ export class ReleaseLibrariesAction {
       info(`status OK; publishing changes: ${status.changes}`);
 
       // publish libs
-      status.changes.map((change: Change) => {
+      status.changes.forEach((change: Change) => {
         const versionID: string = `v${change.new.major}`;
         info(`publishing ${change.libName}`);
-        return this.charmcraft.publishLib(
-          this.charmNamePy,
-          versionID,
-          change.libName
-        );
+        this.charmcraft
+          .publishLib(this.charmNamePy, versionID, change.libName)
+          .catch((reason) => {
+            error(
+              `publishing ${change.libName} (${change.new.major}.${change.new.major}) failed with reason=${reason}`
+            );
+          });
       });
 
       if (!status.changes) {
