@@ -49,32 +49,30 @@ export class ReleaseLibrariesAction {
     version: string,
     libName: string
   ): VersionInfo | Error {
-    const v = data.match('LIBAPI[ ]?=[ ]?d*');
-    let LIBAPI: number | null = null;
-    if (v) {
-      LIBAPI = parseInt(v[1], 10);
-      if (LIBAPI !== versionInt) {
-        return new Error(`lib ${libName} declares LIBAPI=${LIBAPI} but is 
-      in ./lib/charms/${this.charmNamePy}/${version}/. No good.`);
-      }
-    } else {
-      return new Error(`could not find LIBAPI statement in ${libName}`);
+    const libapiStr = data.match('LIBAPI[ ]?=[ ]?d*')?.input;
+    if (!libapiStr) {
+      return new Error(`no LIBAPI found in ${libName}`);
     }
 
-    const r = data.match('LIBPATCH[ ]?=[ ]?d*');
-    let LIBPATCH: number | null = null;
-    if (r) {
-      LIBPATCH = parseInt(r[1], 10);
-    } else {
-      return new Error(`could not find LIBPATCH statement in ${libName}`);
+    const LIBAPI = parseInt(libapiStr.split('=')[1], 10);
+
+    if (LIBAPI !== versionInt) {
+      return new Error(`lib ${libName} declares LIBAPI=${LIBAPI} but is 
+    in ./lib/charms/${this.charmNamePy}/${version}/. No good.`);
     }
-    if (LIBPATCH && LIBAPI) {
-      return {
-        version: LIBAPI,
-        revision: LIBPATCH,
-      };
+
+    const libpatchStr = data.match('LIBPATCH[ ]?=[ ]?d*')?.input;
+
+    if (!libpatchStr) {
+      return new Error(`no LIBPATCH found in ${libName}`);
     }
-    return new Error(`could not extract LIBPATCH and LIBAPI from ${libName} .`);
+
+    const LIBPATCH = parseInt(libpatchStr.split('=')[1], 10);
+
+    return {
+      version: LIBAPI,
+      revision: LIBPATCH,
+    };
   }
 
   getVersionInfo(

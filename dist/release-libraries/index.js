@@ -21403,33 +21403,25 @@ class ReleaseLibrariesAction {
         this.snap = new services_1.Snap();
     }
     parseCharmLibFile(data, versionInt, version, libName) {
-        const v = data.match('LIBAPI[ ]?=[ ]?d*');
-        let LIBAPI = null;
-        if (v) {
-            LIBAPI = parseInt(v[1], 10);
-            if (LIBAPI !== versionInt) {
-                return new Error(`lib ${libName} declares LIBAPI=${LIBAPI} but is 
-      in ./lib/charms/${this.charmNamePy}/${version}/. No good.`);
-            }
+        var _a, _b;
+        const libapiStr = (_a = data.match('LIBAPI[ ]?=[ ]?d*')) === null || _a === void 0 ? void 0 : _a.input;
+        if (!libapiStr) {
+            return new Error(`no LIBAPI found in ${libName}`);
         }
-        else {
-            return new Error(`could not find LIBAPI statement in ${libName}`);
+        const LIBAPI = parseInt(libapiStr.split('=')[1], 10);
+        if (LIBAPI !== versionInt) {
+            return new Error(`lib ${libName} declares LIBAPI=${LIBAPI} but is 
+    in ./lib/charms/${this.charmNamePy}/${version}/. No good.`);
         }
-        const r = data.match('LIBPATCH[ ]?=[ ]?d*');
-        let LIBPATCH = null;
-        if (r) {
-            LIBPATCH = parseInt(r[1], 10);
+        const libpatchStr = (_b = data.match('LIBPATCH[ ]?=[ ]?d*')) === null || _b === void 0 ? void 0 : _b.input;
+        if (!libpatchStr) {
+            return new Error(`no LIBPATCH found in ${libName}`);
         }
-        else {
-            return new Error(`could not find LIBPATCH statement in ${libName}`);
-        }
-        if (LIBPATCH && LIBAPI) {
-            return {
-                version: LIBAPI,
-                revision: LIBPATCH,
-            };
-        }
-        return new Error(`could not extract LIBPATCH and LIBAPI from ${libName} .`);
+        const LIBPATCH = parseInt(libpatchStr.split('=')[1], 10);
+        return {
+            version: LIBAPI,
+            revision: LIBPATCH,
+        };
     }
     getVersionInfo(libFile, versionInt, version, libName) {
         const data = fs.readFileSync(libFile, 'utf-8');
