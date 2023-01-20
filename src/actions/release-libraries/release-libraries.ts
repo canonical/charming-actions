@@ -194,7 +194,7 @@ export class ReleaseLibrariesAction {
       const status = await this.getLibStatus(currentLibs);
 
       // Add a pr comment that says what's going to be updated.
-      this.github.rest.issues.createComment({
+      await this.github.rest.issues.createComment({
         issue_number: this.context.issue.number,
         owner: this.context.repo.owner,
         repo: this.context.repo.repo,

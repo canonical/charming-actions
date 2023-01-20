@@ -50,7 +50,7 @@ export class CheckLibrariesAction {
       const status = await this.charmcraft.hasDriftingLibs();
       // we do this using includes to catch both `pull_request` and `pull_request_target`
       if (!status.ok && this.shouldPostComment) {
-        this.github.rest.issues.createComment({
+        await this.github.rest.issues.createComment({
           issue_number: this.context.issue.number,
           owner: this.context.repo.owner,
           repo: this.context.repo.repo,

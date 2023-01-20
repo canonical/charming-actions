@@ -22,6 +22,8 @@ rules:
     - js: 'never'
       ts: 'never'
   dot-notation: off
+  '@typescript-eslint/no-floating-promises':
+    - 'error'
   '@typescript-eslint/dot-notation':
     - 'error'
   '@typescript-eslint/lines-between-class-members':

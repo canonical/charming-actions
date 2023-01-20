@@ -83,14 +83,14 @@ describe('the charmcraft service', () => {
           `Resource 'resource_1' does not have any uploaded revisions.`
         );
       });
-      it('should not include overriden images', () => {
+      it('should not include overriden images', async () => {
         const charmcraft = new Charmcraft('token');
         charmcraft.metadata = jest.fn(() => ({
           images: [['hello', 'docker.io/library/hello:latest']],
           files: ['resource_1'],
           name: 'hello',
         }));
-        charmcraft.uploadResources({ hello: '2' });
+        await charmcraft.uploadResources({ hello: '2' });
         const mockGetExecOutput = jest.spyOn(exec, 'getExecOutput');
         expect(mockGetExecOutput).not.toHaveBeenCalled();
       });
