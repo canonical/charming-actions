@@ -36,6 +36,7 @@ export interface Tokens {
 export interface Outcomes {
   fail: boolean;
   comment: boolean;
+  labels: boolean;
 }
 
 export interface ResourceInfo {

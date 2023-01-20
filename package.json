@@ -1,6 +1,6 @@
 {
   "name": "charmhub-upload-action",
-  "version": "0.2.2",
+  "version": "2.0.0",
   "description": "Uploads a charm to charmhub.io",
   "main": "main.js",
   "author": "Kenneth Koski <kenneth.koski@canonical.com>",
@@ -15,6 +15,7 @@
     "build:release-libraries": "ncc build src/entries/release-libraries.ts -o dist/release-libraries",
     "test": "jest",
     "lint": "eslint ./src --ext .js,.ts",
+    "lint:fix": "eslint ./src --ext .js,.ts --fix",
     "format": "prettier ./src -c",
     "format:fix": "prettier ./src -w",
     "prepare": "husky install"

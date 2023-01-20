@@ -11,36 +11,32 @@ on:
       - 'main'
 
 jobs:
-  test-charmhub-upload:
+  testing:
     runs-on: ubuntu-latest
-    name: Test charmhub upload
+    name: Testing
     steps:
       - uses: actions/checkout@v2
-
-      - name: Check libraries
-        uses: ./check-libraries
+      - uses: actions/setup-node@v3
         with:
-          credentials: '${{ secrets.CHARMCRAFT_AUTH }}'
-          github-token: '${{ secrets.GITHUB_TOKEN }}'
-          charm-path: test-charm/
-
-      - name: Select charmhub channel
-        uses: ./channel
-        id: channel
-
-      - name: Upload charm to charmhub
-        uses: ./upload-charm
+          node-version: 16
+      - name: Install dependencies
+        run: |
+          npm install
+      - name: Execute tests
+        run: |
+          npm run test
+  linting:
+    runs-on: ubuntu-latest
+    name: Linting
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v3
         with:
-          tag-prefix: test-charm
-          credentials: '${{ secrets.CHARMCRAFT_AUTH }}'
-          charm-path: test-charm/
-          upload-image: 'true'
-          channel: '${{ steps.channel.outputs.name }}'
-          github-token: '${{ secrets.GITHUB_TOKEN }}'
-
-#      - name: Upload bundle to charmhub
-#        uses: ./upload-bundle
-#        with:
-#          credentials: '${{ secrets.CHARMCRAFT_AUTH }}'
-#          bundle-path: test-bundle/
-#          github-token: '${{ secrets.GITHUB_TOKEN }}'
+          node-version: 16
+      - name: Install dependencies
+        run: |
+          npm install
+      - name: Lint
+        run: |
+          npm run format
+          npm run lint
