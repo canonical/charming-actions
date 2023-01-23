@@ -43,20 +43,20 @@ jobs:
         with:
           fetch-depth: 0  
       - name: Check libraries
-        uses: canonical/charming-actions/check-libraries@1.0.0
+        uses: canonical/charming-actions/check-libraries@2.2.0
         with:
           credentials: "${{ secrets.CHARMHUB_TOKEN }}"
           github-token: "${{ secrets.GITHUB_TOKEN }}"
       - name: Release any bumped charm libs
-        uses: canonical/charming-actions/release-libraries@release-libs
+        uses: canonical/charming-actions/release-libraries@2.2.0
         with:
           credentials: "${{ secrets.CHARMHUB_TOKEN }}"
           github-token: "${{ secrets.GITHUB_TOKEN }}"
       - name: Select charmhub channel
-        uses: canonical/charming-actions/channel@1.0.0
+        uses: canonical/charming-actions/channel@2.2.0
         id: channel
       - name: Upload charm to charmhub
-        uses: canonical/charming-actions/upload-charm@1.0.0
+        uses: canonical/charming-actions/upload-charm@2.2.0
         with:
           credentials: "${{ secrets.CHARMHUB_TOKEN }}"
           github-token: "${{ secrets.GITHUB_TOKEN }}"
