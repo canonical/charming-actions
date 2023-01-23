@@ -21,8 +21,7 @@ of the following actions:
 > added to the repository secrets as GitHub Actions will generate a context-bound token for
 > each workflow execution.
 
-The below snippet illustrates how to use all of the actions of the collection in the same
-workflow:
+The below snippet illustrates how to use the actions of the collection in a PR workflow, as well as a push workflow:
 
 ```yaml
 
@@ -47,6 +46,26 @@ jobs:
         with:
           credentials: "${{ secrets.CHARMHUB_TOKEN }}"
           github-token: "${{ secrets.GITHUB_TOKEN }}"
+```
+
+
+```yaml
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Release any bumped charm libs
         uses: canonical/charming-actions/release-libraries@2.2.0
         with:
@@ -63,6 +82,7 @@ jobs:
           upload-image: "true"
           channel: "${{ steps.channel.outputs.name }}"
 ```
+
 
 ## Development
 
