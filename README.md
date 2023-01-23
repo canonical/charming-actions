@@ -48,7 +48,7 @@ jobs:
           credentials: "${{ secrets.CHARMHUB_TOKEN }}"
           github-token: "${{ secrets.GITHUB_TOKEN }}"
       - name: Release any bumped charm libs
-        uses: PietroPasotti/charming-actions/release-libraries@release-libs
+        uses: canonical/charming-actions/release-libraries@release-libs
         with:
           credentials: "${{ secrets.CHARMHUB_TOKEN }}"
           github-token: "${{ secrets.GITHUB_TOKEN }}"
