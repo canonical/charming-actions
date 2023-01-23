@@ -22517,21 +22517,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ReleaseLibrariesAction = void 0;
 const core_1 = __nccwpck_require__(2186);
-const github_1 = __nccwpck_require__(5438);
 const fs = __importStar(__nccwpck_require__(7147));
 const services_1 = __nccwpck_require__(720);
 class ReleaseLibrariesAction {
     constructor() {
-        this.getCommentBody = (diff) => {
-            (0, core_1.debug)('generating comment body...');
-            const formatVersion = (v) => v ? `${v.major}.${v.minor}` : '(new)';
-            if (diff.errors && diff.errors.length > 0)
-                return ['Errors present, nothing will be updated!', ...diff.errors].join('\n');
-            return [
-                `Preparing to publish or bump the following libraries:`,
-                ...diff.changes.map((c) => `- ${c.libName}: ${formatVersion(c.old)} -> ${formatVersion(c.new)}`),
-            ].join('\n');
-        };
         this.isLibDiffering = (left, right) => left.revision !== right.revision || left.version !== right.version;
         this.isLibNewer = (left, right) => left.revision > right.revision || left.version > right.version;
         this.ownsLibs = () => fs.existsSync('./lib') && fs.existsSync(`./lib/charms/${this.charmNamePy}`);
@@ -22550,12 +22539,48 @@ class ReleaseLibrariesAction {
             labels: false,
         };
         process.chdir(this.charmPath);
-        this.context = github_1.context;
-        this.github = (0, github_1.getOctokit)(this.tokens.github);
         this.charmcraft = new services_1.Charmcraft(this.tokens.charmhub);
         this.charmName = this.charmcraft.metadata().name;
         this.charmNamePy = this.charmName.split('-').join('_'); // replace all
         this.snap = new services_1.Snap();
+    }
+    run() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                if (!this.ownsLibs()) {
+                    (0, core_1.warning)(`Charm ${this.charmName} has no own libs. Skipping action.`);
+                    return;
+                }
+                (0, core_1.debug)('installing charmcraft...');
+                yield this.snap.install('charmcraft', this.channel);
+                const status = yield this.getLibStatus();
+                if (status.errors && status.errors.length > 0) {
+                    (0, core_1.info)(`Errors found during lib comparison.`);
+                    if (this.outcomes.fail) {
+                        (0, core_1.setFailed)('No changes committed. Please check the logs.');
+                        return;
+                    }
+                }
+                if (!status.changes.length) {
+                    (0, core_1.info)(`Nothing to update. Exiting...`);
+                    return;
+                }
+                (0, core_1.info)(`Publishing changes:\n${JSON.stringify(status.changes)}`);
+                const failures = yield this.publishLibs(status);
+                if (failures.length) {
+                    (0, core_1.setFailed)('Failed to publish some libs:\n\n' +
+                        `${failures.join('\n')}\n\n` +
+                        'See the logs for more info.');
+                    return;
+                }
+                (0, core_1.info)('Successfully published libraries');
+            }
+            catch (e) {
+                (0, core_1.setFailed)(e.message);
+                (0, core_1.error)(e.stack);
+            }
+            (0, core_1.debug)('Execution completed.');
+        });
     }
     parseCharmLibFile(data, versionInt, version, libName) {
         const libapiStr = data.match(/LIBAPI = (\d+)/i);
@@ -22576,46 +22601,6 @@ class ReleaseLibrariesAction {
             version: LIBAPI,
             revision: LIBPATCH,
         };
-    }
-    run() {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                if (!this.ownsLibs()) {
-                    (0, core_1.warning)(`Charm ${this.charmName} has no own libs. Skipping action.`);
-                    return;
-                }
-                (0, core_1.debug)('installing charmcraft...');
-                yield this.snap.install('charmcraft', this.channel);
-                const status = yield this.getLibStatus();
-                if (status.errors && status.errors.length && this.outcomes.fail) {
-                    (0, core_1.setFailed)('No changes committed. Please check the logs.');
-                    return;
-                }
-                const statusMsg = status.errors
-                    ? 'OK'
-                    : 'NOT OK (errors found: see logs)';
-                if (!status.changes.length) {
-                    (0, core_1.info)(`Status ${statusMsg}; nothing to update. Exiting...`);
-                    return;
-                }
-                // Add a pr comment that says what's going to be updated.
-                yield this.github.rest.issues.createComment(Object.assign(Object.assign({}, this.identifiers), { body: this.getCommentBody(status) }));
-                (0, core_1.info)(`status ${statusMsg}; publishing changes:\n${JSON.stringify(status.changes)}`);
-                const failures = yield this.publishLibs(status);
-                if (failures.length) {
-                    (0, core_1.setFailed)('Failed to publish some libs:\n\n' +
-                        `${failures.join('\n')}\n\n` +
-                        'See the logs for more info.');
-                    return;
-                }
-                (0, core_1.info)('All good. Changes are live.');
-            }
-            catch (e) {
-                (0, core_1.setFailed)(e.message);
-                (0, core_1.error)(e.stack);
-            }
-            (0, core_1.info)('Execution completed.');
-        });
     }
     publishLibs(status) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -22713,16 +22698,6 @@ class ReleaseLibrariesAction {
             });
             return { errors, changes };
         });
-    }
-    get identifiers() {
-        const { owner, repo } = this.context.repo;
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        const issue_number = this.context.issue.number;
-        return {
-            owner,
-            repo,
-            issue_number,
-        };
     }
 }
 exports.ReleaseLibrariesAction = ReleaseLibrariesAction;

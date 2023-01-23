@@ -6,21 +6,17 @@ import {
   setFailed,
   warning,
 } from '@actions/core';
-import { context, getOctokit } from '@actions/github';
-import { Context } from '@actions/github/lib/context';
-import { GitHub } from '@actions/github/lib/utils';
+
 import * as fs from 'fs';
 
 import { Charmcraft, LibInfo, Snap, VersionInfo } from '../../services';
-import { Change, LibrariesDiff, Outcomes, Tokens, Version } from '../../types';
+import { Change, LibrariesDiff, Outcomes, Tokens } from '../../types';
 
 export class ReleaseLibrariesAction {
   private tokens: Tokens;
   private charmcraft: Charmcraft;
   private channel: string;
-  private github: InstanceType<typeof GitHub>;
   private outcomes: Outcomes;
-  private context: Context;
   private charmPath: string;
   private charmName: string;
   private charmNamePy: string;
@@ -45,15 +41,58 @@ export class ReleaseLibrariesAction {
 
     process.chdir(this.charmPath!);
 
-    this.context = context;
-    this.github = getOctokit(this.tokens.github);
     this.charmcraft = new Charmcraft(this.tokens.charmhub);
     this.charmName = this.charmcraft.metadata().name;
     this.charmNamePy = this.charmName.split('-').join('_'); // replace all
     this.snap = new Snap();
   }
 
-  parseCharmLibFile(
+  async run() {
+    try {
+      if (!this.ownsLibs()) {
+        warning(`Charm ${this.charmName} has no own libs. Skipping action.`);
+        return;
+      }
+
+      debug('installing charmcraft...');
+      await this.snap.install('charmcraft', this.channel);
+
+      const status = await this.getLibStatus();
+
+      if (status.errors && status.errors.length > 0) {
+        info(`Errors found during lib comparison.`);
+        if (this.outcomes.fail) {
+          setFailed('No changes committed. Please check the logs.');
+          return;
+        }
+      }
+
+      if (!status.changes.length) {
+        info(`Nothing to update. Exiting...`);
+        return;
+      }
+
+      info(`Publishing changes:\n${JSON.stringify(status.changes)}`);
+
+      const failures = await this.publishLibs(status);
+
+      if (failures.length) {
+        setFailed(
+          'Failed to publish some libs:\n\n' +
+            `${failures.join('\n')}\n\n` +
+            'See the logs for more info.'
+        );
+        return;
+      }
+      info('Successfully published libraries');
+    } catch (e: any) {
+      setFailed(e.message);
+      error(e.stack);
+    }
+    debug('Execution completed.');
+  }
+
+  private parseCharmLibFile(
     data: string,
     versionInt: Number,
     version: string,
@@ -85,62 +124,6 @@ export class ReleaseLibrariesAction {
     };
   }
 
-  async run() {
-    try {
-      if (!this.ownsLibs()) {
-        warning(`Charm ${this.charmName} has no own libs. Skipping action.`);
-        return;
-      }
-
-      debug('installing charmcraft...');
-      await this.snap.install('charmcraft', this.channel);
-
-      const status = await this.getLibStatus();
-
-      if (status.errors && status.errors.length && this.outcomes.fail) {
-        setFailed('No changes committed. Please check the logs.');
-        return;
-      }
-
-      const statusMsg = status.errors
-        ? 'OK'
-        : 'NOT OK (errors found: see logs)';
-
-      if (!status.changes.length) {
-        info(`Status ${statusMsg}; nothing to update. Exiting...`);
-        return;
-      }
-
-      // Add a pr comment that says what's going to be updated.
-      await this.github.rest.issues.createComment({
-        ...this.identifiers,
-        body: this.getCommentBody(status),
-      });
-
-      info(
-        `status ${statusMsg}; publishing changes:\n${JSON.stringify(
-          status.changes
-        )}`
-      );
-
-      const failures = await this.publishLibs(status);
-
-      if (failures.length) {
-        setFailed(
-          'Failed to publish some libs:\n\n' +
-            `${failures.join('\n')}\n\n` +
-            'See the logs for more info.'
-        );
-        return;
-      }
-      info('All good. Changes are live.');
-    } catch (e: any) {
-      setFailed(e.message);
-      error(e.stack);
-    }
-    info('Execution completed.');
-  }
-
   private async publishLibs(status: LibrariesDiff) {
     const failures: string[] = [];
 
@@ -160,7 +143,7 @@ export class ReleaseLibrariesAction {
     return failures;
   }
 
-  getVersionInfo(
+  private getVersionInfo(
     libFile: string,
     versionInt: Number,
     version: string,
@@ -210,7 +193,7 @@ export class ReleaseLibrariesAction {
     return libsFound;
   }
 
-  async getLibStatus(): Promise<LibrariesDiff> {
+  private async getLibStatus(): Promise<LibrariesDiff> {
     const errors: string[] = [];
     const changes: Change[] = [];
 
@@ -264,37 +247,6 @@ export class ReleaseLibrariesAction {
       }
     });
     return { errors, changes };
-  }
-
-  private getCommentBody = (diff: LibrariesDiff) => {
-    debug('generating comment body...');
-    const formatVersion = (v?: Version) =>
-      v ? `${v.major}.${v.minor}` : '(new)';
-
-    if (diff.errors && diff.errors.length > 0)
-      return ['Errors present, nothing will be updated!', ...diff.errors].join(
-        '\n'
-      );
-
-    return [
-      `Preparing to publish or bump the following libraries:`,
-      ...diff.changes.map(
-        (c: Change) =>
-          `- ${c.libName}: ${formatVersion(c.old)} -> ${formatVersion(c.new)}`
-      ),
-    ].join('\n');
-  };
-
-  private get identifiers() {
-    const { owner, repo } = this.context.repo;
-
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    const issue_number = this.context.issue.number;
-    return {
-      owner,
-      repo,
-      issue_number,
-    };
   }
 
   private isLibDiffering = (left: LibInfo, right: LibInfo): boolean =>
