@@ -43,3 +43,19 @@ export interface ResourceInfo {
   resourceName: string;
   resourceRev: string;
 }
+
+export interface Version {
+  major: number;
+  minor: number;
+}
+
+export interface Change {
+  libName: string;
+  old?: Version;
+  new: Version;
+}
+
+export interface LibrariesDiff {
+  errors: string[];
+  changes: Change[];
+}

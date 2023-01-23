@@ -390,30 +390,14 @@ class Charmcraft {
   }
 
   async listLib(charm: string): Promise<LibInfo[]> {
-    const args = ['list-lib', charm];
-    // example output:
-
-    // Library name      API    Patch
-    // ingress           0      7
-    // ingress_per_unit  0      10
+    const args = ['list-lib', charm, '--format=json'];
     const getLibs = await getExecOutput('charmcraft', args, this.execOptions);
 
-    // ignore table headers
-    const libsRaw = getLibs.stdout.split('\n').slice(1);
-
-    const libs = libsRaw.map((line: string) => {
-      const values: string[] = line.trim().split(' ');
-      // purge excess whitespace
-      const [libName, libVersion, libRevision] = values.map((value: string) =>
-        value.trim()
-      );
-      return {
-        libName,
-        version: parseInt(libVersion, 10),
-        revision: parseInt(libRevision, 10),
-      } as LibInfo;
-    });
-    return libs;
+    return JSON.parse(getLibs.stdout).map((l: any) => ({
+      libName: l.library_name,
+      version: l.api,
+      revision: l.patch,
+    }));
   }
 
   async publishLib(charm: string, majorVersion: string, libName: string) {

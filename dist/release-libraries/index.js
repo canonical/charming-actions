@@ -22522,23 +22522,19 @@ const fs = __importStar(__nccwpck_require__(7147));
 const services_1 = __nccwpck_require__(720);
 class ReleaseLibrariesAction {
     constructor() {
-        this.aboutToUpdateCommentBody = (diff) => {
-            let msg = `Preparing to publish or bump the following libraries:`;
-            diff.changes.forEach((change) => {
-                const fmtV = (v) => {
-                    if (v == null) {
-                        return `(new)`; // no previous version: lib is new.
-                    }
-                    return `${v.major}.${v.minor}`;
-                };
-                msg = msg.concat(`\n ${change.libName} \t 
-      (${fmtV(change.old)} + '-->' +${fmtV(change.new)} )`);
-            });
-            if (diff.errors) {
-                msg = msg.concat(`\n\nERRORS PRESENT: ${diff.errors}\n: nothing will be updated.`);
-            }
-            return msg;
+        this.getCommentBody = (diff) => {
+            (0, core_1.debug)('generating comment body...');
+            const formatVersion = (v) => v ? `${v.major}.${v.minor}` : '(new)';
+            if (diff.errors && diff.errors.length > 0)
+                return ['Errors present, nothing will be updated!', ...diff.errors].join('\n');
+            return [
+                `Preparing to publish or bump the following libraries:`,
+                ...diff.changes.map((c) => `- ${c.libName}: ${formatVersion(c.old)} -> ${formatVersion(c.new)}`),
+            ].join('\n');
         };
+        this.isLibDiffering = (left, right) => left.revision !== right.revision || left.version !== right.version;
+        this.isLibNewer = (left, right) => left.revision > right.revision || left.version > right.version;
+        this.ownsLibs = () => fs.existsSync('./lib') && fs.existsSync(`./lib/charms/${this.charmNamePy}`);
         this.tokens = {
             github: (0, core_1.getInput)('github-token'),
             charmhub: (0, core_1.getInput)('credentials'),
@@ -22551,7 +22547,9 @@ class ReleaseLibrariesAction {
         this.outcomes = {
             fail: (0, core_1.getInput)('fail-build').toLowerCase() === 'true',
             comment: (0, core_1.getInput)('comment-on-pr').toLowerCase() === 'true',
+            labels: false,
         };
+        process.chdir(this.charmPath);
         this.context = github_1.context;
         this.github = (0, github_1.getOctokit)(this.tokens.github);
         this.charmcraft = new services_1.Charmcraft(this.tokens.charmhub);
@@ -22579,6 +22577,63 @@ class ReleaseLibrariesAction {
             revision: LIBPATCH,
         };
     }
+    run() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                if (!this.ownsLibs()) {
+                    (0, core_1.warning)(`Charm ${this.charmName} has no own libs. Skipping action.`);
+                    return;
+                }
+                (0, core_1.debug)('installing charmcraft...');
+                yield this.snap.install('charmcraft', this.channel);
+                const status = yield this.getLibStatus();
+                if (status.errors && status.errors.length && this.outcomes.fail) {
+                    (0, core_1.setFailed)('No changes committed. Please check the logs.');
+                    return;
+                }
+                const statusMsg = status.errors
+                    ? 'OK'
+                    : 'NOT OK (errors found: see logs)';
+                if (!status.changes.length) {
+                    (0, core_1.info)(`Status ${statusMsg}; nothing to update. Exiting...`);
+                    return;
+                }
+                // Add a pr comment that says what's going to be updated.
+                yield this.github.rest.issues.createComment(Object.assign(Object.assign({}, this.identifiers), { body: this.getCommentBody(status) }));
+                (0, core_1.info)(`status ${statusMsg}; publishing changes:\n${JSON.stringify(status.changes)}`);
+                const failures = yield this.publishLibs(status);
+                if (failures.length) {
+                    (0, core_1.setFailed)('Failed to publish some libs:\n\n' +
+                        `${failures.join('\n')}\n\n` +
+                        'See the logs for more info.');
+                    return;
+                }
+                (0, core_1.info)('All good. Changes are live.');
+            }
+            catch (e) {
+                (0, core_1.setFailed)(e.message);
+                (0, core_1.error)(e.stack);
+            }
+            (0, core_1.info)('Execution completed.');
+        });
+    }
+    publishLibs(status) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const failures = [];
+            yield Promise.all(status.changes.map((change) => __awaiter(this, void 0, void 0, function* () {
+                const versionID = `v${change.new.major}`;
+                (0, core_1.info)(`publishing ${change.libName}`);
+                this.charmcraft
+                    .publishLib(this.charmNamePy, versionID, change.libName)
+                    .catch((reason) => {
+                    const msg = `publishing ${change.libName} (${change.new.major}.${change.new.major}) failures with reason=${reason}`;
+                    (0, core_1.error)(msg);
+                    failures.push(msg);
+                });
+            })));
+            return failures;
+        });
+    }
     getVersionInfo(libFile, versionInt, version, libName) {
         const data = fs.readFileSync(libFile, 'utf-8');
         return this.parseCharmLibFile(data, versionInt, version, libName);
@@ -22600,9 +22655,7 @@ class ReleaseLibrariesAction {
                             (0, core_1.error)(`lib file could not be parsed: error ${vinfo.name} with msg = ${vinfo.message}`);
                         }
                         else {
-                            // VersionInfo
                             libsFound.push(Object.assign({ libName }, vinfo));
-                            (0, core_1.info)(`lib file could be parsed: VersionInfo=${vinfo}`);
                         }
                     }
                     catch (e) {
@@ -22614,105 +22667,62 @@ class ReleaseLibrariesAction {
             return libsFound;
         });
     }
-    getLibStatus(old) {
+    getLibStatus() {
         return __awaiter(this, void 0, void 0, function* () {
             const errors = [];
             const changes = [];
-            // gather the libs that this charm has at the moment
-            const current = yield this.getCharmLibs();
-            current.forEach((currentLib) => {
-                (0, core_1.info)(`checking status for ${currentLib}`);
-                const oldLib = old.find((value) => value.libName === currentLib.libName);
-                if (oldLib === undefined) {
+            const remoteLibs = yield this.charmcraft.listLib(this.charmName);
+            const localLibs = yield this.getCharmLibs();
+            localLibs.forEach((localLib) => {
+                (0, core_1.info)(`checking status for ${localLib.libName}`);
+                const remoteLib = remoteLibs.find((candidate) => candidate.libName === localLib.libName);
+                (0, core_1.info)(`remote lib: ${JSON.stringify(remoteLib)}`);
+                if (!remoteLib) {
                     changes.push({
-                        libName: currentLib.libName,
-                        old: null,
-                        new: { minor: currentLib.revision, major: currentLib.version },
-                    });
-                }
-                else if (oldLib.revision > currentLib.revision ||
-                    oldLib.version > currentLib.version) {
-                    errors.push(`the local ${currentLib.libName} is at 
-                  ${currentLib.version}.${currentLib.revision}, but 
-                  ${oldLib.version}.${oldLib.revision} is present on 
-                  charmhub.`);
-                }
-                else if (oldLib.revision !== currentLib.revision &&
-                    oldLib.version !== currentLib.version) {
-                    changes.push({
-                        libName: currentLib.libName,
-                        old: {
-                            major: oldLib.version,
-                            minor: oldLib.revision,
+                        libName: localLib.libName,
+                        new: {
+                            minor: localLib.revision,
+                            major: localLib.version,
                         },
-                        new: { minor: currentLib.revision, major: currentLib.version },
                     });
+                    (0, core_1.info)(`${localLib.libName} has no remote counterpart.`);
+                }
+                else if (this.isLibNewer(remoteLib, localLib)) {
+                    errors.push(`the local ${localLib.libName} is at ` +
+                        `${localLib.version}.${localLib.revision}, but ` +
+                        `${remoteLib.version}.${remoteLib.revision} is present on charmhub.`);
+                    (0, core_1.info)(`${localLib.libName} has a lower version or revision than ${remoteLib.libName}`);
+                }
+                else if (this.isLibDiffering(remoteLib, localLib)) {
+                    changes.push({
+                        libName: localLib.libName,
+                        old: {
+                            major: remoteLib.version,
+                            minor: remoteLib.revision,
+                        },
+                        new: {
+                            minor: localLib.revision,
+                            major: localLib.version,
+                        },
+                    });
+                    (0, core_1.info)(`${localLib.libName} will be updated from ${remoteLib.version}.${remoteLib.revision} to ${localLib.version}.${localLib.revision}`);
+                }
+                else {
+                    (0, core_1.info)(`${localLib.libName} and ${remoteLib.libName} are equal`);
                 }
             });
             return { errors, changes };
         });
     }
-    run() {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                process.chdir(this.charmPath);
-                if (!fs.existsSync('./lib')) {
-                    (0, core_1.warning)('No lib folder detected. Skipping action.');
-                    return;
-                }
-                if (!fs.existsSync(`./lib/charms/${this.charmNamePy}`)) {
-                    (0, core_1.warning)(`Charm ${this.charmName} has no libs (not found in ./lib/charms/${this.charmNamePy}, where expected). Skipping action.`);
-                    return;
-                }
-                (0, core_1.info)('installing charmcraft...');
-                yield this.snap.install('charmcraft', this.channel);
-                // these are the most up-to-date libs as charmhub knows them
-                const currentLibs = yield this.charmcraft.listLib(this.charmName);
-                const status = yield this.getLibStatus(currentLibs);
-                // Add a pr comment that says what's going to be updated.
-                yield this.github.rest.issues.createComment({
-                    issue_number: this.context.issue.number,
-                    owner: this.context.repo.owner,
-                    repo: this.context.repo.repo,
-                    body: this.aboutToUpdateCommentBody(status),
-                });
-                if (!!status.errors && this.outcomes.fail) {
-                    (0, core_1.setFailed)('Something went wrong. Please check the logs. Aborting: no changes committed.');
-                    return;
-                }
-                const statusMsg = status.errors
-                    ? 'OK'
-                    : 'NOT OK (errors found: see logs)';
-                if (!status.changes.length) {
-                    (0, core_1.info)(`Status ${statusMsg}; nothing to update. Exiting...`);
-                    return;
-                }
-                (0, core_1.info)(`status ${statusMsg}; publishing changes: ${status.changes}...`);
-                const failures = [];
-                // publish libs in parallel
-                yield Promise.all(status.changes.map((change) => __awaiter(this, void 0, void 0, function* () {
-                    const versionID = `v${change.new.major}`;
-                    (0, core_1.info)(`publishing ${change.libName}`);
-                    this.charmcraft
-                        .publishLib(this.charmNamePy, versionID, change.libName)
-                        .catch((reason) => {
-                        const msg = `publishing ${change.libName} (${change.new.major}.${change.new.major}) failures with reason=${reason}`;
-                        (0, core_1.error)(msg);
-                        failures.push(msg);
-                    });
-                })));
-                if (failures.length) {
-                    (0, core_1.setFailed)(`Failed to publish some libs: ${failures}. See the logs for more info.`);
-                }
-                else {
-                    (0, core_1.info)('All good. Changes are live.');
-                }
-            }
-            catch (e) {
-                (0, core_1.setFailed)(e.message);
-                (0, core_1.error)(e.stack);
-            }
-        });
+    get identifiers() {
+        const { owner, repo } = this.context.repo;
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        const issue_number = this.context.issue.number;
+        return {
+            owner,
+            repo,
+            issue_number,
+        };
     }
 }
 exports.ReleaseLibrariesAction = ReleaseLibrariesAction;
@@ -22780,12 +22790,28 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Artifact = void 0;
 const artifact = __importStar(__nccwpck_require__(2605));
+const exec_1 = __nccwpck_require__(1514);
 const fs = __importStar(__nccwpck_require__(7147));
 const glob = __importStar(__nccwpck_require__(8090));
 class Artifact {
     uploadLogs() {
         return __awaiter(this, void 0, void 0, function* () {
             const basePath = '/home/runner/snap/charmcraft/common/cache/charmcraft/log';
+            const sudoPath = '/root/snap/charmcraft/common/cache/charmcraft/log';
+            // We're running some charmcraft commands as sudo as others as a
+            // regular user - we want to capture both.
+            // First check if the path created by sudo invocations of charmcraft
+            // exists.
+            const dirExistsExitCode = yield (0, exec_1.exec)('sudo', ['test', '-d', sudoPath], {
+                ignoreReturnCode: true,
+            });
+            if (dirExistsExitCode === 0) {
+                // Make sure the directory we're copying to exists as well.
+                if (!fs.existsSync(basePath)) {
+                    yield (0, exec_1.exec)('mkdir', ['-p', basePath]);
+                }
+                yield (0, exec_1.exec)('sudo', ['cp', '-r', `${sudoPath}/.`, basePath]);
+            }
             if (!fs.existsSync(basePath)) {
                 return 'No charmcraft logs generated, skipping artifact upload.';
             }
@@ -22942,6 +22968,7 @@ const exec_1 = __nccwpck_require__(1514);
 const glob = __importStar(__nccwpck_require__(8090));
 const fs = __importStar(__nccwpck_require__(7147));
 const yaml = __importStar(__nccwpck_require__(1917));
+const docker_1 = __nccwpck_require__(7585);
 /* eslint-disable camelcase */
 class Charmcraft {
     constructor(token) {
@@ -22955,7 +22982,7 @@ class Charmcraft {
         return __awaiter(this, void 0, void 0, function* () {
             let resourceInfo = 'resources:\n';
             if (!this.uploadImage) {
-                const msg = `No resources where uploaded as part of this build.\n` +
+                const msg = `No resources were uploaded as part of this build.\n` +
                     `If you wish to upload the OCI image, set 'upload-image' to 'true'`;
                 core.warning(msg);
             }
@@ -23010,13 +23037,14 @@ class Charmcraft {
             if (pullExitCode !== 0) {
                 throw new Error('Could not pull the docker image.');
             }
+            const resourceDigest = yield (0, docker_1.getImageDigest)(resource_image);
             const args = [
                 'upload-resource',
                 '--quiet',
                 name,
                 resource_name,
                 '--image',
-                resource_image,
+                resourceDigest,
             ];
             yield (0, exec_1.exec)('charmcraft', args, this.execOptions);
         });
@@ -23074,14 +23102,15 @@ class Charmcraft {
             const paths = yield globber.glob();
             const args = [
                 'upload',
-                '--quiet',
+                '--format',
+                'json',
                 '--release',
                 channel,
                 paths[0],
                 ...flags,
             ];
             const result = yield (0, exec_1.getExecOutput)('charmcraft', args, this.execOptions);
-            const newRevision = result.stdout.split(' ')[1];
+            const newRevision = JSON.parse(result.stdout).revision;
             return newRevision;
         });
     }
@@ -23104,6 +23133,13 @@ class Charmcraft {
         return __awaiter(this, void 0, void 0, function* () {
             const result = yield (0, exec_1.getExecOutput)('charmcraft', ['status', charm], this.execOptions);
             return result.stdout;
+        });
+    }
+    statusJson(charm) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const result = yield (0, exec_1.getExecOutput)('charmcraft', ['status', charm, '--format', 'json'], this.execOptions);
+            const parsedObj = JSON.parse(result.stdout);
+            return parsedObj;
         });
     }
     getRevisionInfoFromChannel(charm, track, channel) {
@@ -23150,6 +23186,44 @@ class Charmcraft {
             throw new Error(`No track with name ${track}`);
         });
     }
+    getRevisionInfoFromChannelJson(charm, targetTrack, targetChannel, targetBase) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const acceptedChannels = ['stable', 'candidate', 'beta', 'edge'];
+            if (!acceptedChannels.includes(targetChannel)) {
+                throw new Error(`Provided channel ${targetChannel} is not supported. This actions currently only works with one of the following default channels: edge, beta, candidate, stable`);
+            }
+            // Get status of this charm as a structured object
+            const charmcraftStatus = yield this.statusJson(charm);
+            const trackIndex = charmcraftStatus.findIndex((track) => track.track === targetTrack);
+            if (trackIndex === -1) {
+                throw new Error(`No track with name ${targetTrack}`);
+            }
+            const mappingIndex = charmcraftStatus[trackIndex].mappings.findIndex((channel) => channel.base &&
+                channel.base.name === targetBase.name &&
+                channel.base.channel === targetBase.channel &&
+                channel.base.architecture === targetBase.architecture);
+            if (mappingIndex === -1) {
+                throw new Error(`No channel with base name ${targetBase.name}, base channel ${targetBase.channel} and base architecture ${targetBase.architecture}`);
+            }
+            const releaseIndex = charmcraftStatus[trackIndex].mappings[mappingIndex].releases.findIndex((release) => release.channel === `${targetTrack}/${targetChannel}`);
+            if (releaseIndex === -1) {
+                throw new Error(`Cannot find release with channel name ${targetChannel}, with base`);
+            }
+            const releaseObj = charmcraftStatus[trackIndex].mappings[mappingIndex].releases[releaseIndex];
+            if (releaseObj.status !== 'open') {
+                throw new Error('Channel is not open. Make sure there was a release made to this channel previously.');
+            }
+            const { revision, resources } = releaseObj;
+            const resourceInfoArray = [];
+            for (let i = 0; i < resources.length; i += 1) {
+                resourceInfoArray.push({
+                    resourceName: resources[i].name,
+                    resourceRev: resources[i].revision.toString(),
+                });
+            }
+            return { charmRev: revision.toString(), resources: resourceInfoArray };
+        });
+    }
     release(charm, charmRevision, destinationChannel, resourceInfo) {
         return __awaiter(this, void 0, void 0, function* () {
             const resourceArgs = [];
@@ -23171,25 +23245,13 @@ class Charmcraft {
     }
     listLib(charm) {
         return __awaiter(this, void 0, void 0, function* () {
-            const args = ['list-lib', charm];
-            // example output:
-            // Library name      API    Patch
-            // ingress           0      7
-            // ingress_per_unit  0      10
+            const args = ['list-lib', charm, '--format=json'];
             const getLibs = yield (0, exec_1.getExecOutput)('charmcraft', args, this.execOptions);
-            // ignore table headers
-            const libsRaw = getLibs.stdout.split('\n').slice(1);
-            const libs = libsRaw.map((line) => {
-                const values = line.trim().split(' ');
-                // purge excess whitespace
-                const [libName, libVersion, libRevision] = values.map((value) => value.trim());
-                return {
-                    libName,
-                    version: parseInt(libVersion, 10),
-                    revision: parseInt(libRevision, 10),
-                };
-            });
-            return libs;
+            return JSON.parse(getLibs.stdout).map((l) => ({
+                libName: l.library_name,
+                version: l.api,
+                revision: l.patch,
+            }));
         });
     }
     publishLib(charm, majorVersion, libName) {
@@ -23228,6 +23290,73 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 __exportStar(__nccwpck_require__(6432), exports);
+
+
+/***/ }),
+
+/***/ 9999:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getImageDigest = void 0;
+const exec_1 = __nccwpck_require__(1514);
+function getImageDigest(uri) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // String docker.io/ from any image name, as they get removed in the `docker images` list
+        const imageName = uri.replace(/^docker.io\//, '');
+        const result = yield (0, exec_1.getExecOutput)('docker', [
+            'image',
+            'ls',
+            '-q',
+            imageName,
+        ]);
+        const resourceDigests = result.stdout.trim().split('\n');
+        if (resourceDigests.length < 1) {
+            throw new Error(`No digest found for pulled resource_image '${uri}'`);
+        }
+        else if (resourceDigests.length > 1) {
+            throw new Error(`Found too many digests for pulled resource_image '${uri}'.  Expected single output, got multiline output '${result.stdout}'.`);
+        }
+        const resourceDigest = resourceDigests[0];
+        if (resourceDigest.length < 1) {
+            throw new Error(`No digest found for pulled resource_image '${uri}'`);
+        }
+        return resourceDigest;
+    });
+}
+exports.getImageDigest = getImageDigest;
+
+
+/***/ }),
+
+/***/ 7585:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__nccwpck_require__(9999), exports);
 
 
 /***/ }),
@@ -23442,12 +23571,13 @@ class Tagger {
         });
     }
     _build(owner, repo, hash, revision, channel, resources, tagPrefix) {
-        const name = `${tagPrefix ? `${tagPrefix}-` : ''}rev${revision}`;
+        const suffix = revision || (0, dayjs_1.default)().utc().format('YYYYMMDDHHmmss');
+        const name = `${tagPrefix ? `${tagPrefix}-` : ''}rev${suffix}`;
         const message = `${resources} Released to '${channel}' at ${this.get_date_text()}`;
         return {
             owner,
             repo,
-            name: `Revision ${revision}`,
+            name: `Revision ${suffix}`,
             tag_name: name,
             body: message,
             draft: false,
