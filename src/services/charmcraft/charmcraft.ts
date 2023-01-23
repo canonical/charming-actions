@@ -1,4 +1,5 @@
 import * as core from '@actions/core';
+import { debug } from '@actions/core';
 import { exec, ExecOptions, getExecOutput } from '@actions/exec';
 import * as glob from '@actions/glob';
 import * as fs from 'fs';
@@ -387,12 +388,60 @@ class Charmcraft {
     ];
     await exec('charmcraft', args, this.execOptions);
   }
+
+  async listLib(charm: string): Promise<LibInfo[]> {
+    const args = ['list-lib', charm];
+    // example output:
+
+    // Library name      API    Patch
+    // ingress           0      7
+    // ingress_per_unit  0      10
+    const getLibs = await getExecOutput('charmcraft', args, this.execOptions);
+
+    // ignore table headers
+    const libsRaw = getLibs.stdout.split('\n').slice(1);
+
+    const libs = libsRaw.map((line: string) => {
+      const values: string[] = line.trim().split(' ');
+      // purge excess whitespace
+      const [libName, libVersion, libRevision] = values.map((value: string) =>
+        value.trim()
+      );
+      return {
+        libName,
+        version: parseInt(libVersion, 10),
+        revision: parseInt(libRevision, 10),
+      } as LibInfo;
+    });
+    return libs;
+  }
+
+  async publishLib(charm: string, majorVersion: string, libName: string) {
+    const args = ['publish-lib', `charms.${charm}.${majorVersion}.${libName}`];
+    debug(`about to publish lib with ${args}`);
+    await exec('charmcraft', args, this.execOptions).catch((reason: any) => {
+      const msg: string = `charmcraft ${args} ${this.execOptions} failed with ${reason}`;
+      debug(msg);
+      core.setFailed(msg);
+      return false;
+    });
+    return true;
+  }
 }
 
 export interface LibStatus {
   ok: boolean;
   out: string;
   err: string;
+}
+
+export interface VersionInfo {
+  version: number;
+  revision: number;
+}
+
+export interface LibInfo extends VersionInfo {
+  libName: string;
 }
 
 export { Charmcraft };

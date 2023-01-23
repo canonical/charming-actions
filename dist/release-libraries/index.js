@@ -22481,7 +22481,7 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 797:
+/***/ 8778:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -22515,66 +22515,212 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ReleaseCharmAction = void 0;
-const core = __importStar(__nccwpck_require__(2186));
+exports.ReleaseLibrariesAction = void 0;
+const core_1 = __nccwpck_require__(2186);
+const github_1 = __nccwpck_require__(5438);
+const fs = __importStar(__nccwpck_require__(7147));
 const services_1 = __nccwpck_require__(720);
-class ReleaseCharmAction {
+class ReleaseLibrariesAction {
     constructor() {
-        this.destinationChannel = core.getInput('destination-channel');
-        this.originChannel = core.getInput('origin-channel');
-        this.baseName = core.getInput('base-name');
-        this.baseChannel = core.getInput('base-channel');
-        this.baseArchitecture = core.getInput('base-architecture');
-        this.charmcraftChannel = core.getInput('charmcraft-channel');
-        this.token = core.getInput('github-token');
-        this.tagPrefix = core.getInput('tag-prefix');
-        this.charmPath = core.getInput('charm-path');
-        if (!this.token) {
+        this.aboutToUpdateCommentBody = (diff) => {
+            let msg = `Preparing to publish or bump the following libraries:`;
+            diff.changes.forEach((change) => {
+                const fmtV = (v) => {
+                    if (v == null) {
+                        return `(new)`; // no previous version: lib is new.
+                    }
+                    return `${v.major}.${v.minor}`;
+                };
+                msg = msg.concat(`\n ${change.libName} \t 
+      (${fmtV(change.old)} + '-->' +${fmtV(change.new)} )`);
+            });
+            if (diff.errors) {
+                msg = msg.concat(`\n\nERRORS PRESENT: ${diff.errors}\n: nothing will be updated.`);
+            }
+            return msg;
+        };
+        this.tokens = {
+            github: (0, core_1.getInput)('github-token'),
+            charmhub: (0, core_1.getInput)('credentials'),
+        };
+        if (!this.tokens.github) {
             throw new Error(`Input 'github-token' is missing`);
         }
-        this.artifacts = new services_1.Artifact();
+        this.charmPath = (0, core_1.getInput)('charm-path');
+        this.channel = (0, core_1.getInput)('charmcraft-channel');
+        this.outcomes = {
+            fail: (0, core_1.getInput)('fail-build').toLowerCase() === 'true',
+            comment: (0, core_1.getInput)('comment-on-pr').toLowerCase() === 'true',
+        };
+        this.context = github_1.context;
+        this.github = (0, github_1.getOctokit)(this.tokens.github);
+        this.charmcraft = new services_1.Charmcraft(this.tokens.charmhub);
+        this.charmName = this.charmcraft.metadata().name;
+        this.charmNamePy = this.charmName.split('-').join('_'); // replace all
         this.snap = new services_1.Snap();
-        this.tagger = new services_1.Tagger(this.token);
-        this.charmcraft = new services_1.Charmcraft();
+    }
+    parseCharmLibFile(data, versionInt, version, libName) {
+        const libapiStr = data.match(/LIBAPI = (\d+)/i);
+        if (!libapiStr) {
+            return new Error(`no LIBAPI found in ${libName}`);
+        }
+        const LIBAPI = parseInt(libapiStr[1], 10);
+        if (LIBAPI !== versionInt) {
+            return new Error(`lib ${libName} declares LIBAPI=${LIBAPI} but is 
+    under /${version}/. No good?`);
+        }
+        const libpatchStr = data.match(/LIBPATCH = (\d+)/i);
+        if (!libpatchStr) {
+            return new Error(`no LIBPATCH found in ${libName}`);
+        }
+        const LIBPATCH = parseInt(libpatchStr[1], 10);
+        return {
+            version: LIBAPI,
+            revision: LIBPATCH,
+        };
+    }
+    getVersionInfo(libFile, versionInt, version, libName) {
+        const data = fs.readFileSync(libFile, 'utf-8');
+        return this.parseCharmLibFile(data, versionInt, version, libName);
+    }
+    getCharmLibs() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const libsFound = [];
+            const versions = fs.readdirSync(`./lib/charms/${this.charmNamePy}/`);
+            versions.forEach((version) => {
+                const versionInt = parseInt(version.slice(1), 10); // 'v1' --> 1
+                const libs = fs.readdirSync(`./lib/charms/${this.charmNamePy}/${version}/`);
+                libs.forEach((libNamePy) => {
+                    const libName = libNamePy.slice(0, -3);
+                    const libFile = `./lib/charms/${this.charmNamePy}/${version}/${libNamePy}`;
+                    (0, core_1.info)(`found lib file: ${libFile}. Parsing...`);
+                    try {
+                        const vinfo = this.getVersionInfo(libFile, versionInt, version, libName);
+                        if (vinfo instanceof Error) {
+                            (0, core_1.error)(`lib file could not be parsed: error ${vinfo.name} with msg = ${vinfo.message}`);
+                        }
+                        else {
+                            // VersionInfo
+                            libsFound.push(Object.assign({ libName }, vinfo));
+                            (0, core_1.info)(`lib file could be parsed: VersionInfo=${vinfo}`);
+                        }
+                    }
+                    catch (e) {
+                        (0, core_1.setFailed)(e.message);
+                        (0, core_1.error)(e.stack);
+                    }
+                });
+            });
+            return libsFound;
+        });
+    }
+    getLibStatus(old) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const errors = [];
+            const changes = [];
+            // gather the libs that this charm has at the moment
+            const current = yield this.getCharmLibs();
+            current.forEach((currentLib) => {
+                (0, core_1.info)(`checking status for ${currentLib}`);
+                const oldLib = old.find((value) => value.libName === currentLib.libName);
+                if (oldLib === undefined) {
+                    changes.push({
+                        libName: currentLib.libName,
+                        old: null,
+                        new: { minor: currentLib.revision, major: currentLib.version },
+                    });
+                }
+                else if (oldLib.revision > currentLib.revision ||
+                    oldLib.version > currentLib.version) {
+                    errors.push(`the local ${currentLib.libName} is at 
+                  ${currentLib.version}.${currentLib.revision}, but 
+                  ${oldLib.version}.${oldLib.revision} is present on 
+                  charmhub.`);
+                }
+                else if (oldLib.revision !== currentLib.revision &&
+                    oldLib.version !== currentLib.version) {
+                    changes.push({
+                        libName: currentLib.libName,
+                        old: {
+                            major: oldLib.version,
+                            minor: oldLib.revision,
+                        },
+                        new: { minor: currentLib.revision, major: currentLib.version },
+                    });
+                }
+            });
+            return { errors, changes };
+        });
     }
     run() {
-        var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                yield this.snap.install('charmcraft', this.charmcraftChannel);
                 process.chdir(this.charmPath);
-                const { name: charmName } = this.charmcraft.metadata();
-                const [originTrack, originChannel] = this.originChannel.split('/');
-                const base = {
-                    name: this.baseName,
-                    channel: this.baseChannel,
-                    architecture: this.baseArchitecture,
-                };
-                const { charmRev, resources } = yield this.charmcraft.getRevisionInfoFromChannelJson(charmName, originTrack, originChannel, base);
-                yield this.charmcraft.release(charmName, charmRev, this.destinationChannel, resources);
-                const tagName = `${this.tagPrefix ? `${this.tagPrefix}-` : ''}rev${charmRev}`;
-                const release = yield this.tagger.getReleaseByTag(tagName);
-                const newReleaseString = `Released to '${this.destinationChannel}' at ${this.tagger.get_date_text()}\n`;
-                // add release string between last release statement and generated release note (What's changed section)
-                const generateNotesIndex = (_a = release.body) === null || _a === void 0 ? void 0 : _a.indexOf("## What's Changed");
-                const newReleaseBody = (_b = release.body) === null || _b === void 0 ? void 0 : _b.slice(0, generateNotesIndex).concat(newReleaseString, release.body.slice(generateNotesIndex));
-                yield this.tagger.updateRelease(release.id, newReleaseBody);
+                if (!fs.existsSync('./lib')) {
+                    (0, core_1.warning)('No lib folder detected. Skipping action.');
+                    return;
+                }
+                if (!fs.existsSync(`./lib/charms/${this.charmNamePy}`)) {
+                    (0, core_1.warning)(`Charm ${this.charmName} has no libs (not found in ./lib/charms/${this.charmNamePy}, where expected). Skipping action.`);
+                    return;
+                }
+                (0, core_1.info)('installing charmcraft...');
+                yield this.snap.install('charmcraft', this.channel);
+                // these are the most up-to-date libs as charmhub knows them
+                const currentLibs = yield this.charmcraft.listLib(this.charmName);
+                const status = yield this.getLibStatus(currentLibs);
+                // Add a pr comment that says what's going to be updated.
+                yield this.github.rest.issues.createComment({
+                    issue_number: this.context.issue.number,
+                    owner: this.context.repo.owner,
+                    repo: this.context.repo.repo,
+                    body: this.aboutToUpdateCommentBody(status),
+                });
+                if (!!status.errors && this.outcomes.fail) {
+                    (0, core_1.setFailed)('Something went wrong. Please check the logs. Aborting: no changes committed.');
+                    return;
+                }
+                const statusMsg = status.errors
+                    ? 'OK'
+                    : 'NOT OK (errors found: see logs)';
+                if (!status.changes.length) {
+                    (0, core_1.info)(`Status ${statusMsg}; nothing to update. Exiting...`);
+                    return;
+                }
+                (0, core_1.info)(`status ${statusMsg}; publishing changes: ${status.changes}...`);
+                const failures = [];
+                // publish libs in parallel
+                yield Promise.all(status.changes.map((change) => __awaiter(this, void 0, void 0, function* () {
+                    const versionID = `v${change.new.major}`;
+                    (0, core_1.info)(`publishing ${change.libName}`);
+                    this.charmcraft
+                        .publishLib(this.charmNamePy, versionID, change.libName)
+                        .catch((reason) => {
+                        const msg = `publishing ${change.libName} (${change.new.major}.${change.new.major}) failures with reason=${reason}`;
+                        (0, core_1.error)(msg);
+                        failures.push(msg);
+                    });
+                })));
+                if (failures.length) {
+                    (0, core_1.setFailed)(`Failed to publish some libs: ${failures}. See the logs for more info.`);
+                }
+                else {
+                    (0, core_1.info)('All good. Changes are live.');
+                }
             }
-            catch (error) {
-                core.setFailed(error.message);
-                core.error(error.stack);
+            catch (e) {
+                (0, core_1.setFailed)(e.message);
+                (0, core_1.error)(e.stack);
             }
-            const result = yield this.artifacts.uploadLogs();
-            core.info(result);
         });
     }
 }
-exports.ReleaseCharmAction = ReleaseCharmAction;
+exports.ReleaseLibrariesAction = ReleaseLibrariesAction;
 
 
 /***/ }),
 
-/***/ 1138:
+/***/ 5252:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -22589,10 +22735,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const release_charm_1 = __nccwpck_require__(797);
+const release_libraries_1 = __nccwpck_require__(8778);
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
 (() => __awaiter(void 0, void 0, void 0, function* () {
-    yield new release_charm_1.ReleaseCharmAction().run();
+    yield new release_libraries_1.ReleaseLibrariesAction().run();
 }))();
 
 
@@ -22634,28 +22780,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Artifact = void 0;
 const artifact = __importStar(__nccwpck_require__(2605));
-const exec_1 = __nccwpck_require__(1514);
 const fs = __importStar(__nccwpck_require__(7147));
 const glob = __importStar(__nccwpck_require__(8090));
 class Artifact {
     uploadLogs() {
         return __awaiter(this, void 0, void 0, function* () {
             const basePath = '/home/runner/snap/charmcraft/common/cache/charmcraft/log';
-            const sudoPath = '/root/snap/charmcraft/common/cache/charmcraft/log';
-            // We're running some charmcraft commands as sudo as others as a
-            // regular user - we want to capture both.
-            // First check if the path created by sudo invocations of charmcraft
-            // exists.
-            const dirExistsExitCode = yield (0, exec_1.exec)('sudo', ['test', '-d', sudoPath], {
-                ignoreReturnCode: true,
-            });
-            if (dirExistsExitCode === 0) {
-                // Make sure the directory we're copying to exists as well.
-                if (!fs.existsSync(basePath)) {
-                    yield (0, exec_1.exec)('mkdir', ['-p', basePath]);
-                }
-                yield (0, exec_1.exec)('sudo', ['cp', '-r', `${sudoPath}/.`, basePath]);
-            }
             if (!fs.existsSync(basePath)) {
                 return 'No charmcraft logs generated, skipping artifact upload.';
             }
@@ -22812,7 +22942,6 @@ const exec_1 = __nccwpck_require__(1514);
 const glob = __importStar(__nccwpck_require__(8090));
 const fs = __importStar(__nccwpck_require__(7147));
 const yaml = __importStar(__nccwpck_require__(1917));
-const docker_1 = __nccwpck_require__(7585);
 /* eslint-disable camelcase */
 class Charmcraft {
     constructor(token) {
@@ -22826,7 +22955,7 @@ class Charmcraft {
         return __awaiter(this, void 0, void 0, function* () {
             let resourceInfo = 'resources:\n';
             if (!this.uploadImage) {
-                const msg = `No resources were uploaded as part of this build.\n` +
+                const msg = `No resources where uploaded as part of this build.\n` +
                     `If you wish to upload the OCI image, set 'upload-image' to 'true'`;
                 core.warning(msg);
             }
@@ -22881,14 +23010,13 @@ class Charmcraft {
             if (pullExitCode !== 0) {
                 throw new Error('Could not pull the docker image.');
             }
-            const resourceDigest = yield (0, docker_1.getImageDigest)(resource_image);
             const args = [
                 'upload-resource',
                 '--quiet',
                 name,
                 resource_name,
                 '--image',
-                resourceDigest,
+                resource_image,
             ];
             yield (0, exec_1.exec)('charmcraft', args, this.execOptions);
         });
@@ -22946,15 +23074,14 @@ class Charmcraft {
             const paths = yield globber.glob();
             const args = [
                 'upload',
-                '--format',
-                'json',
+                '--quiet',
                 '--release',
                 channel,
                 paths[0],
                 ...flags,
             ];
             const result = yield (0, exec_1.getExecOutput)('charmcraft', args, this.execOptions);
-            const newRevision = JSON.parse(result.stdout).revision;
+            const newRevision = result.stdout.split(' ')[1];
             return newRevision;
         });
     }
@@ -22977,13 +23104,6 @@ class Charmcraft {
         return __awaiter(this, void 0, void 0, function* () {
             const result = yield (0, exec_1.getExecOutput)('charmcraft', ['status', charm], this.execOptions);
             return result.stdout;
-        });
-    }
-    statusJson(charm) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const result = yield (0, exec_1.getExecOutput)('charmcraft', ['status', charm, '--format', 'json'], this.execOptions);
-            const parsedObj = JSON.parse(result.stdout);
-            return parsedObj;
         });
     }
     getRevisionInfoFromChannel(charm, track, channel) {
@@ -23028,44 +23148,6 @@ class Charmcraft {
                 }
             }
             throw new Error(`No track with name ${track}`);
-        });
-    }
-    getRevisionInfoFromChannelJson(charm, targetTrack, targetChannel, targetBase) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const acceptedChannels = ['stable', 'candidate', 'beta', 'edge'];
-            if (!acceptedChannels.includes(targetChannel)) {
-                throw new Error(`Provided channel ${targetChannel} is not supported. This actions currently only works with one of the following default channels: edge, beta, candidate, stable`);
-            }
-            // Get status of this charm as a structured object
-            const charmcraftStatus = yield this.statusJson(charm);
-            const trackIndex = charmcraftStatus.findIndex((track) => track.track === targetTrack);
-            if (trackIndex === -1) {
-                throw new Error(`No track with name ${targetTrack}`);
-            }
-            const mappingIndex = charmcraftStatus[trackIndex].mappings.findIndex((channel) => channel.base &&
-                channel.base.name === targetBase.name &&
-                channel.base.channel === targetBase.channel &&
-                channel.base.architecture === targetBase.architecture);
-            if (mappingIndex === -1) {
-                throw new Error(`No channel with base name ${targetBase.name}, base channel ${targetBase.channel} and base architecture ${targetBase.architecture}`);
-            }
-            const releaseIndex = charmcraftStatus[trackIndex].mappings[mappingIndex].releases.findIndex((release) => release.channel === `${targetTrack}/${targetChannel}`);
-            if (releaseIndex === -1) {
-                throw new Error(`Cannot find release with channel name ${targetChannel}, with base`);
-            }
-            const releaseObj = charmcraftStatus[trackIndex].mappings[mappingIndex].releases[releaseIndex];
-            if (releaseObj.status !== 'open') {
-                throw new Error('Channel is not open. Make sure there was a release made to this channel previously.');
-            }
-            const { revision, resources } = releaseObj;
-            const resourceInfoArray = [];
-            for (let i = 0; i < resources.length; i += 1) {
-                resourceInfoArray.push({
-                    resourceName: resources[i].name,
-                    resourceRev: resources[i].revision.toString(),
-                });
-            }
-            return { charmRev: revision.toString(), resources: resourceInfoArray };
         });
     }
     release(charm, charmRevision, destinationChannel, resourceInfo) {
@@ -23146,73 +23228,6 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 __exportStar(__nccwpck_require__(6432), exports);
-
-
-/***/ }),
-
-/***/ 9999:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getImageDigest = void 0;
-const exec_1 = __nccwpck_require__(1514);
-function getImageDigest(uri) {
-    return __awaiter(this, void 0, void 0, function* () {
-        // String docker.io/ from any image name, as they get removed in the `docker images` list
-        const imageName = uri.replace(/^docker.io\//, '');
-        const result = yield (0, exec_1.getExecOutput)('docker', [
-            'image',
-            'ls',
-            '-q',
-            imageName,
-        ]);
-        const resourceDigests = result.stdout.trim().split('\n');
-        if (resourceDigests.length < 1) {
-            throw new Error(`No digest found for pulled resource_image '${uri}'`);
-        }
-        else if (resourceDigests.length > 1) {
-            throw new Error(`Found too many digests for pulled resource_image '${uri}'.  Expected single output, got multiline output '${result.stdout}'.`);
-        }
-        const resourceDigest = resourceDigests[0];
-        if (resourceDigest.length < 1) {
-            throw new Error(`No digest found for pulled resource_image '${uri}'`);
-        }
-        return resourceDigest;
-    });
-}
-exports.getImageDigest = getImageDigest;
-
-
-/***/ }),
-
-/***/ 7585:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __exportStar = (this && this.__exportStar) || function(m, exports) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-__exportStar(__nccwpck_require__(9999), exports);
 
 
 /***/ }),
@@ -23427,13 +23442,12 @@ class Tagger {
         });
     }
     _build(owner, repo, hash, revision, channel, resources, tagPrefix) {
-        const suffix = revision || (0, dayjs_1.default)().utc().format('YYYYMMDDHHmmss');
-        const name = `${tagPrefix ? `${tagPrefix}-` : ''}rev${suffix}`;
+        const name = `${tagPrefix ? `${tagPrefix}-` : ''}rev${revision}`;
         const message = `${resources} Released to '${channel}' at ${this.get_date_text()}`;
         return {
             owner,
             repo,
-            name: `Revision ${suffix}`,
+            name: `Revision ${revision}`,
             tag_name: name,
             body: message,
             draft: false,
@@ -23695,7 +23709,7 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(1138);
+/******/ 	var __webpack_exports__ = __nccwpck_require__(5252);
 /******/ 	module.exports = __webpack_exports__;
 /******/ 	
 /******/ })()
