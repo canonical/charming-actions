@@ -22840,9 +22840,11 @@ class Charmcraft {
             name: metadata.name,
         };
     }
-    pack() {
+    pack(destructive) {
         return __awaiter(this, void 0, void 0, function* () {
-            const args = ['charmcraft', 'pack', '--destructive-mode', '--quiet'];
+            const args = ['charmcraft', 'pack', '--quiet'];
+            if (destructive)
+                args.push('--destructive-mode');
             yield (0, exec_1.exec)('sudo', args, this.execOptions);
         });
     }

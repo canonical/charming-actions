@@ -179,8 +179,11 @@ class Charmcraft {
     };
   }
 
-  async pack() {
-    const args = ['charmcraft', 'pack', '--destructive-mode', '--quiet'];
+  async pack(destructive?: boolean) {
+    const args = ['charmcraft', 'pack', '--quiet'];
+
+    if (destructive) args.push('--destructive-mode');
+
     await exec('sudo', args, this.execOptions);
   }
 

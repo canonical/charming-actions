@@ -2,6 +2,13 @@ name: Charmhub Upload
 description: Uploads a charm to charmhub.io
 author: Kenneth Koski
 inputs:
+  destructive-mode:
+    required: false
+    default: true
+    description: |
+      Can be used to turn off destructive mode while building.
+      This might be useful when building for other architectures than the one
+      of the runner.
   channel:
     required: false
     default: latest/edge
