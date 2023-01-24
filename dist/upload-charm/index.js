@@ -22526,6 +22526,7 @@ class UploadCharmAction {
         this.charmPath = core.getInput('charm-path');
         this.tagPrefix = core.getInput('tag-prefix');
         this.token = core.getInput('github-token');
+        this.destructive = core.getBooleanInput('destructive-mode');
         if (!this.token) {
             throw new Error(`Input 'github-token' is missing`);
         }
@@ -22548,7 +22549,7 @@ class UploadCharmAction {
             try {
                 yield this.snap.install('charmcraft', this.charmcraftChannel);
                 process.chdir(this.charmPath);
-                yield this.charmcraft.pack();
+                yield this.charmcraft.pack(this.destructive);
                 const overrides = this.overrides;
                 const imageResults = yield this.charmcraft.uploadResources(overrides);
                 const fileResults = yield this.charmcraft.fetchFileFlags(overrides);
@@ -22938,9 +22939,11 @@ class Charmcraft {
             name: metadata.name,
         };
     }
-    pack() {
+    pack(destructive) {
         return __awaiter(this, void 0, void 0, function* () {
-            const args = ['charmcraft', 'pack', '--destructive-mode', '--quiet'];
+            const args = ['charmcraft', 'pack', '--quiet'];
+            if (destructive)
+                args.push('--destructive-mode');
             yield (0, exec_1.exec)('sudo', args, this.execOptions);
         });
     }

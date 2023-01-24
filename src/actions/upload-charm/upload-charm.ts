@@ -10,6 +10,7 @@ export class UploadCharmAction {
   private charmcraft: Charmcraft;
 
   private channel: string;
+  private destructive: boolean;
   private charmcraftChannel: string;
   private charmPath: string;
   private tagPrefix?: string;
@@ -21,6 +22,7 @@ export class UploadCharmAction {
     this.charmPath = core.getInput('charm-path');
     this.tagPrefix = core.getInput('tag-prefix');
     this.token = core.getInput('github-token');
+    this.destructive = core.getBooleanInput('destructive-mode');
 
     if (!this.token) {
       throw new Error(`Input 'github-token' is missing`);
@@ -49,7 +51,7 @@ export class UploadCharmAction {
     try {
       await this.snap.install('charmcraft', this.charmcraftChannel);
       process.chdir(this.charmPath!);
-      await this.charmcraft.pack();
+      await this.charmcraft.pack(this.destructive);
       const overrides = this.overrides!;
 
       const imageResults = await this.charmcraft.uploadResources(overrides);
