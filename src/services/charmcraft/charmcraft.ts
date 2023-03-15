@@ -194,7 +194,7 @@ class Charmcraft {
     const paths = await globber.glob();
 
     // filter all characters which are not letters, numbers or hyphens
-    const allowedChannel = channel.replace(/\_|[^\w\-\/]/gi, '');
+    const allowedChannel = channel.replace(/_|[^\w\-/]/gi, '');
     const args = [
       'upload',
       '--format',
