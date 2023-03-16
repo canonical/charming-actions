@@ -5,7 +5,7 @@ function createContext(
   eventName: string,
   ref: string,
   main: string,
-  prRefs: { base?: string; head?: string } = {}
+  prRefs: { base?: string; head?: string; number?: number } = {}
 ) {
   return {
     eventName,
@@ -24,6 +24,7 @@ function createContext(
         head: {
           ref: prRefs.head,
         },
+        number: prRefs.number,
       },
     },
   } as unknown as Context;
@@ -64,9 +65,10 @@ describe('the ref helper', () => {
       const context = createContext('pull_request', '', 'main', {
         base: 'track/some-track',
         head: 'branch/PR-123',
+        number: 123,
       });
       const ref = new Ref(context);
-      expect(ref.channel()).toEqual('some-track/edge/PR-123');
+      expect(ref.channel()).toEqual('some-track/edge/pr-123');
     });
   });
 });
