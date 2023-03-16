@@ -193,12 +193,14 @@ class Charmcraft {
     const globber = await glob.create('./*.charm');
     const paths = await globber.glob();
 
+    // filter all characters which are not letters, numbers or hyphens
+    const allowedChannel = channel.replace(/[^a-zA-Z0-9\-/]/gi, '');
     const args = [
       'upload',
       '--format',
       'json',
       '--release',
-      channel,
+      allowedChannel,
       paths[0],
       ...flags,
     ];
