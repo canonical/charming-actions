@@ -1,6 +1,6 @@
 # canonical/charming-actions/channel
 
-This action allows you to, based on the github reference, decide which channel on CharHhub to release
+This action allows you to, based on the github reference, decide which channel on Charmhub to release
 a change to. In itself, this action does not mutate any state on either GitHub or CharmHub.
 
 ## Usage
@@ -29,9 +29,9 @@ None
 
 ## Branch Selection
 
-This action automatically selects a Charmhub channel based on the Github branch naming. For `push`
-events, a Charmhub channel is selected. For `pull_request` events, a branch is added to the channel, so
-that the PR can be tested.
+This action automatically selects a Charmhub channel based on the GitHub PR number. For `push`
+events, a Charmhub channel is selected. For `pull_request` events, a `pr-<pr number>` is added to the 
+channel, so that the PR can be tested.
 
 The Charmhub channel/branch selection logic looks like this:
 
@@ -40,6 +40,5 @@ The Charmhub channel/branch selection logic looks like this:
 | push         |                 | `<default branch>`   | `latest/edge`                     |
 | push         |                 | `track/<track-name>` | `<track-name>/edge`               |
 | push         |                 | Any other name       | Ignored                           |
-| pull_request | `<branch-name>` | `<default branch>`   | `latest/edge/<branch-name>`       |
-| pull_request | `<branch-name>` | `track/<track-name>` | `<track-name>/edge/<branch-name>` |
-| pull_request | Any other name  | Any other name       | Ignored                           |
+| pull_request | `<branch-name>` | `track/<track-name>` | `<track-name>/edge/pr-<pr number>`|
+| pull_request | Any other name  | Any other name       | `latest/edge/pr-<pr number>`      |
