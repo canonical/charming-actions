@@ -57,9 +57,10 @@ describe('the ref helper', () => {
       const context = createContext('pull_request', '', 'main', {
         base: 'main',
         head: 'branch/PR-123',
+        number: 123,
       });
       const ref = new Ref(context);
-      expect(ref.channel()).toEqual('latest/edge/PR-123');
+      expect(ref.channel()).toEqual('latest/edge/pr-123');
     });
     it('should return some-track/edge/whatever when creating a PR towards main', () => {
       const context = createContext('pull_request', '', 'main', {
