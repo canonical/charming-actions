@@ -22854,12 +22854,14 @@ class Charmcraft {
             // however, we expect charmcraft pack to always output one charm file.
             const globber = yield glob.create('./*.charm');
             const paths = yield globber.glob();
+            // filter all characters which are not letters, numbers or hyphens
+            const allowedChannel = channel.replace(/[^a-zA-Z0-9\-/]/gi, '');
             const args = [
                 'upload',
                 '--format',
                 'json',
                 '--release',
-                channel,
+                allowedChannel,
                 paths[0],
                 ...flags,
             ];
@@ -23194,15 +23196,12 @@ class Ref {
         if (!metadata) {
             throw new Error('Pull request metadata missing in the actions context');
         }
-        const { base, head } = metadata;
-        const branch = head.ref.replace('branch/', '');
-        if (base.ref === base.repo.default_branch) {
-            return `latest/edge/${branch}`;
-        }
+        const { base, number } = metadata;
+        const branch = `pr-${number}`;
         if (base.ref.startsWith('track/')) {
             return `${base.ref.replace('track/', '')}/edge/${branch}`;
         }
-        throw new Error(`Unhandled PR base name ${base.ref}`);
+        return `latest/edge/${branch}`;
     }
 }
 exports.Ref = Ref;
