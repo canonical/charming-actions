@@ -23295,15 +23295,12 @@ class Ref {
         if (!metadata) {
             throw new Error('Pull request metadata missing in the actions context');
         }
-        const { base, head } = metadata;
-        const branch = head.ref.replace('branch/', '');
-        if (base.ref === base.repo.default_branch) {
-            return `latest/edge/${branch}`;
-        }
+        const { base, number } = metadata;
+        const branch = `pr-${number}`;
         if (base.ref.startsWith('track/')) {
             return `${base.ref.replace('track/', '')}/edge/${branch}`;
         }
-        throw new Error(`Unhandled PR base name ${base.ref}`);
+        return `latest/edge/${branch}`;
     }
 }
 exports.Ref = Ref;
