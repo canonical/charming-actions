@@ -22925,14 +22925,12 @@ class Charmcraft {
             // however, we expect charmcraft pack to always output one charm file.
             const globber = yield glob.create('./*.charm');
             const paths = yield globber.glob();
-            // filter all characters which are not letters, numbers or hyphens
-            const allowedChannel = channel.replace(/[^a-zA-Z0-9\-/]/gi, '');
             const args = [
                 'upload',
                 '--format',
                 'json',
                 '--release',
-                allowedChannel,
+                channel,
                 paths[0],
                 ...flags,
             ];
