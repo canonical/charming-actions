@@ -25,7 +25,7 @@ but it can also be configured to fail the entire build.
 | `github-token`       | GitHub token used to post a comment when `comment-on-pr` is enabled.                                      | ✔️       |
 | `comment-on-pr`      | Whether to post a warning as a comment if drift is detected as part of checking a PR. Defaults to `true`. |          |
 | `fail-build`         | Whether to fail the entire build if drift is detected. Defaults to `false`.                               |          |
-| `charmcraft-channel` | Snap channel to use when installing charmcraft. Defaults to `latest/edge`.                                |          |
+| `charmcraft-channel` | Snap channel to use when installing charmcraft. Defaults to `latest/stable`.                                |          |
 
 
 ### Outputs
