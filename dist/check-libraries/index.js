@@ -23039,21 +23039,22 @@ class Charmcraft {
             if (destructive)
                 args.push('--destructive-mode');
             yield (0, exec_1.exec)('sudo', args, this.execOptions);
-        });
-    }
-    upload(channel, flags) {
-        return __awaiter(this, void 0, void 0, function* () {
             // as we don't know the name of the name of the charm file output, we'll need to glob for it.
             // however, we expect charmcraft pack to always output one charm file.
             const globber = yield glob.create('./*.charm');
             const paths = yield globber.glob();
+            return paths[0];
+        });
+    }
+    upload(charm, channel, flags) {
+        return __awaiter(this, void 0, void 0, function* () {
             const args = [
                 'upload',
                 '--format',
                 'json',
                 '--release',
                 channel,
-                paths[0],
+                charm,
                 ...flags,
             ];
             const result = yield (0, exec_1.getExecOutput)('charmcraft', args, this.execOptions);

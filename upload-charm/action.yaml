@@ -23,6 +23,10 @@ inputs:
     default: '.'
     description: |
       Path to charm directory
+  built-charm-path:
+    required: false
+    description: |
+      Path to a pre-built charm.
   charmcraft-channel:
     required: false
     default: 'latest/stable'
