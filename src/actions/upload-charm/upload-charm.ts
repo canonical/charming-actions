@@ -12,6 +12,7 @@ export class UploadCharmAction {
   private channel: string;
   private destructive: boolean;
   private charmcraftChannel: string;
+  private builtCharmPath: string;
   private charmPath: string;
   private tagPrefix?: string;
   private token: string;
@@ -19,6 +20,7 @@ export class UploadCharmAction {
   constructor() {
     this.channel = core.getInput('channel');
     this.charmcraftChannel = core.getInput('charmcraft-channel');
+    this.builtCharmPath = core.getInput('built-charm-path');
     this.charmPath = core.getInput('charm-path');
     this.tagPrefix = core.getInput('tag-prefix');
     this.token = core.getInput('github-token');
@@ -51,7 +53,11 @@ export class UploadCharmAction {
     try {
       await this.snap.install('charmcraft', this.charmcraftChannel);
       process.chdir(this.charmPath!);
-      await this.charmcraft.pack(this.destructive);
+
+      const charm = this.builtCharmPath
+        ? this.builtCharmPath
+        : await this.charmcraft.pack(this.destructive);
+
       const overrides = this.overrides!;
 
       const imageResults = await this.charmcraft.uploadResources(overrides);
@@ -70,7 +76,7 @@ export class UploadCharmAction {
         ...staticResults.flags,
       ];
 
-      const rev = await this.charmcraft.upload(this.channel, flags);
+      const rev = await this.charmcraft.upload(charm, this.channel, flags);
 
       await this.tagger.tag(rev, this.channel, resourceInfo, this.tagPrefix);
     } catch (error: any) {
