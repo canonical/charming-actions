@@ -33,11 +33,12 @@ If you want to use a new resource, you'll have to cut a new resource revision **
 | `charm-path`         | Path to the charm we want to publish. Defaults to the current working directory.                                 |          |
 | `built-charm-path`   | Path to a pre-built charm we want to publish.                                                                    |          |
 | `channel`            | Channel on charmhub to publish the charm in. Defaults to `latest/edge`.                                          |          |
-| `credentials`        | Credentials [exported](https://juju.is/docs/sdk/remote-env-auth) using `charmcraft login --export`.              | ✔️       |
-| `destructive-mode`   | Whether or not to pack using destructive mode. Defaults to `true`.                                               |         |
-| `github-token`       | Github Token needed for automatic tagging when publishing                                                        | ✔️       |
+| `credentials`        | Credentials [exported](https://juju.is/docs/sdk/remote-env-auth) using `charmcraft login --export`.              | ✔️        |
+| `destructive-mode`   | Whether or not to pack using destructive mode. Defaults to `true`.                                               |          |
+| `github-token`       | Github Token needed for automatic tagging when publishing                                                        | ✔️        |
 | `tag-prefix`         | Tag prefix, useful when bundling multiple charms in the same repo using a matrix.                                |          |
 | `upload-image`       | Toggles whether image resources are uploaded to CharmHub or not. Defaults to `true`.                             |          |
+| `local-image`        | Toggles whether image resources are pulled locally or from an upstream source. Defaults to `false`.              |          |
 | `charmcraft-channel` | Snap channel to use when installing charmcraft. Defaults to `latest/edge`.                                       |          |
 | `resource-overrides` | Charm resource revision overrides. Separate entries using commas, ie. `"promql-transform:2,prometheus-image:12"` |          |
 ### Outputs
