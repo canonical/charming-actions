@@ -43,7 +43,9 @@ describe('the charmcraft service', () => {
           stdout: '{"revision": 2}',
         });
 
-        await charmcraft.upload('edge', ['--resource=resource_1:2']);
+        await charmcraft.upload('banana.charm', 'edge', [
+          '--resource=resource_1:2',
+        ]);
 
         expect(mockExec).toHaveBeenCalled();
         expect(mockExec).toHaveBeenCalledWith(
@@ -54,7 +56,7 @@ describe('the charmcraft service', () => {
             'json',
             '--release',
             'edge',
-            undefined,
+            'banana.charm',
             '--resource=resource_1:2',
           ],
           expect.anything()

@@ -185,21 +185,25 @@ class Charmcraft {
     if (destructive) args.push('--destructive-mode');
 
     await exec('sudo', args, this.execOptions);
-  }
-
-  async upload(channel: string, flags: string[]): Promise<string> {
     // as we don't know the name of the name of the charm file output, we'll need to glob for it.
     // however, we expect charmcraft pack to always output one charm file.
     const globber = await glob.create('./*.charm');
     const paths = await globber.glob();
+    return paths[0];
+  }
 
+  async upload(
+    charm: string,
+    channel: string,
+    flags: string[]
+  ): Promise<string> {
     const args = [
       'upload',
       '--format',
       'json',
       '--release',
       channel,
-      paths[0],
+      charm,
       ...flags,
     ];
     const result = await getExecOutput('charmcraft', args, this.execOptions);

@@ -107,3 +107,11 @@ Finally, build the actions by running:
 ```
 $ npm run build
 ```
+
+### Tests
+
+Run unit tests:
+
+```
+$ npm test
+```

@@ -22523,6 +22523,7 @@ class UploadCharmAction {
     constructor() {
         this.channel = core.getInput('channel');
         this.charmcraftChannel = core.getInput('charmcraft-channel');
+        this.builtCharmPath = core.getInput('built-charm-path');
         this.charmPath = core.getInput('charm-path');
         this.tagPrefix = core.getInput('tag-prefix');
         this.token = core.getInput('github-token');
@@ -22549,7 +22550,9 @@ class UploadCharmAction {
             try {
                 yield this.snap.install('charmcraft', this.charmcraftChannel);
                 process.chdir(this.charmPath);
-                yield this.charmcraft.pack(this.destructive);
+                const charm = this.builtCharmPath
+                    ? this.builtCharmPath
+                    : yield this.charmcraft.pack(this.destructive);
                 const overrides = this.overrides;
                 const imageResults = yield this.charmcraft.uploadResources(overrides);
                 const fileResults = yield this.charmcraft.fetchFileFlags(overrides);
@@ -22564,7 +22567,7 @@ class UploadCharmAction {
                     ...fileResults.flags,
                     ...staticResults.flags,
                 ];
-                const rev = yield this.charmcraft.upload(this.channel, flags);
+                const rev = yield this.charmcraft.upload(charm, this.channel, flags);
                 yield this.tagger.tag(rev, this.channel, resourceInfo, this.tagPrefix);
             }
             catch (error) {
@@ -22945,21 +22948,22 @@ class Charmcraft {
             if (destructive)
                 args.push('--destructive-mode');
             yield (0, exec_1.exec)('sudo', args, this.execOptions);
-        });
-    }
-    upload(channel, flags) {
-        return __awaiter(this, void 0, void 0, function* () {
             // as we don't know the name of the name of the charm file output, we'll need to glob for it.
             // however, we expect charmcraft pack to always output one charm file.
             const globber = yield glob.create('./*.charm');
             const paths = yield globber.glob();
+            return paths[0];
+        });
+    }
+    upload(charm, channel, flags) {
+        return __awaiter(this, void 0, void 0, function* () {
             const args = [
                 'upload',
                 '--format',
                 'json',
                 '--release',
                 channel,
-                paths[0],
+                charm,
                 ...flags,
             ];
             const result = yield (0, exec_1.getExecOutput)('charmcraft', args, this.execOptions);
