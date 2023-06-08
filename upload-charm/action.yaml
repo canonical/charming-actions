@@ -55,7 +55,7 @@ inputs:
       
       Example: "promql-transform:2,prometheus-image:12"   
 runs:
-  using: node12
+  using: node16
   main: ../dist/upload-charm/index.js
 branding:
   icon: upload-cloud
