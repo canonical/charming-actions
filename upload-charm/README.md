@@ -38,7 +38,7 @@ If you want to use a new resource, you'll have to cut a new resource revision **
 | `github-token`       | Github Token needed for automatic tagging when publishing                                                        | ✔️        |
 | `tag-prefix`         | Tag prefix, useful when bundling multiple charms in the same repo using a matrix.                                |          |
 | `upload-image`       | Toggles whether image resources are uploaded to CharmHub or not. Defaults to `true`.                             |          |
-| `local-image`        | Toggles whether image resources are pulled locally or from an upstream source. Defaults to `false`.              |          |
+| `pull-image`         | Toggles whether image resources are pulled. Defaults to `true`.                                                  |          |
 | `charmcraft-channel` | Snap channel to use when installing charmcraft. Defaults to `latest/edge`.                                       |          |
 | `resource-overrides` | Charm resource revision overrides. Separate entries using commas, ie. `"promql-transform:2,prometheus-image:12"` |          |
 ### Outputs
