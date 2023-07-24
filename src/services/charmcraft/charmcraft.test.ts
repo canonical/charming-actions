@@ -98,7 +98,7 @@ describe('the charmcraft service', () => {
       describe('pulling images', () => {
         it('should succeed when image digest is available', async () => {
           const digest = `somedigest`;
-          const charmcraft = new Charmcraft('token');
+          const charmcraft = new Charmcraft('token', true);
 
           const mockedExec = jest.spyOn(exec, 'exec').mockResolvedValue(0);
 

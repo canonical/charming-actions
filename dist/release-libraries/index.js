@@ -22946,8 +22946,10 @@ const yaml = __importStar(__nccwpck_require__(1917));
 const docker_1 = __nccwpck_require__(7585);
 /* eslint-disable camelcase */
 class Charmcraft {
-    constructor(token) {
+    constructor(token, pullImage) {
         this.uploadImage = core.getInput('upload-image').toLowerCase() === 'true';
+        this.pullImage =
+            pullImage || core.getInput('pull-image').toLowerCase() === 'true';
         this.token = token || core.getInput('credentials');
         this.execOptions = {
             env: Object.assign(Object.assign({}, process.env), { CHARMCRAFT_AUTH: this.token }),
@@ -23008,9 +23010,11 @@ class Charmcraft {
     }
     uploadResource(resource_image, name, resource_name) {
         return __awaiter(this, void 0, void 0, function* () {
-            const pullExitCode = yield (0, exec_1.exec)('docker', ['pull', resource_image], this.execOptions);
-            if (pullExitCode !== 0) {
-                throw new Error('Could not pull the docker image.');
+            if (this.pullImage) {
+                const pullExitCode = yield (0, exec_1.exec)('docker', ['pull', resource_image], this.execOptions);
+                if (pullExitCode !== 0) {
+                    throw new Error('Could not pull the docker image.');
+                }
             }
             const resourceDigest = yield (0, docker_1.getImageDigest)(resource_image);
             const args = [

@@ -13,11 +13,14 @@ import { Base, Mapping, Status, Track } from './types';
 
 class Charmcraft {
   private uploadImage: boolean;
+  private pullImage: boolean;
   private token: string;
   private execOptions: ExecOptions;
 
-  constructor(token?: string) {
+  constructor(token?: string, pullImage?: boolean) {
     this.uploadImage = core.getInput('upload-image').toLowerCase() === 'true';
+    this.pullImage =
+      pullImage || core.getInput('pull-image').toLowerCase() === 'true';
     this.token = token || core.getInput('credentials');
     this.execOptions = {
       env: {
@@ -108,13 +111,15 @@ class Charmcraft {
     name: string,
     resource_name: string
   ) {
-    const pullExitCode = await exec(
-      'docker',
-      ['pull', resource_image],
-      this.execOptions
-    );
-    if (pullExitCode !== 0) {
-      throw new Error('Could not pull the docker image.');
+    if (this.pullImage) {
+      const pullExitCode = await exec(
+        'docker',
+        ['pull', resource_image],
+        this.execOptions
+      );
+      if (pullExitCode !== 0) {
+        throw new Error('Could not pull the docker image.');
+      }
     }
 
     const resourceDigest = await getImageDigest(resource_image);

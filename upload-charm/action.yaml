@@ -37,6 +37,14 @@ inputs:
     default: 'true'
     description: |
       Set to false if you don't want to update the OCI image
+  pull-image:
+    required: false
+    default: 'true'
+    description: |
+      Set to false if you want to skip pulling OCI images. If false,
+      the OCI images must be present in the local docker registry prior
+      to running the action. Set the upstream-source key in metadata.yaml
+      to the name of the local image.
   credentials:
     required: true
     description: |
