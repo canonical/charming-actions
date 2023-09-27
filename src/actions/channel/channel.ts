@@ -1,4 +1,4 @@
-import { setOutput } from '@actions/core';
+import { setOutput, setFailed } from '@actions/core';
 import { context } from '@actions/github';
 import { Context } from '@actions/github/lib/context';
 import { Ref } from '../../services';
@@ -13,7 +13,12 @@ export class ChannelSelection {
   }
 
   run() {
-    const channel = this.ref.channel();
+    try {
+      const channel = this.ref.channel();
+    } catch (error) {
+      setFailed(error.message);
+    }
+
     setOutput('name', channel);
   }
 }
