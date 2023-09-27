@@ -38,7 +38,9 @@ export class Ref {
       return `${branch.replace('track/', '')}/edge`;
     }
 
-    throw new Error(`Unsupported branch name ${this.ctx.ref}`);
+    throw new Error(
+      `Unable to determine channel name from branch name "${this.ctx.ref}". See action readme for details on the logic used.`
+    );
   }
 
   _getChannelForPr() {

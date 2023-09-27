@@ -22497,8 +22497,13 @@ class ChannelSelection {
         this.ref = new services_1.Ref(this.context);
     }
     run() {
-        const channel = this.ref.channel();
-        (0, core_1.setOutput)('name', channel);
+        try {
+            const channel = this.ref.channel();
+            (0, core_1.setOutput)('name', channel);
+        }
+        catch (error) {
+            (0, core_1.setFailed)(error.message);
+        }
     }
 }
 exports.ChannelSelection = ChannelSelection;
@@ -23192,7 +23197,7 @@ class Ref {
         if (branch.startsWith('track/')) {
             return `${branch.replace('track/', '')}/edge`;
         }
-        throw new Error(`Unsupported branch name ${this.ctx.ref}`);
+        throw new Error(`Unable to determine channel name from branch name "${this.ctx.ref}". See action readme for details on the logic used.`);
     }
     _getChannelForPr() {
         const metadata = this.ctx.payload.pull_request;

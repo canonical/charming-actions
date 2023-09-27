@@ -15,10 +15,9 @@ export class ChannelSelection {
   run() {
     try {
       const channel = this.ref.channel();
-    } catch (error) {
+      setOutput('name', channel);
+    } catch (error: any) {
       setFailed(error.message);
     }
-
-    setOutput('name', channel);
   }
 }
