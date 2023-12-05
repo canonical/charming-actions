@@ -14,7 +14,7 @@ of the following actions:
 
 > #### ⚠️ Prerequisites
 > 
-> To use this action, start by adding a repository secret to your Github repository. In 
+> To use these actions, start by adding a repository secret to your Github repository. In 
 > the example below, it's called `CHARMCRAFT_TOKEN`, but can be anything you want. 
 > See https://juju.is/docs/sdk/remote-env-auth for more information 
 > on how to generate the appropriate credentials. `GITHUB_TOKEN` does not need to be explicitly
