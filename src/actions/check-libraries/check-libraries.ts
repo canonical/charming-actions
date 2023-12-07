@@ -56,7 +56,7 @@ export class CheckLibrariesAction {
         await this.configureLabels(success, fail);
         await this.replaceLabel(
           status.ok ? success : fail,
-          status.ok ? fail : success
+          status.ok ? fail : success,
         );
       }
 
@@ -111,7 +111,7 @@ export class CheckLibrariesAction {
             color: label.color,
           });
         }
-      })
+      }),
     );
   }
 

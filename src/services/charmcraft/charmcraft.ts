@@ -47,7 +47,7 @@ class Charmcraft {
         // If an image resource has been overridden in the action input,
         // we don't want to upload a new version of it either.
         .filter(
-          ([name]) => !overrides || !Object.keys(overrides).includes(name)
+          ([name]) => !overrides || !Object.keys(overrides).includes(name),
         )
         .map(async ([name, image]) => {
           if (this.uploadImage) {
@@ -56,14 +56,14 @@ class Charmcraft {
           const resourceFlag = await this.buildResourceFlag(
             charmName,
             name,
-            image
+            image,
           );
 
           if (!resourceFlag) return;
 
           flags.push(resourceFlag.flag);
           resourceInfo += resourceFlag.info;
-        })
+        }),
     );
     return { flags, resourceInfo };
   }
@@ -73,7 +73,7 @@ class Charmcraft {
     // If an image resource has been overridden in the action input,
     // we don't want to upload a new version of it either.
     const filtered = files.filter(
-      ([name]) => !overrides || !Object.keys(overrides).includes(name)
+      ([name]) => !overrides || !Object.keys(overrides).includes(name),
     );
     const result = { flags: [] as string[], resourceInfo: '' };
     await Promise.all(
@@ -81,7 +81,7 @@ class Charmcraft {
         const flag = await this.buildResourceFlag(charmName, item, '');
         result.flags.push(flag.flag);
         result.resourceInfo += flag.info;
-      })
+      }),
     );
 
     return result;
@@ -93,13 +93,13 @@ class Charmcraft {
     }
 
     const flags = Object.entries(overrides!).map(
-      ([key, value]) => `--resource=${key}:${value}`
+      ([key, value]) => `--resource=${key}:${value}`,
     );
 
     const resourceInfo = [
       'Static resources:\n',
       ...Object.entries(overrides).map(
-        ([key, val]) => `  - ${key}\n    resource-revision: ${val}\n`
+        ([key, val]) => `  - ${key}\n    resource-revision: ${val}\n`,
       ),
     ].join('\n');
 
@@ -109,13 +109,13 @@ class Charmcraft {
   async uploadResource(
     resource_image: string,
     name: string,
-    resource_name: string
+    resource_name: string,
   ) {
     if (this.pullImage) {
       const pullExitCode = await exec(
         'docker',
         ['pull', resource_image],
-        this.execOptions
+        this.execOptions,
       );
       if (pullExitCode !== 0) {
         throw new Error('Could not pull the docker image.');
@@ -149,7 +149,7 @@ class Charmcraft {
 
     if (result.stdout.trim().split('\n').length <= 1) {
       throw new Error(
-        `Resource '${name}' does not have any uploaded revisions.`
+        `Resource '${name}' does not have any uploaded revisions.`,
       );
     }
 
@@ -200,7 +200,7 @@ class Charmcraft {
   async upload(
     charm: string,
     channel: string,
-    flags: string[]
+    flags: string[],
   ): Promise<string> {
     const args = [
       'upload',
@@ -226,7 +226,7 @@ class Charmcraft {
       .split('\n')
       .filter((x) => !re.test(x))
       .filter((x) =>
-        /(updated to version|not found in Charmhub|has local changes)/.test(x)
+        /(updated to version|not found in Charmhub|has local changes)/.test(x),
       );
 
     const { stdout: out, stderr: err } = result;
@@ -238,7 +238,7 @@ class Charmcraft {
     const result = await getExecOutput(
       'charmcraft',
       ['status', charm],
-      this.execOptions
+      this.execOptions,
     );
     return result.stdout;
   }
@@ -247,7 +247,7 @@ class Charmcraft {
     const result = await getExecOutput(
       'charmcraft',
       ['status', charm, '--format', 'json'],
-      this.execOptions
+      this.execOptions,
     );
     const parsedObj = JSON.parse(result.stdout);
     return parsedObj;
@@ -256,7 +256,7 @@ class Charmcraft {
   async getRevisionInfoFromChannel(
     charm: string,
     track: string,
-    channel: string
+    channel: string,
   ): Promise<{ charmRev: string; resources: Array<ResourceInfo> }> {
     // For now we have to parse the `charmcraft status` output this will soon be fixed
     // when we can get json output from charmcraft.
@@ -264,7 +264,7 @@ class Charmcraft {
     const acceptedChannels = ['stable', 'candidate', 'beta', 'edge'];
     if (!acceptedChannels.includes(channel)) {
       throw new Error(
-        `Provided channel ${channel} is not supported. This actions currently only works with one of the following default channels: edge, beta, candidate, stable`
+        `Provided channel ${channel} is not supported. This actions currently only works with one of the following default channels: edge, beta, candidate, stable`,
       );
     }
     const charmcraftStatus = await this.status(charm);
@@ -307,12 +307,12 @@ class Charmcraft {
     charm: string,
     targetTrack: string,
     targetChannel: string,
-    targetBase: Base
+    targetBase: Base,
   ): Promise<{ charmRev: string; resources: Array<ResourceInfo> }> {
     const acceptedChannels = ['stable', 'candidate', 'beta', 'edge'];
     if (!acceptedChannels.includes(targetChannel)) {
       throw new Error(
-        `Provided channel ${targetChannel} is not supported. This actions currently only works with one of the following default channels: edge, beta, candidate, stable`
+        `Provided channel ${targetChannel} is not supported. This actions currently only works with one of the following default channels: edge, beta, candidate, stable`,
       );
     }
 
@@ -320,7 +320,7 @@ class Charmcraft {
     const charmcraftStatus = await this.statusJson(charm);
 
     const trackIndex = charmcraftStatus.findIndex(
-      (track: Track) => track.track === targetTrack
+      (track: Track) => track.track === targetTrack,
     );
 
     if (trackIndex === -1) {
@@ -332,24 +332,24 @@ class Charmcraft {
         channel.base &&
         channel.base.name === targetBase.name &&
         channel.base.channel === targetBase.channel &&
-        channel.base.architecture === targetBase.architecture
+        channel.base.architecture === targetBase.architecture,
     );
 
     if (mappingIndex === -1) {
       throw new Error(
-        `No channel with base name ${targetBase.name}, base channel ${targetBase.channel} and base architecture ${targetBase.architecture}`
+        `No channel with base name ${targetBase.name}, base channel ${targetBase.channel} and base architecture ${targetBase.architecture}`,
       );
     }
 
     const releaseIndex = charmcraftStatus[trackIndex].mappings[
       mappingIndex
     ].releases.findIndex(
-      (release: any) => release.channel === `${targetTrack}/${targetChannel}`
+      (release: any) => release.channel === `${targetTrack}/${targetChannel}`,
     );
 
     if (releaseIndex === -1) {
       throw new Error(
-        `Cannot find release with channel name ${targetChannel}, with base`
+        `Cannot find release with channel name ${targetChannel}, with base`,
       );
     }
 
@@ -360,7 +360,7 @@ class Charmcraft {
 
     if (releaseObj.status !== 'open') {
       throw new Error(
-        'Channel is not open. Make sure there was a release made to this channel previously.'
+        'Channel is not open. Make sure there was a release made to this channel previously.',
       );
     }
 
@@ -382,7 +382,7 @@ class Charmcraft {
     charm: string,
     charmRevision: string,
     destinationChannel: string,
-    resourceInfo: Array<ResourceInfo>
+    resourceInfo: Array<ResourceInfo>,
   ) {
     const resourceArgs: Array<string> = [];
     resourceInfo.forEach((resource) => {

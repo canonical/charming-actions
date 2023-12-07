@@ -11,7 +11,7 @@ describe('the check libraries action', () => {
           out: 'example stdout',
           err: 'example stderr',
         },
-        './some/path/'
+        './some/path/',
       );
       expect(body).toEqual(`
 Libraries at path './some/path/' are not up to date with their remote 
@@ -52,26 +52,26 @@ and commit the updated libs to your PR branch.\n
 
       await action.replaceLabel(
         process.env['INPUT_LABEL-SUCCESS'],
-        process.env['INPUT_LABEL-FAIL']
+        process.env['INPUT_LABEL-FAIL'],
       );
 
       expect(action.github.rest.issues.listLabelsOnIssue).toHaveBeenCalledWith(
         expect.objectContaining({
           repo: 'repo',
           owner: 'test',
-        })
+        }),
       );
 
       expect(action.github.rest.issues.addLabels).toHaveBeenCalledWith(
         expect.objectContaining({
           labels: ['success'],
-        })
+        }),
       );
 
       expect(action.github.rest.issues.removeLabel).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'fail',
-        })
+        }),
       );
     });
 
@@ -89,7 +89,7 @@ and commit the updated libs to your PR branch.\n
 
       await action.replaceLabel(
         process.env['INPUT_LABEL-FAIL'],
-        process.env['INPUT_LABEL-SUCCESS']
+        process.env['INPUT_LABEL-SUCCESS'],
       );
 
       expect(action.github.rest.issues.addLabels).not.toHaveBeenCalled();

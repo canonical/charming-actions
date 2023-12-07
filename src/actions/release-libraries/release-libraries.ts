@@ -80,7 +80,7 @@ export class ReleaseLibrariesAction {
         setFailed(
           'Failed to publish some libs:\n\n' +
             `${failures.join('\n')}\n\n` +
-            'See the logs for more info.'
+            'See the logs for more info.',
         );
         return;
       }
@@ -96,7 +96,7 @@ export class ReleaseLibrariesAction {
     data: string,
     versionInt: Number,
     version: string,
-    libName: string
+    libName: string,
   ): VersionInfo | Error {
     const libapiStr = data.match(/LIBAPI = (\d+)/i);
     if (!libapiStr) {
@@ -138,7 +138,7 @@ export class ReleaseLibrariesAction {
             error(msg);
             failures.push(msg);
           });
-      })
+      }),
     );
     return failures;
   }
@@ -147,7 +147,7 @@ export class ReleaseLibrariesAction {
     libFile: string,
     versionInt: Number,
     version: string,
-    libName: string
+    libName: string,
   ): VersionInfo | Error {
     const data = fs.readFileSync(libFile, 'utf-8');
     return this.parseCharmLibFile(data, versionInt, version, libName);
@@ -157,12 +157,12 @@ export class ReleaseLibrariesAction {
     const libsFound: LibInfo[] = [];
 
     const versions: string[] = fs.readdirSync(
-      `./lib/charms/${this.charmNamePy}/`
+      `./lib/charms/${this.charmNamePy}/`,
     );
     versions.forEach((version: string) => {
       const versionInt = parseInt(version.slice(1), 10); // 'v1' --> 1
       const libs: string[] = fs.readdirSync(
-        `./lib/charms/${this.charmNamePy}/${version}/`
+        `./lib/charms/${this.charmNamePy}/${version}/`,
       );
 
       libs.forEach((libNamePy: string) => {
@@ -175,11 +175,11 @@ export class ReleaseLibrariesAction {
             libFile,
             versionInt,
             version,
-            libName
+            libName,
           );
           if (vinfo instanceof Error) {
             error(
-              `lib file could not be parsed: error ${vinfo.name} with msg = ${vinfo.message}`
+              `lib file could not be parsed: error ${vinfo.name} with msg = ${vinfo.message}`,
             );
           } else {
             libsFound.push({ libName, ...vinfo });
@@ -204,7 +204,7 @@ export class ReleaseLibrariesAction {
       info(`checking status for ${localLib.libName}`);
 
       const remoteLib: LibInfo | undefined = remoteLibs.find(
-        (candidate: LibInfo) => candidate.libName === localLib.libName
+        (candidate: LibInfo) => candidate.libName === localLib.libName,
       );
 
       info(`remote lib: ${JSON.stringify(remoteLib)}`);
@@ -222,10 +222,10 @@ export class ReleaseLibrariesAction {
         errors.push(
           `the local ${localLib.libName} is at ` +
             `${localLib.version}.${localLib.revision}, but ` +
-            `${remoteLib.version}.${remoteLib.revision} is present on charmhub.`
+            `${remoteLib.version}.${remoteLib.revision} is present on charmhub.`,
         );
         info(
-          `${localLib.libName} has a lower version or revision than ${remoteLib.libName}`
+          `${localLib.libName} has a lower version or revision than ${remoteLib.libName}`,
         );
       } else if (this.isLibDiffering(remoteLib, localLib)) {
         changes.push({
@@ -240,7 +240,7 @@ export class ReleaseLibrariesAction {
           },
         });
         info(
-          `${localLib.libName} will be updated from ${remoteLib.version}.${remoteLib.revision} to ${localLib.version}.${localLib.revision}`
+          `${localLib.libName} will be updated from ${remoteLib.version}.${remoteLib.revision} to ${localLib.version}.${localLib.revision}`,
         );
       } else {
         info(`${localLib.libName} and ${remoteLib.libName} are equal`);

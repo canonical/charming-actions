@@ -39,7 +39,7 @@ export class Ref {
     }
 
     throw new Error(
-      `Unable to determine channel name from branch name "${this.ctx.ref}". See action readme for details on the logic used.`
+      `Unable to determine channel name from branch name "${this.ctx.ref}". See action readme for details on the logic used.`,
     );
   }
 

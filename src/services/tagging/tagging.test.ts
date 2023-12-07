@@ -99,7 +99,7 @@ describe('the tagging helper', () => {
       } as any);
 
       await expect(tagger.getReleaseByTag('rev14')).rejects.toThrow(
-        Error(`Cannot find release by tag rev14`)
+        Error(`Cannot find release by tag rev14`),
       );
     });
   });

@@ -27,7 +27,7 @@ describe('the container image service', () => {
     const expectedError = `No digest found for pulled resource_image 'placeholder-image'`;
 
     await expect(getImageDigest('placeholder-image')).rejects.toThrow(
-      Error(expectedError)
+      Error(expectedError),
     );
   });
 
@@ -47,7 +47,7 @@ describe('the container image service', () => {
     const expectedError = `Found too many digests for pulled resource_image 'placeholder-image'.  Expected single output, got multiline output '${dockerReturn}'.`;
 
     await expect(getImageDigest('placeholder-image')).rejects.toThrow(
-      Error(expectedError)
+      Error(expectedError),
     );
   });
 });

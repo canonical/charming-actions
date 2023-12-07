@@ -59,7 +59,7 @@ describe('the charmcraft service', () => {
             'banana.charm',
             '--resource=resource_1:2',
           ],
-          expect.anything()
+          expect.anything(),
         );
       });
 
@@ -80,7 +80,7 @@ describe('the charmcraft service', () => {
         });
 
         await expect(charmcraft.fetchFileFlags({})).rejects.toThrow(
-          `Resource 'resource_1' does not have any uploaded revisions.`
+          `Resource 'resource_1' does not have any uploaded revisions.`,
         );
       });
       it('should not include overriden images', async () => {
@@ -111,7 +111,7 @@ describe('the charmcraft service', () => {
           await charmcraft.uploadResource(
             'placeholder-image',
             'placeholder-name',
-            'placeholder-resource-name'
+            'placeholder-resource-name',
           );
 
           const calledProgram = mockedExec.mock.calls[1][0];
@@ -166,7 +166,7 @@ describe('the charmcraft service', () => {
           async (_name, resource_name) => ({
             flag: `${flags.find((f) => f.includes(resource_name))}`,
             info: ``,
-          })
+          }),
         );
 
         const uploadResources = await charmcraft.uploadResources();
@@ -275,7 +275,7 @@ describe('the charmcraft service', () => {
           const result = await charmcraft.getRevisionInfoFromChannel(
             'placeholder-charm',
             track,
-            channel
+            channel,
           );
           expect(result).toEqual(expected);
         });
@@ -302,8 +302,8 @@ describe('the charmcraft service', () => {
           charmcraft.getRevisionInfoFromChannel(
             'placeholder-charm',
             'latest',
-            'candidate'
-          )
+            'candidate',
+          ),
         ).rejects.toThrow(Error('No revision available in latest/candidate'));
       });
       it('throws error if track does not exist', async () => {
@@ -318,8 +318,8 @@ describe('the charmcraft service', () => {
           charmcraft.getRevisionInfoFromChannel(
             'placeholder-charm',
             '1.0.0',
-            'candidate'
-          )
+            'candidate',
+          ),
         ).rejects.toThrow(Error('No track with name 1.0.0'));
       });
       it('throws error if not provided with one of the default channels', async () => {
@@ -328,12 +328,12 @@ describe('the charmcraft service', () => {
           charmcraft.getRevisionInfoFromChannel(
             'placeholder-charm',
             'latest',
-            'stable/feature-123'
-          )
+            'stable/feature-123',
+          ),
         ).rejects.toThrow(
           Error(
-            'Provided channel stable/feature-123 is not supported. This actions currently only works with one of the following default channels: edge, beta, candidate, stable'
-          )
+            'Provided channel stable/feature-123 is not supported. This actions currently only works with one of the following default channels: edge, beta, candidate, stable',
+          ),
         );
       });
     });
@@ -430,7 +430,7 @@ describe('the charmcraft service', () => {
           'placeholder-charm',
           track,
           channel,
-          base
+          base,
         );
         expect(result).toEqual(expected);
       });
@@ -512,7 +512,7 @@ describe('the charmcraft service', () => {
           'placeholder-charm',
           track,
           channel,
-          base
+          base,
         );
         expect(result).toEqual(expected);
       });
@@ -533,12 +533,12 @@ describe('the charmcraft service', () => {
             'placeholder-charm',
             'valid track',
             'invalid-channel',
-            base
-          )
+            base,
+          ),
         ).rejects.toThrow(
           Error(
-            `Provided channel invalid-channel is not supported. This actions currently only works with one of the following default channels: edge, beta, candidate, stable`
-          )
+            `Provided channel invalid-channel is not supported. This actions currently only works with one of the following default channels: edge, beta, candidate, stable`,
+          ),
         );
       });
 
@@ -565,8 +565,8 @@ describe('the charmcraft service', () => {
             'placeholder-charm',
             track,
             channel,
-            base
-          )
+            base,
+          ),
         ).rejects.toThrow(Error(`No track with name ${track}`));
       });
 
@@ -607,8 +607,8 @@ describe('the charmcraft service', () => {
             'placeholder-charm',
             track,
             channel,
-            base
-          )
+            base,
+          ),
         ).rejects.toThrowError();
       });
 
@@ -645,12 +645,12 @@ describe('the charmcraft service', () => {
             'placeholder-charm',
             track,
             channel,
-            base
-          )
+            base,
+          ),
         ).rejects.toThrow(
           Error(
-            `No channel with base name ${base.name}, base channel ${base.channel} and base architecture ${base.architecture}`
-          )
+            `No channel with base name ${base.name}, base channel ${base.channel} and base architecture ${base.architecture}`,
+          ),
         );
       });
 
@@ -691,8 +691,8 @@ describe('the charmcraft service', () => {
             'placeholder-charm',
             track,
             channel,
-            base
-          )
+            base,
+          ),
         ).rejects.toThrowError();
       });
 
@@ -733,12 +733,12 @@ describe('the charmcraft service', () => {
             'placeholder-charm',
             track,
             channel,
-            base
-          )
+            base,
+          ),
         ).rejects.toThrow(
           Error(
-            'Channel is not open. Make sure there was a release made to this channel previously.'
-          )
+            'Channel is not open. Make sure there was a release made to this channel previously.',
+          ),
         );
       });
 
@@ -782,12 +782,12 @@ describe('the charmcraft service', () => {
             'placeholder-charm',
             track,
             channel,
-            base
-          )
+            base,
+          ),
         ).rejects.toThrow(
           Error(
-            'Channel is not open. Make sure there was a release made to this channel previously.'
-          )
+            'Channel is not open. Make sure there was a release made to this channel previously.',
+          ),
         );
       });
     });
@@ -819,7 +819,7 @@ describe('the charmcraft service', () => {
           '--resource',
           'resource-2-k8s:8',
         ],
-        expect.anything()
+        expect.anything(),
       );
     });
 
@@ -841,7 +841,7 @@ describe('the charmcraft service', () => {
           '--channel',
           'latest/candidate',
         ],
-        expect.anything()
+        expect.anything(),
       );
     });
   });

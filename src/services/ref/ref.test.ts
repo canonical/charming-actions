@@ -5,7 +5,7 @@ function createContext(
   eventName: string,
   ref: string,
   main: string,
-  prRefs: { base?: string; head?: string; number?: number } = {}
+  prRefs: { base?: string; head?: string; number?: number } = {},
 ) {
   return {
     eventName,
@@ -36,7 +36,7 @@ describe('the ref helper', () => {
       const context = createContext('invalid-type', 'na', 'main');
       const ref = new Ref(context);
       expect(() => ref.channel()).toThrow(
-        new Error('Invalid event type: invalid-type')
+        new Error('Invalid event type: invalid-type'),
       );
     });
     it('should return latest/edge when pushing to main', () => {
@@ -48,7 +48,7 @@ describe('the ref helper', () => {
       const context = createContext(
         'push',
         'refs/heads/track/some-track',
-        'main'
+        'main',
       );
       const ref = new Ref(context);
       expect(ref.channel()).toEqual('some-track/edge');
