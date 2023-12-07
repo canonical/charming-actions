@@ -1,4 +1,4 @@
-name: Test Charmhub Upload
+name: CI
 
 on:
   push:
