@@ -43417,7 +43417,7 @@ class Ref {
         if (branch.startsWith('track/')) {
             return `${branch.replace('track/', '')}/edge`;
         }
-        throw new Error(`Unsupported branch name ${this.ctx.ref}`);
+        throw new Error(`Unable to determine channel name from branch name "${this.ctx.ref}". See action readme for details on the logic used.`);
     }
     _getChannelForPr() {
         const metadata = this.ctx.payload.pull_request;

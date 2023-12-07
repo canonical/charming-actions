@@ -31,7 +31,7 @@ None
 
 This action automatically selects a Charmhub channel based on the GitHub PR number. For `push`
 events, a Charmhub channel is selected. For `pull_request` events, a `pr-<pr number>` is added to the 
-channel, so that the PR can be tested.
+channel, so that the PR can be tested. 
 
 The Charmhub channel/branch selection logic looks like this:
 
@@ -42,3 +42,9 @@ The Charmhub channel/branch selection logic looks like this:
 | push         |                 | Any other name       | Ignored                           |
 | pull_request | `<branch-name>` | `track/<track-name>` | `<track-name>/edge/pr-<pr number>`|
 | pull_request | Any other name  | Any other name       | `latest/edge/pr-<pr number>`      |
+
+If the action is unable to select a channel, the action will fail. If you for any reason want to ignore the failure
+and continue running the CI, you should set the `continue-on-error` parameter to `true` for this CI step. This is
+mainly useful if you have fallback logic in place that you'd like to use instead of failing.
+
+
