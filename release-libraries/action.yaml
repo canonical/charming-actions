@@ -22,7 +22,7 @@ inputs:
     description: |
       Github Token needed for automatic tagging when publishing
 runs:
-  using: node16
+  using: node20
   main: ../dist/release-libraries/index.js
 branding:
   icon: upload-cloud
