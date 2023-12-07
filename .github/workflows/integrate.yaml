@@ -54,3 +54,10 @@ jobs:
       - name: Build
         run: |
           npm run build
+
+          if [[ -n "$(git status -s)" ]]; then
+            echo "Please run 'npm run build' then commit/push changes"
+            echo
+            git diff
+            exit 1
+          fi
