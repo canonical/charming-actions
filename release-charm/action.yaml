@@ -51,7 +51,7 @@ inputs:
     description: |
       Github Token needed for updating Release Information
 runs:
-  using: node16
+  using: node20
   main: ../dist/release-charm/index.js
 branding:
   icon: upload-cloud
