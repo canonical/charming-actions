@@ -58,14 +58,14 @@ export class ReleaseCharmAction {
           charmName,
           originTrack,
           originChannel,
-          base
+          base,
         );
 
       await this.charmcraft.release(
         charmName,
         charmRev,
         this.destinationChannel,
-        resources
+        resources,
       );
 
       const tagName = `${

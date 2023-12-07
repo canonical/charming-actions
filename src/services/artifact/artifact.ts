@@ -34,7 +34,7 @@ class Artifact {
     const result = await artifacts.uploadArtifact(
       'charmcraft-logs',
       files,
-      basePath
+      basePath,
     );
 
     return `Artifact upload result: ${JSON.stringify(result)}`;

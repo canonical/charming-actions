@@ -20,7 +20,7 @@ export class UploadBundleAction {
 
     if (!this.token) {
       throw new Error(
-        `Input 'github-token' is missing, and not provided in environment`
+        `Input 'github-token' is missing, and not provided in environment`,
       );
     }
 

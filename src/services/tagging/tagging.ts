@@ -16,7 +16,7 @@ class Tagger {
     revision: string,
     channel: string,
     resources: string,
-    tagPrefix?: string
+    tagPrefix?: string,
   ) {
     const { owner, repo } = context.repo;
     if (context.eventName && context.eventName.includes('pull_request')) {
@@ -29,7 +29,7 @@ class Tagger {
       revision,
       channel,
       resources,
-      tagPrefix
+      tagPrefix,
     );
 
     await this.kit.rest.repos.createRelease(content);
@@ -42,7 +42,7 @@ class Tagger {
     revision: string,
     channel: string,
     resources: string,
-    tagPrefix?: string
+    tagPrefix?: string,
   ) {
     const suffix = revision || dayjs().utc().format('YYYYMMDDHHmmss');
     const name = `${tagPrefix ? `${tagPrefix}-` : ''}rev${suffix}`;

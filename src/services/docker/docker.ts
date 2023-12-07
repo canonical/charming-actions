@@ -15,7 +15,7 @@ export async function getImageDigest(uri: string): Promise<string> {
     throw new Error(`No digest found for pulled resource_image '${uri}'`);
   } else if (resourceDigests.length > 1) {
     throw new Error(
-      `Found too many digests for pulled resource_image '${uri}'.  Expected single output, got multiline output '${result.stdout}'.`
+      `Found too many digests for pulled resource_image '${uri}'.  Expected single output, got multiline output '${result.stdout}'.`,
     );
   }
   const resourceDigest = resourceDigests[0];
