@@ -40,3 +40,17 @@ jobs:
         run: |
           npm run format
           npm run lint
+  build:
+    runs-on: ubuntu-latest
+    name: Build
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+      - uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65 # v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: |
+          npm install
+      - name: Build
+        run: |
+          npm run build
