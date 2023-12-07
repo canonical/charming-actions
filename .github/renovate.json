@@ -1,0 +1,126 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":autodetectPinVersions",
+    ":automergePatch",
+    ":label(renovate)",
+    ":prConcurrentLimitNone",
+    ":prHourlyLimitNone",
+    ":prImmediately",
+    ":rebaseStalePrs",
+    ":separatePatchReleases",
+    ":timezone(Europe/Stockholm)",
+    "helpers:disableTypesNodeMajor",
+    "helpers:pinGitHubActionDigests",
+    "npm:unpublishSafe",
+    ":semanticCommits",
+    ":updateNotScheduled",
+    "workarounds:typesNodeVersioning",
+    ":disablePeerDependencies",
+    "schedule:automergeDaily"
+  ],
+
+  "baseBranches": ["main"],
+  "rebaseWhen": "conflicted",
+  "labels": ["dependencies"],
+  "rangeStrategy": "bump",
+  "postUpdateOptions": ["npmDedupe", "yarnDedupeFewer"],
+  "transitiveRemediation": true,
+  "separateMajorMinor": true,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": true
+  },
+  "vulnerabilityAlerts": {
+    "commitMessagePrefix": "chore(renovate): Security update",
+    "labels": ["security"]
+  },
+  "ignorePaths": ["**/node_modules/**"],
+  "packageRules": [
+    {
+      "description": "Group major updates together",
+      "matchPackagePatterns": ["*"],
+      "matchUpdateTypes": ["major"],
+      "reviewersFromCodeOwners": true,
+      "addLabels": ["major", "version-update"],
+      "commitMessagePrefix": "fix(renovate):",
+      "groupName": "major"
+    },
+    {
+      "description": "Group minor updates together",
+      "matchPackagePatterns": ["*"],
+      "matchUpdateTypes": ["minor"],
+      "addLabels": ["minor"],
+      "commitMessagePrefix": "fix(renovate):",
+      "groupName": "minor"
+    },
+    {
+      "description": "Group patch updates together and automerge if tests pass",
+      "matchPackagePatterns": ["*"],
+      "matchUpdateTypes": ["patch"],
+      "addLabels": ["patch"],
+      "commitMessagePrefix": "fix(renovate):",
+      "groupName": "patch",
+      "automerge": true
+    },
+    {
+      "description": "Group pin updates together and automerge if tests pass",
+      "matchPackagePatterns": ["*"],
+      "matchUpdateTypes": ["pin", "digest"],
+      "addLabels": ["pin"],
+      "commitMessagePrefix": "fix(renovate): pin",
+      "groupName": "pin",
+      "automerge": true
+    },
+    {
+      "description": "Automerge any updates to types",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["minor"],
+      "addLabels": ["minor"],
+      "matchPackagePatterns": ["^@types/"],
+      "groupName": "minor-types",
+      "commitMessagePrefix": "fix(renovate): @types",
+      "automerge": true
+    },
+    {
+      "description": "Automerge any updates to linting or prettier",
+      "matchDepTypes": ["devDependencies"],
+      "matchPackagePatterns": ["lint", "prettier"],
+      "automerge": true
+    },
+    {
+      "description": "Automerge peripheral packages",
+      "matchDepTypes": ["devDependencies"],
+      "matchPackagePatterns": ["husky", "jest"],
+      "automerge": true
+    },
+    {
+      "description": "Automerge Github Actions updates",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true
+    },
+    {
+      "matchManagers": "github-actions",
+      "separateMultipleMajor": true,
+      "groupName": "github-actions"
+    },
+    {
+      "matchDepNames": ["npm"],
+      "matchPackagePatterns": ["/npm$"],
+      "matchUpdateTypes": ["major"],
+      "addLabels": ["major"],
+      "groupName": "npm major"
+    },
+    {
+      "matchDepNames": ["typescript"],
+      "matchPackagePatterns": ["^typescript$"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "Typescript major"
+    }
+  ],
+  "platform": "github",
+  "onboarding": false,
+  "requireConfig": "ignored"
+}
