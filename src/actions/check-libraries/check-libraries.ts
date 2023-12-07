@@ -74,7 +74,6 @@ export class CheckLibrariesAction {
         if (this.outcomes.fail) {
           setFailed('Charmcraft libraries are not up to date.');
         }
-        return;
       }
     } catch (e: any) {
       setFailed(e.message);
