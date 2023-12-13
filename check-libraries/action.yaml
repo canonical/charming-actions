@@ -1,6 +1,6 @@
 name: Charmhub Library Checker
 author: Simon Aronsson
-description: |
+description: >
   Check whether charmhub libraries are up to date with their remote counterparts.
 
 branding:
@@ -20,14 +20,14 @@ inputs:
   charmcraft-channel:
     required: false
     default: 'latest/stable'
-    description: |
-      Snap channel to use when installing charmcraft
+    description: >
+      Snap channel to use when installing charmcraft.
   
   # Tokens
   credentials:
     required: true
     description: >
-      Charmhub token used to fetch remote libraries through charmcraft
+      Charmhub token used to fetch remote libraries through charmcraft.
   github-token:
     required: true
     description: >
@@ -43,7 +43,7 @@ inputs:
     required: false
     default: "Libraries: OK"
     description: >
-      The label to use when all libraries are in sync
+      The label to use when all libraries are in sync.
   label-fail:
     required: false
     default: "Libraries: Out of sync"
