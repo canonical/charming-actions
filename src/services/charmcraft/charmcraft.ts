@@ -190,11 +190,11 @@ class Charmcraft {
     if (destructive) args.push('--destructive-mode');
 
     await exec('sudo', args, this.execOptions);
-    // as we don't know the name of the name of the charm file output, we'll need to glob for it.
-    // however, we expect charmcraft pack to always output one charm file.
+    // As we don't know the name of the charm files output, we'll need to glob for them.
+    // As charmcraft pack could create multiple charm files, we return an array.
     const globber = await glob.create('./*.charm');
     const paths = await globber.glob();
-    return paths[0];
+    return paths;
   }
 
   async upload(

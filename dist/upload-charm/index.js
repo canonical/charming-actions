@@ -42321,8 +42321,8 @@ class UploadCharmAction {
             try {
                 yield this.snap.install('charmcraft', this.charmcraftChannel);
                 process.chdir(this.charmPath);
-                const charm = this.builtCharmPath
-                    ? this.builtCharmPath
+                const charms = this.builtCharmPath
+                    ? [this.builtCharmPath]
                     : yield this.charmcraft.pack(this.destructive);
                 const overrides = this.overrides;
                 const imageResults = yield this.charmcraft.uploadResources(overrides);
@@ -42338,8 +42338,14 @@ class UploadCharmAction {
                     ...fileResults.flags,
                     ...staticResults.flags,
                 ];
-                const rev = yield this.charmcraft.upload(charm, this.channel, flags);
-                yield this.tagger.tag(rev, this.channel, resourceInfo, this.tagPrefix);
+                // If there are multiple charm files, we upload them one by one, so that the file
+                // released at last(which determines the version under 'platform' shown on Charmhub UI)
+                // is consistent for a charm.
+                yield charms.reduce((previousUpload, charm) => __awaiter(this, void 0, void 0, function* () {
+                    yield previousUpload;
+                    const rev = yield this.charmcraft.upload(charm, this.channel, flags);
+                    yield this.tagger.tag(rev, this.channel, resourceInfo, this.tagPrefix);
+                }), Promise.resolve());
             }
             catch (error) {
                 core.setFailed(error.message);
@@ -42743,11 +42749,11 @@ class Charmcraft {
             if (destructive)
                 args.push('--destructive-mode');
             yield (0, exec_1.exec)('sudo', args, this.execOptions);
-            // as we don't know the name of the name of the charm file output, we'll need to glob for it.
-            // however, we expect charmcraft pack to always output one charm file.
+            // As we don't know the name of the charm files output, we'll need to glob for them.
+            // As charmcraft pack could create multiple charm files, we return an array.
             const globber = yield glob.create('./*.charm');
             const paths = yield globber.glob();
-            return paths[0];
+            return paths;
         });
     }
     upload(charm, channel, flags) {
