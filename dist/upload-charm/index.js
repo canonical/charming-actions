@@ -42727,8 +42727,14 @@ class Charmcraft {
             };
         });
     }
+    _read() {
+        if (fs.existsSync('metadata.yaml')) {
+            return fs.readFileSync('metadata.yaml');
+        }
+        return fs.readFileSync('charmcraft.yaml');
+    }
     metadata() {
-        const buffer = fs.readFileSync('metadata.yaml');
+        const buffer = this._read();
         const metadata = yaml.load(buffer.toString());
         const resources = Object.entries(metadata.resources || {});
         const files = resources
