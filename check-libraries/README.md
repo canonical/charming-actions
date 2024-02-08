@@ -26,6 +26,11 @@ but it can also be configured to fail the entire build.
 | `comment-on-pr`      | Whether to post a warning as a comment if drift is detected as part of checking a PR. Defaults to `true`. |          |
 | `fail-build`         | Whether to fail the entire build if drift is detected. Defaults to `false`.                               |          |
 | `charmcraft-channel` | Snap channel to use when installing charmcraft. Defaults to `latest/stable`.                                |          |
+| `use-labels` | Whether to use PR labels to show the status of the charm libraries. Defaults to `true`.                                |          |
+| `label-success` | The label to use when all libraries are in sync. Defaults to `"Libraries: OK"`.                                |          |
+| `label-fail` | The label to use when libraries are out of sync. Defaults to `"Libraries: Out of sync"`.                                |          |
+
+
 
 
 ### Outputs
