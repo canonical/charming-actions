@@ -54,8 +54,8 @@ export class UploadCharmAction {
       await this.snap.install('charmcraft', this.charmcraftChannel);
       process.chdir(this.charmPath!);
 
-      const charm = this.builtCharmPath
-        ? this.builtCharmPath
+      const charms = this.builtCharmPath
+        ? [this.builtCharmPath]
         : await this.charmcraft.pack(this.destructive);
 
       const overrides = this.overrides!;
@@ -76,9 +76,14 @@ export class UploadCharmAction {
         ...staticResults.flags,
       ];
 
-      const rev = await this.charmcraft.upload(charm, this.channel, flags);
-
-      await this.tagger.tag(rev, this.channel, resourceInfo, this.tagPrefix);
+      // If there are multiple charm files, we upload them one by one, so that the file
+      // released at last(which determines the version under 'platform' shown on Charmhub UI)
+      // is consistent for a charm.
+      await charms.reduce(async (previousUpload, charm) => {
+        await previousUpload;
+        const rev = await this.charmcraft.upload(charm, this.channel, flags);
+        await this.tagger.tag(rev, this.channel, resourceInfo, this.tagPrefix);
+      }, Promise.resolve());
     } catch (error: any) {
       core.setFailed(error.message);
       core.error(error.stack);
