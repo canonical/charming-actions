@@ -9,14 +9,15 @@ of the following actions:
 - [canonical/charming-actions/channel](channel/README.md)
 - [canonical/charming-actions/upload-charm](upload-charm/README.md)
 - [canonical/charming-actions/upload-bundle](upload-bundle/README.md)
+- [canonical/charming-actions/dump-logs](dump-logs/README.md)
 
 ## Usage
 
 > #### ⚠️ Prerequisites
-> 
-> To use these actions, start by adding a repository secret to your Github repository. In 
-> the example below, it's called `CHARMCRAFT_TOKEN`, but can be anything you want. 
-> See https://juju.is/docs/sdk/remote-env-auth for more information 
+>
+> To use these actions, start by adding a repository secret to your Github repository. In
+> the example below, it's called `CHARMCRAFT_TOKEN`, but can be anything you want.
+> See https://juju.is/docs/sdk/remote-env-auth for more information
 > on how to generate the appropriate credentials. `GITHUB_TOKEN` does not need to be explicitly
 > added to the repository secrets as GitHub Actions will generate a context-bound token for
 > each workflow execution.
@@ -27,7 +28,7 @@ The below snippet illustrates how to use the actions of the collection in a PR w
 
 name: Pull Request
 
-on: 
+on:
   pull_request:
     branches:
       - main
@@ -40,7 +41,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0  
+          fetch-depth: 0
       - name: Check libraries
         uses: canonical/charming-actions/check-libraries@2.2.0
         with:
@@ -86,8 +87,8 @@ jobs:
 
 ## Development
 
-To be able to contribute to this repository, you first need to make sure you have 
-`npm` and `nodejs` installed in your local development environment. This installation varies 
+To be able to contribute to this repository, you first need to make sure you have
+`npm` and `nodejs` installed in your local development environment. This installation varies
 depending on the OS and distribution you are using. For more detailed instructions, see [the official NodeJS page](https://nodejs.org/).
 
 Once that is done, start by cloning the repository:
