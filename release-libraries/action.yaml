@@ -21,6 +21,11 @@ inputs:
     required: true
     description: |
       Github Token needed for automatic tagging when publishing
+  fail-build:
+    required: false
+    default: false
+    description: >
+      Whether to fail the entire build if publishing lib fails for any reason.
 runs:
   using: node20
   main: ../dist/release-libraries/index.js
