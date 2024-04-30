@@ -16,6 +16,7 @@ export class UploadCharmAction {
   private charmPath: string;
   private tagPrefix?: string;
   private token: string;
+  private githubTag: boolean;
 
   constructor() {
     this.channel = core.getInput('channel');
@@ -25,6 +26,7 @@ export class UploadCharmAction {
     this.tagPrefix = core.getInput('tag-prefix');
     this.token = core.getInput('github-token');
     this.destructive = core.getBooleanInput('destructive-mode');
+    this.githubTag = core.getBooleanInput('github-tag');
 
     if (!this.token) {
       throw new Error(`Input 'github-token' is missing`);
@@ -82,7 +84,14 @@ export class UploadCharmAction {
       await charms.reduce(async (previousUpload, charm) => {
         await previousUpload;
         const rev = await this.charmcraft.upload(charm, this.channel, flags);
-        await this.tagger.tag(rev, this.channel, resourceInfo, this.tagPrefix);
+        if (this.githubTag) {
+          await this.tagger.tag(
+            rev,
+            this.channel,
+            resourceInfo,
+            this.tagPrefix,
+          );
+        }
       }, Promise.resolve());
     } catch (error: any) {
       core.setFailed(error.message);
