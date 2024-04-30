@@ -44,6 +44,11 @@ export interface ResourceInfo {
   resourceRev: string;
 }
 
+export interface RevisionResourceInfo {
+  charmRev: string;
+  resources: ResourceInfo[];
+}
+
 export interface Version {
   major: number;
   minor: number;
