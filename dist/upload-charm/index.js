@@ -42517,6 +42517,7 @@ class UploadCharmAction {
         this.tagPrefix = core.getInput('tag-prefix');
         this.token = core.getInput('github-token');
         this.destructive = core.getBooleanInput('destructive-mode');
+        this.githubTag = core.getBooleanInput('github-tag');
         if (!this.token) {
             throw new Error(`Input 'github-token' is missing`);
         }
@@ -42562,7 +42563,9 @@ class UploadCharmAction {
                 yield charms.reduce((previousUpload, charm) => __awaiter(this, void 0, void 0, function* () {
                     yield previousUpload;
                     const rev = yield this.charmcraft.upload(charm, this.channel, flags);
-                    yield this.tagger.tag(rev, this.channel, resourceInfo, this.tagPrefix);
+                    if (this.githubTag) {
+                        yield this.tagger.tag(rev, this.channel, resourceInfo, this.tagPrefix);
+                    }
                 }), Promise.resolve());
             }
             catch (error) {
