@@ -6,11 +6,12 @@
   "author": "Kenneth Koski <kenneth.koski@canonical.com>",
   "license": "GPL-3.0-only",
   "scripts": {
-    "build": "npm run build:upload-charm && npm run build:upload-bundle && npm run build:channel && npm run build:check-libraries && npm run build:release-charm && npm run build:release-libraries",
+    "build": "npm run build:upload-charm && npm run build:upload-bundle && npm run build:channel && npm run build:check-libraries && npm run build:promote-charm && npm run build:release-charm && npm run build:release-libraries",
     "build:upload-bundle": "ncc build src/entries/upload-bundle.ts -o dist/upload-bundle",
     "build:upload-charm": "ncc build src/entries/upload-charm.ts -o dist/upload-charm",
     "build:channel": "ncc build src/entries/channel.ts -o dist/channel -d",
     "build:check-libraries": "ncc build src/entries/check-libraries.ts -o dist/check-libraries",
+    "build:promote-charm": "ncc build src/entries/promote-charm.ts -o dist/promote-charm",
     "build:release-charm": "ncc build src/entries/release-charm.ts -o dist/release-charm",
     "build:release-libraries": "ncc build src/entries/release-libraries.ts -o dist/release-libraries",
     "test": "jest",

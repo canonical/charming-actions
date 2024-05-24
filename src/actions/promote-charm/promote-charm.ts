@@ -4,7 +4,7 @@ import { Snap, Charmcraft, Artifact } from '../../services';
 import { Base } from '../../services/charmcraft/types';
 import { RevisionResourceInfo } from '../../types';
 
-export class ReleaseCharmAction {
+export class PromoteCharmAction {
   private artifacts: Artifact;
   private snap: Snap;
   private charmcraft: Charmcraft;
