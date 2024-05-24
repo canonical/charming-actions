@@ -422,12 +422,19 @@ class Charmcraft {
   async publishLib(charm: string, majorVersion: string, libName: string) {
     const args = ['publish-lib', `charms.${charm}.${majorVersion}.${libName}`];
     debug(`about to publish lib with ${args}`);
-    await exec('charmcraft', args, this.execOptions).catch((reason: any) => {
-      const msg: string = `charmcraft ${args} ${this.execOptions} failed with ${reason}`;
-      debug(msg);
-      core.setFailed(msg);
+    const { exitCode, stdout, stderr } = await getExecOutput(
+      'charmcraft',
+      args,
+      this.execOptions,
+    );
+    if (exitCode !== 0 || stdout.indexOf('has a wrong LIBPATCH number') > 0) {
+      if (exitCode !== 0) {
+        core.setFailed(stderr);
+      } else {
+        core.setFailed(stdout);
+      }
       return false;
-    });
+    }
     return true;
   }
 }

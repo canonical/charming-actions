@@ -845,4 +845,52 @@ describe('the charmcraft service', () => {
       );
     });
   });
+
+  describe('test publishing libs', () => {
+    describe('with a correct version', () => {
+      it('should succeed without a failure', async () => {
+        const charmcraft = new Charmcraft('token');
+
+        mockExec.mockResolvedValue({
+          exitCode: 0,
+          stderr: '',
+          stdout:
+            'Library charms.test.v0.lib sent to the store with version 0.2',
+        });
+
+        const response = await charmcraft.publishLib('test', 'v0', 'lib');
+        expect(response).toBeTruthy();
+
+        expect(mockExec).toHaveBeenCalled();
+        expect(mockExec).toHaveBeenCalledWith(
+          'charmcraft',
+          ['publish-lib', 'charms.test.v0.lib'],
+          expect.anything(),
+        );
+      });
+    });
+
+    describe('with an incorrect version', () => {
+      it('should return a failure', async () => {
+        const charmcraft = new Charmcraft('token');
+
+        mockExec.mockResolvedValue({
+          exitCode: 0,
+          stderr: '',
+          stdout:
+            "Library charms.test.v0.lib has a wrong LIBPATCH number, it's too high and needs to be consecutive Charmhub highest version is 0.1.",
+        });
+
+        const response = await charmcraft.publishLib('test', 'v0', 'lib');
+        expect(response).toBeFalsy();
+
+        expect(mockExec).toHaveBeenCalled();
+        expect(mockExec).toHaveBeenCalledWith(
+          'charmcraft',
+          ['publish-lib', 'charms.test.v0.lib'],
+          expect.anything(),
+        );
+      });
+    });
+  });
 });
