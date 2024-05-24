@@ -397,8 +397,7 @@ class Charmcraft {
       throw new Error(`No track with name ${targetTrack}`);
     }
 
-    return charmcraftStatus[trackIndex]
-      .map(x => x.base);
+    return charmcraftStatus[trackIndex].mappings.map((x) => x.base);
   }
 
   async release(
