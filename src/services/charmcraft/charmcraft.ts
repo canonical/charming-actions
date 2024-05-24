@@ -397,14 +397,8 @@ class Charmcraft {
       throw new Error(`No track with name ${targetTrack}`);
     }
 
-    const basesArray = [] as Array<Base>;
-
-    const { mappings } = charmcraftStatus[trackIndex];
-    for (let i = 0; i < mappings.length; i += 1) {
-      basesArray.push(mappings[i].base);
-    }
-
-    return basesArray;
+    return charmcraftStatus[trackIndex]
+      .map(x => x.base);
   }
 
   async release(
