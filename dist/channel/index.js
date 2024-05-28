@@ -42999,6 +42999,17 @@ class Charmcraft {
             return { charmRev: revision.toString(), resources: resourceInfoArray };
         });
     }
+    getBases(charm, targetTrack) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // Get status of this charm as a structured object
+            const charmcraftStatus = yield this.statusJson(charm);
+            const trackIndex = charmcraftStatus.findIndex((track) => track.track === targetTrack);
+            if (trackIndex === -1) {
+                throw new Error(`No track with name ${targetTrack}`);
+            }
+            return charmcraftStatus[trackIndex].mappings.map((x) => x.base);
+        });
+    }
     release(charm, charmRevision, destinationChannel, resourceInfo) {
         return __awaiter(this, void 0, void 0, function* () {
             const resourceArgs = [];

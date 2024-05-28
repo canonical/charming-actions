@@ -1,0 +1,34 @@
+name: Charmhub Promotion
+description: Promote a charm from a channel to another.
+author: Luca Bello
+inputs:
+  destination-channel:
+    required: true
+    description: |
+      Channel to which the charm will be released
+  origin-channel:
+    required: true
+    description: |
+      Origin Channel from where the charm that needs to be promoted will be
+      pulled.
+  charm-path:
+    required: false
+    default: '.'
+    description: |
+      Path to charm directory
+  charmcraft-channel:
+    required: false
+    default: 'latest/edge'
+    description: |
+      Snap channel to use when installing charmcraft
+  credentials:
+    required: true
+    description: |
+      Credentials exported from `charmcraft login --export`. See
+      https://juju.is/docs/sdk/remote-env-auth for more info
+runs:
+  using: node20
+  main: ../dist/release-charm/index.js
+branding:
+  icon: upload-cloud
+  color: orange

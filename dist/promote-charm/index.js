@@ -42466,7 +42466,7 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 797:
+/***/ 3706:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -42504,50 +42504,38 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ReleaseCharmAction = void 0;
+exports.PromoteCharmAction = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const services_1 = __nccwpck_require__(720);
-class ReleaseCharmAction {
+class PromoteCharmAction {
     constructor() {
         this.destinationChannel = core.getInput('destination-channel');
         this.originChannel = core.getInput('origin-channel');
-        this.baseName = core.getInput('base-name');
-        this.baseChannel = core.getInput('base-channel');
-        this.baseArchitecture = core.getInput('base-architecture');
         this.charmcraftChannel = core.getInput('charmcraft-channel');
-        this.token = core.getInput('github-token');
-        this.tagPrefix = core.getInput('tag-prefix');
         this.charmPath = core.getInput('charm-path');
-        if (!this.token) {
-            throw new Error(`Input 'github-token' is missing`);
-        }
         this.artifacts = new services_1.Artifact();
         this.snap = new services_1.Snap();
-        this.tagger = new services_1.Tagger(this.token);
         this.charmcraft = new services_1.Charmcraft();
     }
+    getRevisions(name, track, channel, bases) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return Promise.all(bases.map((base) => __awaiter(this, void 0, void 0, function* () {
+                return this.charmcraft.getRevisionInfoFromChannelJson(name, track, channel, base);
+            })));
+        });
+    }
     run() {
-        var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 yield this.snap.install('charmcraft', this.charmcraftChannel);
                 process.chdir(this.charmPath);
                 const { name: charmName } = this.charmcraft.metadata();
                 const [originTrack, originChannel] = this.originChannel.split('/');
-                const base = {
-                    name: this.baseName,
-                    channel: this.baseChannel,
-                    architecture: this.baseArchitecture,
-                };
-                const { charmRev, resources } = yield this.charmcraft.getRevisionInfoFromChannelJson(charmName, originTrack, originChannel, base);
-                yield this.charmcraft.release(charmName, charmRev, this.destinationChannel, resources);
-                const tagName = `${this.tagPrefix ? `${this.tagPrefix}-` : ''}rev${charmRev}`;
-                const release = yield this.tagger.getReleaseByTag(tagName);
-                const newReleaseString = `Released to '${this.destinationChannel}' at ${this.tagger.get_date_text()}\n`;
-                // add release string between last release statement and generated release note (What's changed section)
-                const generateNotesIndex = (_a = release.body) === null || _a === void 0 ? void 0 : _a.indexOf("## What's Changed");
-                const newReleaseBody = (_b = release.body) === null || _b === void 0 ? void 0 : _b.slice(0, generateNotesIndex).concat(newReleaseString, release.body.slice(generateNotesIndex));
-                yield this.tagger.updateRelease(release.id, newReleaseBody);
+                const basesArray = yield this.charmcraft.getBases(charmName, originTrack);
+                const revisions = yield this.getRevisions(charmName, originTrack, originChannel, basesArray);
+                yield Promise.all(revisions.map(({ charmRev, resources }) => __awaiter(this, void 0, void 0, function* () {
+                    return this.charmcraft.release(charmName, charmRev, this.destinationChannel, resources);
+                })));
             }
             catch (error) {
                 core.setFailed(error.message);
@@ -42558,12 +42546,12 @@ class ReleaseCharmAction {
         });
     }
 }
-exports.ReleaseCharmAction = ReleaseCharmAction;
+exports.PromoteCharmAction = PromoteCharmAction;
 
 
 /***/ }),
 
-/***/ 1138:
+/***/ 3935:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -42578,10 +42566,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const release_charm_1 = __nccwpck_require__(797);
+const promote_charm_1 = __nccwpck_require__(3706);
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
 (() => __awaiter(void 0, void 0, void 0, function* () {
-    yield new release_charm_1.ReleaseCharmAction().run();
+    yield new promote_charm_1.PromoteCharmAction().run();
 }))();
 
 
@@ -45428,7 +45416,7 @@ module.exports = parseParams
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(1138);
+/******/ 	var __webpack_exports__ = __nccwpck_require__(3935);
 /******/ 	module.exports = __webpack_exports__;
 /******/ 	
 /******/ })()

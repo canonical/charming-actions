@@ -5,7 +5,7 @@ import * as glob from '@actions/glob';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 
-import { Metadata, ResourceInfo } from '../../types';
+import { Metadata, ResourceInfo, RevisionResourceInfo } from '../../types';
 import { getImageDigest } from '../docker';
 import { Base, Mapping, Status, Track } from './types';
 
@@ -315,7 +315,7 @@ class Charmcraft {
     targetTrack: string,
     targetChannel: string,
     targetBase: Base,
-  ): Promise<{ charmRev: string; resources: Array<ResourceInfo> }> {
+  ): Promise<RevisionResourceInfo> {
     const acceptedChannels = ['stable', 'candidate', 'beta', 'edge'];
     if (!acceptedChannels.includes(targetChannel)) {
       throw new Error(
@@ -383,6 +383,21 @@ class Charmcraft {
     }
 
     return { charmRev: revision.toString(), resources: resourceInfoArray };
+  }
+
+  async getBases(charm: string, targetTrack: string): Promise<Base[]> {
+    // Get status of this charm as a structured object
+    const charmcraftStatus = await this.statusJson(charm);
+
+    const trackIndex = charmcraftStatus.findIndex(
+      (track: Track) => track.track === targetTrack,
+    );
+
+    if (trackIndex === -1) {
+      throw new Error(`No track with name ${targetTrack}`);
+    }
+
+    return charmcraftStatus[trackIndex].mappings.map((x) => x.base);
   }
 
   async release(
