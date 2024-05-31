@@ -39,7 +39,7 @@ class Charmcraft {
       core.warning(msg);
     }
 
-    const { name: charmName, images } = this.metadata();
+    const { name: charmName, images } = await this.metadata();
     const flags: string[] = [];
 
     await Promise.all(
@@ -69,7 +69,7 @@ class Charmcraft {
   }
 
   async fetchFileFlags(overrides: { [key: string]: string }) {
-    const { name: charmName, files } = this.metadata();
+    const { name: charmName, files } = await this.metadata();
     // If an image resource has been overridden in the action input,
     // we don't want to upload a new version of it either.
     const filtered = files.filter(
@@ -164,16 +164,29 @@ class Charmcraft {
     };
   }
 
-  _read() {
+  _readMetadata(): Metadata {
     if (fs.existsSync('metadata.yaml')) {
-      return fs.readFileSync('metadata.yaml');
+      return yaml.load(fs.readFileSync('metadata.yaml', 'utf8')) as Metadata;
     }
-    return fs.readFileSync('charmcraft.yaml');
+    return yaml.load(fs.readFileSync('charmcraft.yaml', 'utf8')) as Metadata;
   }
 
-  metadata() {
-    const buffer = this._read();
-    const metadata = yaml.load(buffer.toString()) as Metadata;
+  async expandExtensions() {
+    const output = await getExecOutput('charmcraft', ['expand-extensions'], {
+      silent: true,
+    });
+    return output.stdout;
+  }
+
+  charmName(): string {
+    return this._readMetadata().name;
+  }
+
+  async metadata() {
+    let metadata = this._readMetadata();
+    if (metadata.extensions) {
+      metadata = yaml.load(await this.expandExtensions()) as Metadata;
+    }
     const resources = Object.entries(metadata.resources || {});
 
     const files = resources
@@ -224,7 +237,7 @@ class Charmcraft {
   }
 
   async hasDriftingLibs(): Promise<LibStatus> {
-    const { name } = this.metadata();
+    const { name } = await this.metadata();
     const args = ['fetch-lib'];
     const result = await getExecOutput('charmcraft', args, this.execOptions);
     const re = new RegExp(`${name}`);

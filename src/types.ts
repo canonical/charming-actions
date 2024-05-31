@@ -26,6 +26,7 @@ export type PullRequestMetadata = {
 export type Metadata = {
   name: string;
   resources: { [key: string]: Resource };
+  extensions?: string[];
 };
 
 export interface Tokens {
