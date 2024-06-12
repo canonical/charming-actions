@@ -28,7 +28,7 @@ inputs:
       https://juju.is/docs/sdk/remote-env-auth for more info
 runs:
   using: node20
-  main: ../dist/release-charm/index.js
+  main: ../dist/promote-charm/index.js
 branding:
   icon: upload-cloud
   color: orange
