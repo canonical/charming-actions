@@ -164,7 +164,7 @@ class Charmcraft {
     };
   }
 
-  _readMetadata(): Metadata {
+  private readMetadata(): Metadata {
     if (fs.existsSync('metadata.yaml')) {
       return yaml.load(fs.readFileSync('metadata.yaml', 'utf8')) as Metadata;
     }
@@ -179,11 +179,11 @@ class Charmcraft {
   }
 
   charmName(): string {
-    return this._readMetadata().name;
+    return this.readMetadata().name;
   }
 
   async metadata() {
-    let metadata = this._readMetadata();
+    let metadata = this.readMetadata();
     if (metadata.extensions) {
       metadata = yaml.load(await this.expandExtensions()) as Metadata;
     }

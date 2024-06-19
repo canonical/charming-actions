@@ -42929,7 +42929,7 @@ class Charmcraft {
             };
         });
     }
-    _readMetadata() {
+    readMetadata() {
         if (fs.existsSync('metadata.yaml')) {
             return yaml.load(fs.readFileSync('metadata.yaml', 'utf8'));
         }
@@ -42944,11 +42944,11 @@ class Charmcraft {
         });
     }
     charmName() {
-        return this._readMetadata().name;
+        return this.readMetadata().name;
     }
     metadata() {
         return __awaiter(this, void 0, void 0, function* () {
-            let metadata = this._readMetadata();
+            let metadata = this.readMetadata();
             if (metadata.extensions) {
                 metadata = yaml.load(yield this.expandExtensions());
             }
