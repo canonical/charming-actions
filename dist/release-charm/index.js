@@ -42532,7 +42532,7 @@ class ReleaseCharmAction {
             try {
                 yield this.snap.install('charmcraft', this.charmcraftChannel);
                 process.chdir(this.charmPath);
-                const { name: charmName } = this.charmcraft.metadata();
+                const { name: charmName } = yield this.charmcraft.metadata();
                 const [originTrack, originChannel] = this.originChannel.split('/');
                 const base = {
                     name: this.baseName,
@@ -42841,7 +42841,7 @@ class Charmcraft {
                     `If you wish to upload the OCI image, set 'upload-image' to 'true'`;
                 core.warning(msg);
             }
-            const { name: charmName, images } = this.metadata();
+            const { name: charmName, images } = yield this.metadata();
             const flags = [];
             yield Promise.all(images
                 // If an image resource has been overridden in the action input,
@@ -42862,7 +42862,7 @@ class Charmcraft {
     }
     fetchFileFlags(overrides) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { name: charmName, files } = this.metadata();
+            const { name: charmName, files } = yield this.metadata();
             // If an image resource has been overridden in the action input,
             // we don't want to upload a new version of it either.
             const filtered = files.filter(([name]) => !overrides || !Object.keys(overrides).includes(name));
@@ -42929,27 +42929,42 @@ class Charmcraft {
             };
         });
     }
-    _read() {
+    readMetadata() {
         if (fs.existsSync('metadata.yaml')) {
-            return fs.readFileSync('metadata.yaml');
+            return yaml.load(fs.readFileSync('metadata.yaml', 'utf8'));
         }
-        return fs.readFileSync('charmcraft.yaml');
+        return yaml.load(fs.readFileSync('charmcraft.yaml', 'utf8'));
+    }
+    expandExtensions() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const output = yield (0, exec_1.getExecOutput)('charmcraft', ['expand-extensions'], {
+                silent: true,
+            });
+            return output.stdout;
+        });
+    }
+    charmName() {
+        return this.readMetadata().name;
     }
     metadata() {
-        const buffer = this._read();
-        const metadata = yaml.load(buffer.toString());
-        const resources = Object.entries(metadata.resources || {});
-        const files = resources
-            .filter(([, res]) => res.type === 'file')
-            .map(([name]) => name);
-        const images = resources
-            .filter(([, res]) => res.type === 'oci-image')
-            .map(([name, res]) => [name, res['upstream-source']]);
-        return {
-            images,
-            files,
-            name: metadata.name,
-        };
+        return __awaiter(this, void 0, void 0, function* () {
+            let metadata = this.readMetadata();
+            if (metadata.extensions) {
+                metadata = yaml.load(yield this.expandExtensions());
+            }
+            const resources = Object.entries(metadata.resources || {});
+            const files = resources
+                .filter(([, res]) => res.type === 'file')
+                .map(([name]) => name);
+            const images = resources
+                .filter(([, res]) => res.type === 'oci-image')
+                .map(([name, res]) => [name, res['upstream-source']]);
+            return {
+                images,
+                files,
+                name: metadata.name,
+            };
+        });
     }
     pack(destructive) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -42982,7 +42997,7 @@ class Charmcraft {
     }
     hasDriftingLibs() {
         return __awaiter(this, void 0, void 0, function* () {
-            const { name } = this.metadata();
+            const { name } = yield this.metadata();
             const args = ['fetch-lib'];
             const result = yield (0, exec_1.getExecOutput)('charmcraft', args, this.execOptions);
             const re = new RegExp(`${name}`);

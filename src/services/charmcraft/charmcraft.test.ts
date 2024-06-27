@@ -1,4 +1,5 @@
 import * as exec from '@actions/exec';
+import fs from 'fs';
 import { Charmcraft } from '.';
 
 describe('the charmcraft service', () => {
@@ -18,7 +19,11 @@ describe('the charmcraft service', () => {
     ].forEach(({ text, expected }) => {
       it(`should detect when lib ${text}`, async () => {
         const charmcraft = new Charmcraft('token');
-        charmcraft.metadata = () => ({ name: 'hello', images: [], files: [] });
+        charmcraft.metadata = async () => ({
+          name: 'hello',
+          images: [],
+          files: [],
+        });
         mockExec.mockResolvedValue({ exitCode: 0, stderr: text, stdout: '' });
 
         const status = await charmcraft.hasDriftingLibs();
@@ -27,11 +32,41 @@ describe('the charmcraft service', () => {
     });
   });
 
+  describe('when getting charm metadata', () => {
+    it('should return the metadata after applying the charmcraft extensions', async () => {
+      jest
+        .spyOn(fs, 'existsSync')
+        .mockImplementationOnce((file) => file === 'charmcraft.yaml')
+        .mockImplementationOnce((file) => file === 'charmcraft.yaml');
+      jest
+        .spyOn(fs, 'readFileSync')
+        .mockImplementationOnce(() =>
+          JSON.stringify({ name: 'test', extensions: ['test'] }),
+        );
+      mockExec.mockResolvedValue({
+        exitCode: 0,
+        stderr: '',
+        stdout: JSON.stringify({
+          name: 'test',
+          resources: {
+            'test-image': {
+              type: 'oci-image',
+              'upstream-source': 'test:latest',
+            },
+          },
+        }),
+      });
+      const charmcraft = new Charmcraft('token');
+      const metadata = await charmcraft.metadata();
+      expect(metadata.images).toEqual([['test-image', 'test:latest']]);
+    });
+  });
+
   describe('when uploading a charm', () => {
     describe('with file resources', () => {
       it('should use the latest revision for the file resources', async () => {
         const charmcraft = new Charmcraft('token');
-        charmcraft.metadata = () => ({
+        charmcraft.metadata = async () => ({
           images: [],
           files: ['resource_1'],
           name: 'hello',
@@ -65,7 +100,7 @@ describe('the charmcraft service', () => {
 
       it('should fail if there are no resource revisions for a file resource that is being looked up', async () => {
         const charmcraft = new Charmcraft('token');
-        charmcraft.metadata = jest.fn(() => ({
+        charmcraft.metadata = jest.fn(async () => ({
           images: [['hello', 'docker.io/library/hello:latest']],
           files: ['resource_1'],
           name: 'hello',
@@ -85,7 +120,7 @@ describe('the charmcraft service', () => {
       });
       it('should not include overriden images', async () => {
         const charmcraft = new Charmcraft('token');
-        charmcraft.metadata = jest.fn(() => ({
+        charmcraft.metadata = jest.fn(async () => ({
           images: [['hello', 'docker.io/library/hello:latest']],
           files: ['resource_1'],
           name: 'hello',
@@ -156,7 +191,7 @@ describe('the charmcraft service', () => {
         const charmcraft = new Charmcraft('token');
 
         charmcraft.uploadResource = jest.fn();
-        charmcraft.metadata = jest.fn(() => ({
+        charmcraft.metadata = jest.fn(async () => ({
           name: 'hello',
           files: ['resource_1'],
           images,

@@ -42,7 +42,7 @@ export class ReleaseLibrariesAction {
     process.chdir(this.charmPath!);
 
     this.charmcraft = new Charmcraft(this.tokens.charmhub);
-    this.charmName = this.charmcraft.metadata().name;
+    this.charmName = this.charmcraft.charmName();
     this.charmNamePy = this.charmName.split('-').join('_'); // replace all
     this.snap = new Snap();
   }

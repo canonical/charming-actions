@@ -43,7 +43,7 @@ export class ReleaseCharmAction {
     try {
       await this.snap.install('charmcraft', this.charmcraftChannel);
       process.chdir(this.charmPath!);
-      const { name: charmName } = this.charmcraft.metadata();
+      const { name: charmName } = await this.charmcraft.metadata();
 
       const [originTrack, originChannel] = this.originChannel.split('/');
 
