@@ -47,6 +47,7 @@ In multi charm repo, you would also need to provide the charm path; this is nece
 | Key                  | Description                                                                                             | Required |
 | -------------------- | ------------------------------------------------------------------------------------------------------- | -------- | 
 | `credentials`        | Credentials [exported](https://juju.is/docs/sdk/remote-env-auth) using `charmcraft login --export`.     | ✔️       |
+| `github-token`       | Github Token needed for automatic tagging when promoting                                                | ✔️       |
 | `destination-channel`| Channel to which the charm will be released. It must be in the format of `track/risk`.                  | ✔️       |
 | `origin-channel`     | Origin Channel from where the charm that needs to be promoted will be pulled.                           | ✔️       |
 | `charm-path`         | Path to the charm where `metadata.yaml` is located. Defaults to the current working directory.          |          |    
