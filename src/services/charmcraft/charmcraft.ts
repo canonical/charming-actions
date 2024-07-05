@@ -51,18 +51,30 @@ class Charmcraft {
         )
         .map(async ([name, image]) => {
           if (this.uploadImage) {
-            await this.uploadResource(image, charmName, name);
+            // await this.uploadResource(image, charmName, name);
+            const command = await this.uploadResource(image, charmName, name);
+            console.log(command);
+            const output = JSON.parse(command.output);
+            const { revision } = output;
+            const resourceFlag = {
+              flag: `--resource=${name}:${revision}`,
+              info:
+                `    -  ${name}: ${image}\n` +
+                `       resource-revision: ${revision}\n`,
+            };
+            flags.push(resourceFlag.flag);
+            resourceInfo += resourceFlag.info;
           }
-          const resourceFlag = await this.buildResourceFlag(
-            charmName,
-            name,
-            image,
-          );
+          // const resourceFlag = await this.buildResourceFlag(
+          //   charmName,
+          //   name,
+          //   image,
+          // );
 
-          if (!resourceFlag) return;
+          // if (!resourceFlag) return;
 
-          flags.push(resourceFlag.flag);
-          resourceInfo += resourceFlag.info;
+          // flags.push(resourceFlag.flag);
+          // resourceInfo += resourceFlag.info;
         }),
     );
     return { flags, resourceInfo };
@@ -126,13 +138,32 @@ class Charmcraft {
 
     const args = [
       'upload-resource',
-      '--quiet',
+      '--format',
+      'json',
       name,
       resource_name,
       '--image',
       resourceDigest,
     ];
-    await exec('charmcraft', args, this.execOptions);
+
+    let myOutput = '';
+    let myError = '';
+
+    const options = this.execOptions;
+    options.listeners = {
+      stdout: (data: Buffer) => {
+        myOutput += data.toString();
+      },
+      stderr: (data: Buffer) => {
+        myError += data.toString();
+      },
+    };
+    await exec('charmcraft', args, options);
+    console.log('myError');
+    console.log(myError);
+    console.log('myOutput');
+    console.log(myOutput);
+    return { output: myOutput, error: myError };
   }
 
   async buildResourceFlag(charmName: string, name: string, image: string) {
