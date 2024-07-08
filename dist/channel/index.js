@@ -42759,11 +42759,10 @@ class Charmcraft {
                 .map(([name, image]) => __awaiter(this, void 0, void 0, function* () {
                 if (this.uploadImage) {
                     // await this.uploadResource(image, charmName, name);
-                    const command = yield this.uploadResource(image, charmName, name);
+                    const uploadResource = yield this.uploadResource(image, charmName, name);
                     console.log('command output:');
-                    console.log(command);
-                    const output = JSON.parse(command.output);
-                    const { revision } = output;
+                    console.log(uploadResource);
+                    const { revision } = JSON.parse(uploadResource.result.stdout);
                     const resourceFlag = {
                         flag: `--resource=${name}:${revision}`,
                         info: `    -  ${name}: ${image}\n` +
@@ -42828,19 +42827,22 @@ class Charmcraft {
                 '--image',
                 resourceDigest,
             ];
-            let myOutput = '';
-            let myError = '';
-            const options = structuredClone(this.execOptions);
-            options.listeners = {
-                stdout: (data) => {
-                    myOutput += data.toString();
-                },
-                stderr: (data) => {
-                    myError += data.toString();
-                },
-            };
-            yield (0, exec_1.exec)('charmcraft', args, options);
-            return { output: myOutput, error: myError };
+            // let myOutput = '';
+            // let myError = '';
+            // const options = structuredClone(this.execOptions);
+            // options.listeners = {
+            //   stdout: (data: Buffer) => {
+            //     myOutput += data.toString();
+            //   },
+            //   stderr: (data: Buffer) => {
+            //     myError += data.toString();
+            //   },
+            // };
+            // await exec('charmcraft', args, options);
+            const result = yield (0, exec_1.getExecOutput)('charmcraft', args, this.execOptions);
+            console.log('result');
+            console.log(result);
+            return { result };
         });
     }
     buildResourceFlag(charmName, name, image) {
