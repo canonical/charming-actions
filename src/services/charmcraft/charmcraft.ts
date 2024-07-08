@@ -53,7 +53,7 @@ class Charmcraft {
           if (this.uploadImage) {
             // await this.uploadResource(image, charmName, name);
             const command = await this.uploadResource(image, charmName, name);
-            console.log('command:');
+            console.log('command output:');
             console.log(command);
             const output = JSON.parse(command.output);
             const { revision } = output;
@@ -150,7 +150,7 @@ class Charmcraft {
     let myOutput = '';
     let myError = '';
 
-    const options = this.execOptions;
+    const options = structuredClone(this.execOptions);
     options.listeners = {
       stdout: (data: Buffer) => {
         myOutput += data.toString();
