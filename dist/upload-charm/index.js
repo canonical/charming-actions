@@ -42551,17 +42551,17 @@ class UploadCharmAction {
                 // /snap/bin/charmcraft upload-resource --quiet envoy oci-image --image bfdc24b0d7b9
                 const imageResults = yield this.charmcraft.uploadResources(overrides);
                 // /snap/bin/charmcraft resource-revisions envoy oci-image
-                const fileResults = yield this.charmcraft.fetchFileFlags(overrides);
-                const staticResults = this.charmcraft.buildStaticFlags(overrides);
+                // const fileResults = await this.charmcraft.fetchFileFlags(overrides);
+                // const staticResults = this.charmcraft.buildStaticFlags(overrides);
                 const resourceInfo = [
                     imageResults.resourceInfo,
-                    fileResults.resourceInfo,
-                    staticResults.resourceInfo,
+                    // fileResults.resourceInfo,
+                    // staticResults.resourceInfo,
                 ].join('\n');
                 const flags = [
                     ...imageResults.flags,
-                    ...fileResults.flags,
-                    ...staticResults.flags,
+                    // ...fileResults.flags,
+                    // ...staticResults.flags,
                 ];
                 // If there are multiple charm files, we upload them one by one, so that the file
                 // released at last(which determines the version under 'platform' shown on Charmhub UI)
@@ -42881,13 +42881,11 @@ class Charmcraft {
                     console.log('command output:');
                     console.log(uploadResource);
                     const { revision } = JSON.parse(uploadResource.result.stdout);
-                    const resourceFlag = {
-                        flag: `--resource=${name}:${revision}`,
-                        info: `    -  ${name}: ${image}\n` +
-                            `       resource-revision: ${revision}\n`,
-                    };
-                    flags.push(resourceFlag.flag);
-                    resourceInfo += resourceFlag.info;
+                    const flag = `--resource=${name}:${revision}`;
+                    const info = `    -  ${name}: ${image}\n` +
+                        `       resource-revision: ${revision}\n`;
+                    flags.push(flag);
+                    resourceInfo += info;
                 }
                 // const resourceFlag = await this.buildResourceFlag(
                 //   charmName,

@@ -42985,13 +42985,11 @@ class Charmcraft {
                     console.log('command output:');
                     console.log(uploadResource);
                     const { revision } = JSON.parse(uploadResource.result.stdout);
-                    const resourceFlag = {
-                        flag: `--resource=${name}:${revision}`,
-                        info: `    -  ${name}: ${image}\n` +
-                            `       resource-revision: ${revision}\n`,
-                    };
-                    flags.push(resourceFlag.flag);
-                    resourceInfo += resourceFlag.info;
+                    const flag = `--resource=${name}:${revision}`;
+                    const info = `    -  ${name}: ${image}\n` +
+                        `       resource-revision: ${revision}\n`;
+                    flags.push(flag);
+                    resourceInfo += info;
                 }
                 // const resourceFlag = await this.buildResourceFlag(
                 //   charmName,

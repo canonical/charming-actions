@@ -63,19 +63,19 @@ export class UploadCharmAction {
       const overrides = this.overrides!;
 
       const imageResults = await this.charmcraft.uploadResources(overrides);
-      const fileResults = await this.charmcraft.fetchFileFlags(overrides);
-      const staticResults = this.charmcraft.buildStaticFlags(overrides);
+      // const fileResults = await this.charmcraft.fetchFileFlags(overrides);
+      // const staticResults = this.charmcraft.buildStaticFlags(overrides);
 
       const resourceInfo = [
         imageResults.resourceInfo,
-        fileResults.resourceInfo,
-        staticResults.resourceInfo,
+        // fileResults.resourceInfo,
+        // staticResults.resourceInfo,
       ].join('\n');
 
       const flags = [
         ...imageResults.flags,
-        ...fileResults.flags,
-        ...staticResults.flags,
+        // ...fileResults.flags,
+        // ...staticResults.flags,
       ];
 
       // If there are multiple charm files, we upload them one by one, so that the file
