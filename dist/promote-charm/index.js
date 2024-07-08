@@ -42839,6 +42839,7 @@ class Charmcraft {
                 if (this.uploadImage) {
                     // await this.uploadResource(image, charmName, name);
                     const command = yield this.uploadResource(image, charmName, name);
+                    console.log('command:');
                     console.log(command);
                     const output = JSON.parse(command.output);
                     const { revision } = output;
