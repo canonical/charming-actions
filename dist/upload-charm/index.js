@@ -42958,10 +42958,6 @@ class Charmcraft {
                 },
             };
             yield (0, exec_1.exec)('charmcraft', args, options);
-            console.log('myError');
-            console.log(myError);
-            console.log('myOutput');
-            console.log(myOutput);
             return { output: myOutput, error: myError };
         });
     }

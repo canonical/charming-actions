@@ -149,7 +149,6 @@ class Charmcraft {
 
     let myOutput = '';
     let myError = '';
-
     const options = structuredClone(this.execOptions);
     options.listeners = {
       stdout: (data: Buffer) => {
@@ -159,11 +158,8 @@ class Charmcraft {
         myError += data.toString();
       },
     };
+
     await exec('charmcraft', args, options);
-    console.log('myError');
-    console.log(myError);
-    console.log('myOutput');
-    console.log(myOutput);
     return { output: myOutput, error: myError };
   }
 
