@@ -42539,7 +42539,7 @@ class UploadCharmAction {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 // /usr/bin/sudo snap install charmcraft --classic --channel latest/stable
-                yield this.snap.install('charmcraft', this.charmcraftChannel, '3451');
+                yield this.snap.install('charmcraft', this.charmcraftChannel);
                 process.chdir(this.charmPath);
                 // /usr/bin/sudo charmcraft pack --quiet --destructive-mode
                 const charms = this.builtCharmPath
@@ -43437,7 +43437,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Snap = void 0;
 const exec_1 = __nccwpck_require__(1514);
 class Snap {
-    install(snap, channel, revision) {
+    install(snap, channel) {
         return __awaiter(this, void 0, void 0, function* () {
             yield (0, exec_1.exec)('sudo', [
                 'snap',
@@ -43445,7 +43445,6 @@ class Snap {
                 snap,
                 '--classic',
                 ...(channel ? ['--channel', channel] : []),
-                ...(revision ? ['--revision', revision] : []),
             ]);
         });
     }

@@ -43398,7 +43398,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Snap = void 0;
 const exec_1 = __nccwpck_require__(1514);
 class Snap {
-    install(snap, channel, revision) {
+    install(snap, channel) {
         return __awaiter(this, void 0, void 0, function* () {
             yield (0, exec_1.exec)('sudo', [
                 'snap',
@@ -43406,7 +43406,6 @@ class Snap {
                 snap,
                 '--classic',
                 ...(channel ? ['--channel', channel] : []),
-                ...(revision ? ['--revision', revision] : []),
             ]);
         });
     }
