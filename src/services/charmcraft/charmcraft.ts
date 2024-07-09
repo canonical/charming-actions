@@ -66,6 +66,17 @@ class Charmcraft {
               `       resource-revision: ${revision}\n`;
             flags.push(flag);
             resourceInfo += info;
+          } else {
+            const resourceFlag = await this.buildResourceFlag(
+              charmName,
+              name,
+              image,
+            );
+
+            if (!resourceFlag) return;
+
+            flags.push(resourceFlag.flag);
+            resourceInfo += resourceFlag.info;
           }
         }),
     );

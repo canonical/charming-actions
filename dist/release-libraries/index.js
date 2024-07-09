@@ -42991,6 +42991,13 @@ class Charmcraft {
                     flags.push(flag);
                     resourceInfo += info;
                 }
+                else {
+                    const resourceFlag = yield this.buildResourceFlag(charmName, name, image);
+                    if (!resourceFlag)
+                        return;
+                    flags.push(resourceFlag.flag);
+                    resourceInfo += resourceFlag.info;
+                }
             })));
             return { flags, resourceInfo };
         });
