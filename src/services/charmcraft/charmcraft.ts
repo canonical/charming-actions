@@ -51,14 +51,17 @@ class Charmcraft {
         )
         .map(async ([name, image]) => {
           if (this.uploadImage) {
-            // await this.uploadResource(image, charmName, name);
             const uploadResource = await this.uploadResource(
               image,
               charmName,
               name,
             );
-            console.log('command output:');
-            console.log(uploadResource);
+            const uploadExitCode = uploadResource.result.exitCode;
+            if (uploadExitCode !== 0) {
+              throw new Error(
+                `Could not upload resource with error ${uploadResource.result.stderr}`,
+              );
+            }
             const { revision } = JSON.parse(uploadResource.result.stdout);
             const flag = `--resource=${name}:${revision}`;
             const info =
@@ -148,21 +151,7 @@ class Charmcraft {
       resourceDigest,
     ];
 
-    // let myOutput = '';
-    // let myError = '';
-    // const options = structuredClone(this.execOptions);
-    // options.listeners = {
-    //   stdout: (data: Buffer) => {
-    //     myOutput += data.toString();
-    //   },
-    //   stderr: (data: Buffer) => {
-    //     myError += data.toString();
-    //   },
-    // };
-    // await exec('charmcraft', args, options);
     const result = await getExecOutput('charmcraft', args, this.execOptions);
-    console.log('result');
-    console.log(result);
     return { result };
   }
 

@@ -42849,10 +42849,11 @@ class Charmcraft {
                 .filter(([name]) => !overrides || !Object.keys(overrides).includes(name))
                 .map(([name, image]) => __awaiter(this, void 0, void 0, function* () {
                 if (this.uploadImage) {
-                    // await this.uploadResource(image, charmName, name);
                     const uploadResource = yield this.uploadResource(image, charmName, name);
-                    console.log('command output:');
-                    console.log(uploadResource);
+                    const uploadExitCode = uploadResource.result.exitCode;
+                    if (uploadExitCode !== 0) {
+                        throw new Error(`Could not upload resource with error ${uploadResource.result.stderr}`);
+                    }
                     const { revision } = JSON.parse(uploadResource.result.stdout);
                     const flag = `--resource=${name}:${revision}`;
                     const info = `    -  ${name}: ${image}\n` +
@@ -42916,21 +42917,7 @@ class Charmcraft {
                 '--image',
                 resourceDigest,
             ];
-            // let myOutput = '';
-            // let myError = '';
-            // const options = structuredClone(this.execOptions);
-            // options.listeners = {
-            //   stdout: (data: Buffer) => {
-            //     myOutput += data.toString();
-            //   },
-            //   stderr: (data: Buffer) => {
-            //     myError += data.toString();
-            //   },
-            // };
-            // await exec('charmcraft', args, options);
             const result = yield (0, exec_1.getExecOutput)('charmcraft', args, this.execOptions);
-            console.log('result');
-            console.log(result);
             return { result };
         });
     }
@@ -43432,7 +43419,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Snap = void 0;
 const exec_1 = __nccwpck_require__(1514);
 class Snap {
-    install(snap, channel) {
+    install(snap, channel, revision) {
         return __awaiter(this, void 0, void 0, function* () {
             yield (0, exec_1.exec)('sudo', [
                 'snap',
@@ -43440,6 +43427,7 @@ class Snap {
                 snap,
                 '--classic',
                 ...(channel ? ['--channel', channel] : []),
+                ...(revision ? ['--revision', revision] : []),
             ]);
         });
     }

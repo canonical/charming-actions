@@ -53,7 +53,7 @@ export class UploadCharmAction {
 
   async run() {
     try {
-      await this.snap.install('charmcraft', this.charmcraftChannel);
+      await this.snap.install('charmcraft', this.charmcraftChannel, '3451');
       process.chdir(this.charmPath!);
 
       const charms = this.builtCharmPath
