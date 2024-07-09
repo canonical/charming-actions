@@ -42980,26 +42980,17 @@ class Charmcraft {
                 .filter(([name]) => !overrides || !Object.keys(overrides).includes(name))
                 .map(([name, image]) => __awaiter(this, void 0, void 0, function* () {
                 if (this.uploadImage) {
-                    const uploadResource = yield this.uploadResource(image, charmName, name);
-                    const uploadExitCode = uploadResource.result.exitCode;
-                    if (uploadExitCode !== 0) {
-                        throw new Error(`Could not upload resource with error ${uploadResource.result.stderr}`);
+                    const { exitCode, stdout, stderr } = yield this.uploadResource(image, charmName, name);
+                    if (exitCode === 0) {
+                        throw new Error(`Could not upload resource with error ${stderr}`);
                     }
-                    const { revision } = JSON.parse(uploadResource.result.stdout);
+                    const { revision } = JSON.parse(stdout);
                     const flag = `--resource=${name}:${revision}`;
                     const info = `    -  ${name}: ${image}\n` +
                         `       resource-revision: ${revision}\n`;
                     flags.push(flag);
                     resourceInfo += info;
                 }
-                // const resourceFlag = await this.buildResourceFlag(
-                //   charmName,
-                //   name,
-                //   image,
-                // );
-                // if (!resourceFlag) return;
-                // flags.push(resourceFlag.flag);
-                // resourceInfo += resourceFlag.info;
             })));
             return { flags, resourceInfo };
         });
@@ -43048,8 +43039,8 @@ class Charmcraft {
                 '--image',
                 resourceDigest,
             ];
-            const result = yield (0, exec_1.getExecOutput)('charmcraft', args, this.execOptions);
-            return { result };
+            const execOutput = yield (0, exec_1.getExecOutput)('charmcraft', args, this.execOptions);
+            return execOutput;
         });
     }
     buildResourceFlag(charmName, name, image) {
