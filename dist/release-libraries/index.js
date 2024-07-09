@@ -42981,7 +42981,7 @@ class Charmcraft {
                 .map(([name, image]) => __awaiter(this, void 0, void 0, function* () {
                 if (this.uploadImage) {
                     const { exitCode, stdout, stderr } = yield this.uploadResource(image, charmName, name);
-                    if (exitCode === 0) {
+                    if (exitCode !== 0) {
                         throw new Error(`Could not upload resource with error ${stderr}`);
                     }
                     const { revision } = JSON.parse(stdout);
