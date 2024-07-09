@@ -63,20 +63,28 @@ export class UploadCharmAction {
       const overrides = this.overrides!;
 
       const imageResults = await this.charmcraft.uploadResources(overrides);
-      // const fileResults = await this.charmcraft.fetchFileFlags(overrides);
-      // const staticResults = this.charmcraft.buildStaticFlags(overrides);
+      const fileResults = await this.charmcraft.fetchFileFlags(overrides);
+      const staticResults = this.charmcraft.buildStaticFlags(overrides);
+      console.log('fileResults:');
+      console.log(fileResults);
+      console.log('staticResults:');
+      console.log(staticResults);
 
       const resourceInfo = [
         imageResults.resourceInfo,
-        // fileResults.resourceInfo,
-        // staticResults.resourceInfo,
+        fileResults.resourceInfo,
+        staticResults.resourceInfo,
       ].join('\n');
+      console.log('resourceInfo:');
+      console.log(resourceInfo);
 
       const flags = [
         ...imageResults.flags,
-        // ...fileResults.flags,
-        // ...staticResults.flags,
+        ...fileResults.flags,
+        ...staticResults.flags,
       ];
+      console.log('flags:');
+      console.log(flags);
 
       // If there are multiple charm files, we upload them one by one, so that the file
       // released at last(which determines the version under 'platform' shown on Charmhub UI)

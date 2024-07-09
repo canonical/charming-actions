@@ -42538,38 +42538,38 @@ class UploadCharmAction {
     run() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                // /usr/bin/sudo snap install charmcraft --classic --channel latest/stable
                 yield this.snap.install('charmcraft', this.charmcraftChannel);
                 process.chdir(this.charmPath);
-                // /usr/bin/sudo charmcraft pack --quiet --destructive-mode
                 const charms = this.builtCharmPath
                     ? [this.builtCharmPath]
                     : yield this.charmcraft.pack(this.destructive);
                 const overrides = this.overrides;
-                // /usr/bin/docker pull gcr.io/ml-pipeline/metadata-envoy:2.2.0
-                // /usr/bin/docker image ls -q gcr.io/ml-pipeline/metadata-envoy:2.2.0
-                // /snap/bin/charmcraft upload-resource --quiet envoy oci-image --image bfdc24b0d7b9
                 const imageResults = yield this.charmcraft.uploadResources(overrides);
-                // /snap/bin/charmcraft resource-revisions envoy oci-image
-                // const fileResults = await this.charmcraft.fetchFileFlags(overrides);
-                // const staticResults = this.charmcraft.buildStaticFlags(overrides);
+                const fileResults = yield this.charmcraft.fetchFileFlags(overrides);
+                const staticResults = this.charmcraft.buildStaticFlags(overrides);
+                console.log('fileResults:');
+                console.log(fileResults);
+                console.log('staticResults:');
+                console.log(staticResults);
                 const resourceInfo = [
                     imageResults.resourceInfo,
-                    // fileResults.resourceInfo,
-                    // staticResults.resourceInfo,
+                    fileResults.resourceInfo,
+                    staticResults.resourceInfo,
                 ].join('\n');
+                console.log('resourceInfo:');
+                console.log(resourceInfo);
                 const flags = [
                     ...imageResults.flags,
-                    // ...fileResults.flags,
-                    // ...staticResults.flags,
+                    ...fileResults.flags,
+                    ...staticResults.flags,
                 ];
+                console.log('flags:');
+                console.log(flags);
                 // If there are multiple charm files, we upload them one by one, so that the file
                 // released at last(which determines the version under 'platform' shown on Charmhub UI)
                 // is consistent for a charm.
                 yield charms.reduce((previousUpload, charm) => __awaiter(this, void 0, void 0, function* () {
                     yield previousUpload;
-                    // /snap/bin/charmcraft upload --format json --release latest/edge/pr-113 /home/runner/work/envoy-operator/envoy-operator/envoy_ubuntu-20.04-amd64.charm --resource=oci-image:104
-                    // /usr/bin/sudo test -d /root/snap/charmcraft/common/cache/charmcraft/log
                     const rev = yield this.charmcraft.upload(charm, this.channel, flags);
                     if (this.githubTag) {
                         yield this.tagger.tag(rev, this.channel, resourceInfo, this.tagPrefix);
