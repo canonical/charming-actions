@@ -42953,13 +42953,24 @@ class Charmcraft {
                 .filter(([name]) => !overrides || !Object.keys(overrides).includes(name))
                 .map(([name, image]) => __awaiter(this, void 0, void 0, function* () {
                 if (this.uploadImage) {
-                    yield this.uploadResource(image, charmName, name);
+                    const { exitCode, stdout, stderr } = yield this.uploadResource(image, charmName, name);
+                    if (exitCode !== 0) {
+                        throw new Error(`Could not upload resource with error ${stderr}`);
+                    }
+                    const { revision } = JSON.parse(stdout);
+                    const flag = `--resource=${name}:${revision}`;
+                    const info = `    -  ${name}: ${image}\n` +
+                        `       resource-revision: ${revision}\n`;
+                    flags.push(flag);
+                    resourceInfo += info;
                 }
-                const resourceFlag = yield this.buildResourceFlag(charmName, name, image);
-                if (!resourceFlag)
-                    return;
-                flags.push(resourceFlag.flag);
-                resourceInfo += resourceFlag.info;
+                else {
+                    const resourceFlag = yield this.buildResourceFlag(charmName, name, image);
+                    if (!resourceFlag)
+                        return;
+                    flags.push(resourceFlag.flag);
+                    resourceInfo += resourceFlag.info;
+                }
             })));
             return { flags, resourceInfo };
         });
@@ -43001,13 +43012,15 @@ class Charmcraft {
             const resourceDigest = yield (0, docker_1.getImageDigest)(resource_image);
             const args = [
                 'upload-resource',
-                '--quiet',
+                '--format',
+                'json',
                 name,
                 resource_name,
                 '--image',
                 resourceDigest,
             ];
-            yield (0, exec_1.exec)('charmcraft', args, this.execOptions);
+            const execOutput = yield (0, exec_1.getExecOutput)('charmcraft', args, this.execOptions);
+            return execOutput;
         });
     }
     buildResourceFlag(charmName, name, image) {

@@ -135,13 +135,15 @@ describe('the charmcraft service', () => {
           const digest = `somedigest`;
           const charmcraft = new Charmcraft('token', true);
 
-          const mockedExec = jest.spyOn(exec, 'exec').mockResolvedValue(0);
+          jest.spyOn(exec, 'exec').mockResolvedValue(0);
 
-          jest.spyOn(exec, 'getExecOutput').mockResolvedValue({
-            exitCode: 0,
-            stderr: '',
-            stdout: digest,
-          });
+          const mockedExec = jest
+            .spyOn(exec, 'getExecOutput')
+            .mockResolvedValue({
+              exitCode: 0,
+              stderr: '',
+              stdout: digest,
+            });
 
           await charmcraft.uploadResource(
             'placeholder-image',
