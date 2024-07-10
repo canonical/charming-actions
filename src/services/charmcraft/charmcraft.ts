@@ -51,18 +51,33 @@ class Charmcraft {
         )
         .map(async ([name, image]) => {
           if (this.uploadImage) {
-            await this.uploadResource(image, charmName, name);
+            const { exitCode, stdout, stderr } = await this.uploadResource(
+              image,
+              charmName,
+              name,
+            );
+            if (exitCode !== 0) {
+              throw new Error(`Could not upload resource with error ${stderr}`);
+            }
+            const { revision } = JSON.parse(stdout);
+            const flag = `--resource=${name}:${revision}`;
+            const info =
+              `    -  ${name}: ${image}\n` +
+              `       resource-revision: ${revision}\n`;
+            flags.push(flag);
+            resourceInfo += info;
+          } else {
+            const resourceFlag = await this.buildResourceFlag(
+              charmName,
+              name,
+              image,
+            );
+
+            if (!resourceFlag) return;
+
+            flags.push(resourceFlag.flag);
+            resourceInfo += resourceFlag.info;
           }
-          const resourceFlag = await this.buildResourceFlag(
-            charmName,
-            name,
-            image,
-          );
-
-          if (!resourceFlag) return;
-
-          flags.push(resourceFlag.flag);
-          resourceInfo += resourceFlag.info;
         }),
     );
     return { flags, resourceInfo };
@@ -126,13 +141,20 @@ class Charmcraft {
 
     const args = [
       'upload-resource',
-      '--quiet',
+      '--format',
+      'json',
       name,
       resource_name,
       '--image',
       resourceDigest,
     ];
-    await exec('charmcraft', args, this.execOptions);
+
+    const execOutput = await getExecOutput(
+      'charmcraft',
+      args,
+      this.execOptions,
+    );
+    return execOutput;
   }
 
   async buildResourceFlag(charmName: string, name: string, image: string) {

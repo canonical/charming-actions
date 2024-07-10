@@ -17,8 +17,9 @@ This action is used to upload a charm to charmhub.io.
 
 ### OCI Image
 
-When uploading a charm with OCI image resources, a new revision of the OCI image will be published
-and attached to the release. It is possible to disable this behavior using either `upload-image: false`
+When uploading a charm with OCI image resources, the action will try to upload the OCI image to Charmhub
+and attach it to the release. If the image already exists in Charmhub, then it will use an existing revision
+corresponding to that image. It is possible to disable this behavior using either `upload-image: false`
 or by providing `resource-overrides` pointing at a specific existing revision.
 
 ### Files
