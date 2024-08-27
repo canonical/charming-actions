@@ -5,13 +5,11 @@ class Bundle {
   async publish(path: string, channel: string) {
     core.exportVariable('CHARMCRAFT_AUTH', core.getInput('credentials'));
     process.chdir(path);
-    await exec.exec('juju-bundle', [
-      'publish',
-      '--destructive-mode',
-      '--serial',
-      '--release',
-      channel,
-    ]);
+
+    const result = await exec.getExecOutput('charmcraft', ['pack']);
+    const bundleName = result.stdout.split(' ')[1].trim();
+
+    await exec.exec('charmcraft', ['upload', bundleName, '--release', channel]);
   }
 }
 

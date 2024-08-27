@@ -42645,13 +42645,9 @@ class Bundle {
         return __awaiter(this, void 0, void 0, function* () {
             core.exportVariable('CHARMCRAFT_AUTH', core.getInput('credentials'));
             process.chdir(path);
-            yield exec.exec('juju-bundle', [
-                'publish',
-                '--destructive-mode',
-                '--serial',
-                '--release',
-                channel,
-            ]);
+            const result = yield exec.getExecOutput('charmcraft', ['pack']);
+            const bundleName = result.stdout.split(' ')[1].trim();
+            yield exec.exec('charmcraft', ['upload', bundleName, '--release', channel]);
         });
     }
 }
