@@ -8,9 +8,19 @@ class Bundle {
 
     const result = await exec.getExecOutput('charmcraft', ['pack']);
     core.info(result.stdout);
-    const bundleName = result.stdout.split(' ')[1].trim();
+    const lastLine = result.stderr.trim().split('\n').pop();
 
-    await exec.exec('charmcraft', ['upload', bundleName, '--release', channel]);
+    if (lastLine) {
+      const bundleName = lastLine.split(' ')[1];
+      await exec.exec('charmcraft', [
+        'upload',
+        bundleName,
+        '--release',
+        channel,
+      ]);
+    } else {
+      throw new Error('charmcraft pack ran unsuccessfully');
+    }
   }
 }
 

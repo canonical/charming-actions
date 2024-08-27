@@ -42757,8 +42757,19 @@ class Bundle {
             process.chdir(path);
             const result = yield exec.getExecOutput('charmcraft', ['pack']);
             core.info(result.stdout);
-            const bundleName = result.stdout.split(' ')[1].trim();
-            yield exec.exec('charmcraft', ['upload', bundleName, '--release', channel]);
+            const lastLine = result.stderr.trim().split('\n').pop();
+            if (lastLine) {
+                const bundleName = lastLine.split(' ')[1];
+                yield exec.exec('charmcraft', [
+                    'upload',
+                    bundleName,
+                    '--release',
+                    channel,
+                ]);
+            }
+            else {
+                throw new Error('charmcraft pack ran unsuccessfully');
+            }
         });
     }
 }
