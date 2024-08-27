@@ -42841,6 +42841,7 @@ class Bundle {
             core.exportVariable('CHARMCRAFT_AUTH', core.getInput('credentials'));
             process.chdir(path);
             const result = yield exec.getExecOutput('charmcraft', ['pack']);
+            core.info(result.stdout);
             const bundleName = result.stdout.split(' ')[1].trim();
             yield exec.exec('charmcraft', ['upload', bundleName, '--release', channel]);
         });

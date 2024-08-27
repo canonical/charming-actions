@@ -7,6 +7,7 @@ class Bundle {
     process.chdir(path);
 
     const result = await exec.getExecOutput('charmcraft', ['pack']);
+    core.info(result.stdout);
     const bundleName = result.stdout.split(' ')[1].trim();
 
     await exec.exec('charmcraft', ['upload', bundleName, '--release', channel]);
