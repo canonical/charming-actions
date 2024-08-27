@@ -42737,19 +42737,23 @@ class Bundle {
             core.exportVariable('CHARMCRAFT_AUTH', core.getInput('credentials'));
             process.chdir(path);
             const result = yield exec.getExecOutput('charmcraft', ['pack']);
-            core.info(result.stdout);
-            const lastLine = result.stderr.trim().split('\n').pop();
-            if (lastLine) {
-                const bundleName = lastLine.split(' ')[1];
-                yield exec.exec('charmcraft', [
-                    'upload',
-                    bundleName,
-                    '--release',
-                    channel,
-                ]);
+            if (result.exitCode === 0) {
+                const lastLine = result.stderr.trim().split('\n').pop();
+                if (lastLine) {
+                    const bundleName = lastLine.split(' ')[1];
+                    yield exec.exec('charmcraft', [
+                        'upload',
+                        bundleName,
+                        '--release',
+                        channel,
+                    ]);
+                }
+                else {
+                    throw new Error('Failed to extract the bundle name from the output of charmcraft pack.');
+                }
             }
             else {
-                throw new Error('charmcraft pack ran unsuccessfully');
+                throw new Error(`charmcraft pack ran unsuccessfully with exit code ${result.exitCode}.`);
             }
         });
     }
