@@ -42706,13 +42706,11 @@ class Bundle {
                 throw new Error(`charmcraft pack ran unsuccessfully with exit code ${result.exitCode}.`);
             }
             const lastLine = result.stderr.trim().split('\n').pop();
-            if (lastLine) {
-                const bundleName = lastLine.split(' ')[1];
-                yield (0, exec_1.exec)('charmcraft', ['upload', bundleName, '--release', channel]);
-            }
-            else {
+            if (!lastLine) {
                 throw new Error('Failed to extract the bundle name from the output of charmcraft pack.');
             }
+            const bundleName = lastLine.split(' ')[1];
+            yield (0, exec_1.exec)('charmcraft', ['upload', bundleName, '--release', channel]);
         });
     }
 }

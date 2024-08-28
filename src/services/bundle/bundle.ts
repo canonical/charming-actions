@@ -13,14 +13,13 @@ class Bundle {
       );
     }
     const lastLine = result.stderr.trim().split('\n').pop();
-    if (lastLine) {
-      const bundleName = lastLine.split(' ')[1];
-      await exec('charmcraft', ['upload', bundleName, '--release', channel]);
-    } else {
+    if (!lastLine) {
       throw new Error(
         'Failed to extract the bundle name from the output of charmcraft pack.',
       );
     }
+    const bundleName = lastLine.split(' ')[1];
+    await exec('charmcraft', ['upload', bundleName, '--release', channel]);
   }
 }
 
