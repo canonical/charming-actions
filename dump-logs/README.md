@@ -21,7 +21,7 @@ jobs:
       - name: Set up and run some tests
       - name: Dump logs
         if: failure()
-        uses: canonical/charming-actions/dump-logs
+        uses: canonical/charming-actions/dump-logs@2.6.3
 ```
 
 ## Known issues
