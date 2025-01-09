@@ -42519,7 +42519,10 @@ class PromoteCharmAction {
     }
     getRevisions(name, track, channel, bases) {
         return __awaiter(this, void 0, void 0, function* () {
-            return Promise.all(bases.map((base) => __awaiter(this, void 0, void 0, function* () {
+            // Filter out bases with architecture "all"
+            const filteredBases = bases.filter((base) => base.architecture !== 'all');
+            // Map filtered bases to their revision information
+            return Promise.all(filteredBases.map((base) => __awaiter(this, void 0, void 0, function* () {
                 return this.charmcraft.getRevisionInfoFromChannelJson(name, track, channel, base);
             })));
         });
