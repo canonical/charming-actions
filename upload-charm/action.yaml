@@ -26,7 +26,10 @@ inputs:
   built-charm-path:
     required: false
     description: |
-      Path to a pre-built charm.
+      Path to one or more pre-built charms as comma-separated values.
+      If provided, charmcraft pack will not be executed.
+      - Single charm: `/tmp/build/my-charm.charm`
+      - Multiple charms: `/tmp/build/my-charm.charm,/tmp/build/my-charm_amd64.charm`
   charmcraft-channel:
     required: false
     default: 'latest/stable'

@@ -34,7 +34,7 @@ If you want to use a new resource, you'll have to cut a new resource revision **
 | Key                  | Description                                                                                                      | Required |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------- | -------- |
 | `charm-path`         | Path to the charm we want to publish. Defaults to the current working directory.                                 |          |
-| `built-charm-path`   | Path to a pre-built charm we want to publish.                                                                    |          |
+| `built-charm-path`   | Path to one or more pre-built charms as comma-separated values.                                                  |          |
 | `channel`            | Channel on charmhub to publish the charm in. Defaults to `latest/edge`.                                          |          |
 | `credentials`        | Credentials [exported](https://juju.is/docs/sdk/remote-env-auth) using `charmcraft login --export`.              | ✔️       |
 | `destructive-mode`   | Whether or not to pack using destructive mode. Defaults to `true`.                                               |          |

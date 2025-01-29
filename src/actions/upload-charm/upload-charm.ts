@@ -57,7 +57,7 @@ export class UploadCharmAction {
       process.chdir(this.charmPath!);
 
       const charms = this.builtCharmPath
-        ? [this.builtCharmPath]
+        ? this.builtCharmPath.split(',').map((path) => path.trim())
         : await this.charmcraft.pack(this.destructive);
 
       const overrides = this.overrides!;
