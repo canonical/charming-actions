@@ -15,6 +15,14 @@ describe('the upload charm action', () => {
       builtCharmPath: '',
     }, // charmcraft pack produces two files
     { charmcraftPackOutput: [], builtCharmPath: '/path/to/prebuilt.charm' }, // built-charm-path input option is provided
+    {
+      charmcraftPackOutput: [],
+      builtCharmPath: '/path/to/prebuilt1.charm,/path/to/prebuilt2.charm',
+    }, // Multiple comma paths
+    {
+      charmcraftPackOutput: [],
+      builtCharmPath: '/path/to/prebuilt1.charm, /path/to/prebuilt2.charm',
+    }, // Multiple comma paths with spaces
   ].forEach(({ charmcraftPackOutput, builtCharmPath }) => {
     it('should call charmcraft upload correct number of times with correct parameters', async () => {
       jest.spyOn(core, 'getInput').mockImplementation((inputOption) => {
@@ -45,12 +53,18 @@ describe('the upload charm action', () => {
       await action.run();
 
       if (builtCharmPath) {
-        expect(action.charmcraft.upload).toHaveBeenCalledTimes(1);
-        expect(action.charmcraft.upload).toHaveBeenCalledWith(
-          builtCharmPath,
-          'something',
-          ['f1', 'f2', 'f1', 'f2', 'f1', 'f2'],
+        const expectedPaths = builtCharmPath.split(',').map((p) => p.trim());
+        expect(action.charmcraft.upload).toHaveBeenCalledTimes(
+          expectedPaths.length,
         );
+        expectedPaths.forEach((expectedPath, index) => {
+          expect(action.charmcraft.upload).toHaveBeenNthCalledWith(
+            index + 1,
+            expectedPath,
+            'something',
+            ['f1', 'f2', 'f1', 'f2', 'f1', 'f2'],
+          );
+        });
       } else {
         expect(action.charmcraft.upload).toHaveBeenCalledTimes(
           charmcraftPackOutput.length,

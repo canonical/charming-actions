@@ -42541,7 +42541,7 @@ class UploadCharmAction {
                 yield this.snap.install('charmcraft', this.charmcraftChannel);
                 process.chdir(this.charmPath);
                 const charms = this.builtCharmPath
-                    ? [this.builtCharmPath]
+                    ? this.builtCharmPath.split(',').map((path) => path.trim())
                     : yield this.charmcraft.pack(this.destructive);
                 const overrides = this.overrides;
                 const imageResults = yield this.charmcraft.uploadResources(overrides);
