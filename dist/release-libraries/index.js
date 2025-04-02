@@ -43039,7 +43039,7 @@ class Charmcraft {
               Revision    Created at    Size
               2 <- This   2022-01-20    1024B
               1           2021-07-19    512B
-              
+        
             */
             if (result.stdout.trim().split('\n').length <= 1) {
                 throw new Error(`Resource '${name}' does not have any uploaded revisions.`);
@@ -43238,6 +43238,24 @@ class Charmcraft {
                 throw new Error(`No track with name ${targetTrack}`);
             }
             return charmcraftStatus[trackIndex].mappings.map((x) => x.base);
+        });
+    }
+    getOpenBases(charm, targetTrack, targetChannel) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // Get status of this charm as a structured object
+            const charmcraftStatus = yield this.statusJson(charm);
+            const trackIndex = charmcraftStatus.findIndex((track) => track.track === targetTrack);
+            if (trackIndex === -1) {
+                throw new Error(`No track with name ${targetTrack}`);
+            }
+            const { mappings } = charmcraftStatus[trackIndex];
+            const validBases = mappings
+                .filter((mapping) => mapping.base &&
+                mapping.releases.some((release) => release.channel === `${targetTrack}/${targetChannel}` &&
+                    release.status === 'open'))
+                .map((mapping) => mapping.base);
+            core.info(`Filtered bases that is open for ${targetChannel}: ${JSON.stringify(validBases, null, 2)}`);
+            return validBases;
         });
     }
     release(charm, charmRevision, destinationChannel, resourceInfo) {

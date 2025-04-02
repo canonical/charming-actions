@@ -32,12 +32,8 @@ export class PromoteCharmAction {
     channel: string,
     bases: Base[],
   ): Promise<RevisionResourceInfo[]> {
-    // Filter out bases with architecture "all"
-    const filteredBases = bases.filter((base) => base.architecture !== 'all');
-
-    // Map filtered bases to their revision information
     return Promise.all(
-      filteredBases.map(async (base: Base) =>
+      bases.map(async (base: Base) =>
         this.charmcraft.getRevisionInfoFromChannelJson(
           name,
           track,
@@ -56,7 +52,11 @@ export class PromoteCharmAction {
 
       const [originTrack, originChannel] = this.originChannel.split('/');
 
-      const basesArray = await this.charmcraft.getBases(charmName, originTrack);
+      const basesArray = await this.charmcraft.getOpenBases(
+        charmName,
+        originTrack,
+        originChannel,
+      );
       const revisions = await this.getRevisions(
         charmName,
         originTrack,
