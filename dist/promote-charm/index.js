@@ -42999,7 +42999,7 @@ class Charmcraft {
     }
     statusJson(charm) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield (0, exec_1.getExecOutput)('charmcraft', ['status', charm, '--format', 'json'], this.execOptions);
+            const result = yield (0, exec_1.getExecOutput)('charmcraft', ['status', charm, '--format', 'json'], Object.assign(Object.assign({}, this.execOptions), { silent: true }));
             const parsedObj = JSON.parse(result.stdout);
             return parsedObj;
         });

@@ -289,7 +289,7 @@ class Charmcraft {
     const result = await getExecOutput(
       'charmcraft',
       ['status', charm, '--format', 'json'],
-      this.execOptions,
+      { ...this.execOptions, silent: true }, // Suppress auto-logging
     );
     const parsedObj = JSON.parse(result.stdout);
     return parsedObj;
