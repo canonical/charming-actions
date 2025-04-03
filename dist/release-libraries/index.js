@@ -43142,7 +43142,7 @@ class Charmcraft {
     }
     statusJson(charm) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield (0, exec_1.getExecOutput)('charmcraft', ['status', charm, '--format', 'json'], Object.assign(Object.assign({}, this.execOptions), { silent: true }));
+            const result = yield (0, exec_1.getExecOutput)('charmcraft', ['status', charm, '--format', 'json'], this.execOptions);
             const parsedObj = JSON.parse(result.stdout);
             return parsedObj;
         });
@@ -43249,12 +43249,20 @@ class Charmcraft {
                 throw new Error(`No track with name ${targetTrack}`);
             }
             const { mappings } = charmcraftStatus[trackIndex];
+            const allBases = mappings.map((mapping) => mapping.base);
             const validBases = mappings
                 .filter((mapping) => mapping.base &&
                 mapping.releases.some((release) => release.channel === `${targetTrack}/${targetChannel}` &&
                     release.status === 'open'))
                 .map((mapping) => mapping.base);
-            core.info(`Filtered bases that is open for ${targetChannel}: ${JSON.stringify(validBases, null, 2)}`);
+            // Determine bases that were filtered out
+            const filteredOutBases = allBases.filter((base) => !validBases.some((validBase) => validBase.name === base.name &&
+                validBase.channel === base.channel &&
+                validBase.architecture === base.architecture));
+            if (filteredOutBases.length > 0) {
+                core.warning(`Filtered out bases that are not open for ${targetTrack}/${targetChannel}: ${JSON.stringify(filteredOutBases, null, 2)}`);
+            }
+            core.info(`Filtered bases that are open for ${targetTrack}/${targetChannel}: ${JSON.stringify(validBases, null, 2)}`);
             return validBases;
         });
     }

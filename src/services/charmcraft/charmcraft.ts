@@ -289,7 +289,7 @@ class Charmcraft {
     const result = await getExecOutput(
       'charmcraft',
       ['status', charm, '--format', 'json'],
-      { ...this.execOptions, silent: true }, // Suppress auto-logging
+      this.execOptions,
     );
     const parsedObj = JSON.parse(result.stdout);
     return parsedObj;
@@ -453,6 +453,8 @@ class Charmcraft {
 
     const { mappings } = charmcraftStatus[trackIndex];
 
+    const allBases = mappings.map((mapping) => mapping.base);
+
     const validBases = mappings
       .filter(
         (mapping) =>
@@ -465,8 +467,25 @@ class Charmcraft {
       )
       .map((mapping) => mapping.base);
 
+    // Determine bases that were filtered out
+    const filteredOutBases = allBases.filter(
+      (base) =>
+        !validBases.some(
+          (validBase) =>
+            validBase.name === base.name &&
+            validBase.channel === base.channel &&
+            validBase.architecture === base.architecture,
+        ),
+    );
+
+    if (filteredOutBases.length > 0) {
+      core.warning(
+        `Filtered out bases that are not open for ${targetTrack}/${targetChannel}: ${JSON.stringify(filteredOutBases, null, 2)}`,
+      );
+    }
+
     core.info(
-      `Filtered bases that is open for ${targetChannel}: ${JSON.stringify(validBases, null, 2)}`,
+      `Filtered bases that are open for ${targetTrack}/${targetChannel}: ${JSON.stringify(validBases, null, 2)}`,
     );
     return validBases;
   }
