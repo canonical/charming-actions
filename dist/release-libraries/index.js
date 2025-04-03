@@ -43039,7 +43039,7 @@ class Charmcraft {
               Revision    Created at    Size
               2 <- This   2022-01-20    1024B
               1           2021-07-19    512B
-              
+        
             */
             if (result.stdout.trim().split('\n').length <= 1) {
                 throw new Error(`Resource '${name}' does not have any uploaded revisions.`);
@@ -43142,7 +43142,7 @@ class Charmcraft {
     }
     statusJson(charm) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield (0, exec_1.getExecOutput)('charmcraft', ['status', charm, '--format', 'json'], this.execOptions);
+            const result = yield (0, exec_1.getExecOutput)('charmcraft', ['status', charm, '--format', 'json'], Object.assign(Object.assign({}, this.execOptions), { silent: true }));
             const parsedObj = JSON.parse(result.stdout);
             return parsedObj;
         });

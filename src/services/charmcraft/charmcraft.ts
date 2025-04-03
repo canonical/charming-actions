@@ -166,7 +166,7 @@ class Charmcraft {
       Revision    Created at    Size
       2 <- This   2022-01-20    1024B
       1           2021-07-19    512B
-      
+
     */
 
     if (result.stdout.trim().split('\n').length <= 1) {
@@ -289,7 +289,7 @@ class Charmcraft {
     const result = await getExecOutput(
       'charmcraft',
       ['status', charm, '--format', 'json'],
-      this.execOptions,
+      { ...this.execOptions, silent: true }, // Suppress auto-logging
     );
     const parsedObj = JSON.parse(result.stdout);
     return parsedObj;
