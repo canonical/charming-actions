@@ -1,6 +1,9 @@
 # canonical/charming-actions/promote-charm
 
-This action is used to promote an already uploaded charm to a different channel in charmhub. It is designed to be manually triggered with the inputs. The promotion involves all the existing bases for the charm.
+This action is used to promote an already uploaded charm to a different channel in charmhub. It is designed to be manually triggered with the inputs. The promotion involves all the existing combination of base/architecture for the charm.
+
+**Note**: It is necessary to have at least one release for a certain base/architecture in the `origin-channel`. E.g: if there isn't a release in `latest/candidate` for `ubuntu 20.04 (arm64)`, the action will igonore the promotion from `latest/candidate` to `latest/stable`.
+
 ## Usage
 
 ```yaml
@@ -45,11 +48,11 @@ In multi charm repo, you would also need to provide the charm path; this is nece
 ### Inputs
 
 | Key                  | Description                                                                                             | Required |
-| -------------------- | ------------------------------------------------------------------------------------------------------- | -------- | 
+| -------------------- | ------------------------------------------------------------------------------------------------------- | -------- |
 | `credentials`        | Credentials [exported](https://juju.is/docs/sdk/remote-env-auth) using `charmcraft login --export`.     | ✔️       |
 | `destination-channel`| Channel to which the charm will be released. It must be in the format of `track/risk`.                  | ✔️       |
 | `origin-channel`     | Origin Channel from where the charm that needs to be promoted will be pulled.                           | ✔️       |
-| `charm-path`         | Path to the charm where `metadata.yaml` is located. Defaults to the current working directory.          |          |    
+| `charm-path`         | Path to the charm where `metadata.yaml` is located. Defaults to the current working directory.          |          |
 | `charmcraft-channel` | Snap channel to use when installing charmcraft. Defaults to `latest/edge`.                              |          |
 
 ### Outputs
