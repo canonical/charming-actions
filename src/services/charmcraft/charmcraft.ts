@@ -351,13 +351,6 @@ class Charmcraft {
     targetChannel: string,
     targetBase: Base,
   ): Promise<RevisionResourceInfo> {
-    const acceptedChannels = ['stable', 'candidate', 'beta', 'edge'];
-    if (!acceptedChannels.includes(targetChannel)) {
-      throw new Error(
-        `Provided channel ${targetChannel} is not supported. This actions currently only works with one of the following default channels: edge, beta, candidate, stable`,
-      );
-    }
-
     // Get status of this charm as a structured object
     const charmcraftStatus = await this.statusJson(charm);
 

@@ -43081,10 +43081,6 @@ class Charmcraft {
     }
     getRevisionInfoFromChannelJson(charm, targetTrack, targetChannel, targetBase) {
         return __awaiter(this, void 0, void 0, function* () {
-            const acceptedChannels = ['stable', 'candidate', 'beta', 'edge'];
-            if (!acceptedChannels.includes(targetChannel)) {
-                throw new Error(`Provided channel ${targetChannel} is not supported. This actions currently only works with one of the following default channels: edge, beta, candidate, stable`);
-            }
             // Get status of this charm as a structured object
             const charmcraftStatus = yield this.statusJson(charm);
             const trackIndex = charmcraftStatus.findIndex((track) => track.track === targetTrack);

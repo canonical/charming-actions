@@ -42530,7 +42530,8 @@ class PromoteCharmAction {
                 yield this.snap.install('charmcraft', this.charmcraftChannel);
                 process.chdir(this.charmPath);
                 const charmName = this.charmcraft.charmName();
-                const [originTrack, originChannel] = this.originChannel.split('/');
+                const [originTrack, ...originChannelParts] = this.originChannel.split('/');
+                const originChannel = originChannelParts.join('/');
                 const basesArray = yield this.charmcraft.getOpenBases(charmName, originTrack, originChannel);
                 const revisions = yield this.getRevisions(charmName, originTrack, originChannel, basesArray);
                 yield Promise.all(revisions.map(({ charmRev, resources }) => __awaiter(this, void 0, void 0, function* () {
@@ -43050,10 +43051,6 @@ class Charmcraft {
     }
     getRevisionInfoFromChannelJson(charm, targetTrack, targetChannel, targetBase) {
         return __awaiter(this, void 0, void 0, function* () {
-            const acceptedChannels = ['stable', 'candidate', 'beta', 'edge'];
-            if (!acceptedChannels.includes(targetChannel)) {
-                throw new Error(`Provided channel ${targetChannel} is not supported. This actions currently only works with one of the following default channels: edge, beta, candidate, stable`);
-            }
             // Get status of this charm as a structured object
             const charmcraftStatus = yield this.statusJson(charm);
             const trackIndex = charmcraftStatus.findIndex((track) => track.track === targetTrack);

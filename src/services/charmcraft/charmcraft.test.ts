@@ -553,32 +553,129 @@ describe('the charmcraft service', () => {
         );
         expect(result).toEqual(expected);
       });
-    });
 
-    describe('throws correct error', () => {
-      it('when an invalid channel was provided', async () => {
+      it('with branch channel', async () => {
+        const charmcraftStatus = [
+          {
+            track: 'latest',
+            mappings: [
+              {
+                base: {
+                  name: 'ubuntu',
+                  channel: '20.04',
+                  architecture: 'amd64',
+                },
+                releases: [
+                  {
+                    status: 'closed',
+                    channel: 'latest/stable',
+                    version: null,
+                    revision: null,
+                    resources: null,
+                    expires_at: null,
+                  },
+                  {
+                    status: 'open',
+                    channel: 'latest/candidate',
+                    version: '3',
+                    revision: 3,
+                    resources: [
+                      {
+                        name: 'httpbin-image',
+                        revision: 3,
+                      },
+                    ],
+                    expires_at: null,
+                  },
+                  {
+                    status: 'open',
+                    channel: 'latest/beta',
+                    version: '10',
+                    revision: 10,
+                    resources: [
+                      {
+                        name: 'httpbin-image',
+                        revision: 10,
+                      },
+                    ],
+                    expires_at: null,
+                  },
+                  {
+                    status: 'open',
+                    channel: 'latest/edge',
+                    version: '10',
+                    revision: 10,
+                    resources: [
+                      {
+                        name: 'httpbin-image',
+                        revision: 10,
+                      },
+                    ],
+                    expires_at: null,
+                  },
+                  {
+                    status: 'open',
+                    channel: 'latest/beta/feature-123',
+                    version: '13',
+                    revision: 13,
+                    resources: [
+                      {
+                        name: 'httpbin-image',
+                        revision: 13,
+                      },
+                    ],
+                    expires_at: '2025-01-01T00:00:00z',
+                  },
+                  {
+                    status: 'open',
+                    channel: 'latest/edge/feature-123',
+                    version: '15',
+                    revision: 15,
+                    resources: [
+                      {
+                        name: 'httpbin-image',
+                        revision: 15,
+                      },
+                    ],
+                    expires_at: '2025-01-01T00:00:00z',
+                  },
+                ],
+              },
+            ],
+          },
+        ];
+
+        const track = 'latest';
+        const channel = 'edge/feature-123';
         const base = {
           name: 'ubuntu',
           channel: '20.04',
           architecture: 'amd64',
         };
+        const expected = {
+          charmRev: '15',
+          resources: [{ resourceName: 'httpbin-image', resourceRev: '15' }],
+        };
 
         const charmcraft = new Charmcraft('token');
 
-        await expect(
-          charmcraft.getRevisionInfoFromChannelJson(
-            'placeholder-charm',
-            'valid track',
-            'invalid-channel',
-            base,
-          ),
-        ).rejects.toThrow(
-          Error(
-            `Provided channel invalid-channel is not supported. This actions currently only works with one of the following default channels: edge, beta, candidate, stable`,
-          ),
-        );
-      });
+        jest.spyOn(exec, 'getExecOutput').mockResolvedValue({
+          exitCode: 0,
+          stderr: '',
+          stdout: JSON.stringify(charmcraftStatus),
+        });
 
+        const result = await charmcraft.getRevisionInfoFromChannelJson(
+          'placeholder-charm',
+          track,
+          channel,
+          base,
+        );
+        expect(result).toEqual(expected);
+      });
+    });
+
+    describe('throws correct error', () => {
       it('when track not found', async () => {
         const charmcraftStatus = [{ track: 'special-track' }];
         const track = 'latest';

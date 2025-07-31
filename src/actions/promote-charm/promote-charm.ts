@@ -50,7 +50,9 @@ export class PromoteCharmAction {
       process.chdir(this.charmPath!);
       const charmName = this.charmcraft.charmName();
 
-      const [originTrack, originChannel] = this.originChannel.split('/');
+      const [originTrack, ...originChannelParts] =
+        this.originChannel.split('/');
+      const originChannel = originChannelParts.join('/');
 
       const basesArray = await this.charmcraft.getOpenBases(
         charmName,
