@@ -27,7 +27,7 @@ inputs:
     description: >
       Whether to fail the entire build if publishing lib fails for any reason.
 runs:
-  using: node20
+  using: node24
   main: ../dist/release-libraries/index.js
 branding:
   icon: upload-cloud
