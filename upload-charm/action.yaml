@@ -72,7 +72,7 @@ inputs:
 
       Example: "promql-transform:2,prometheus-image:12"
 runs:
-  using: node20
+  using: node24
   main: ../dist/upload-charm/index.js
 branding:
   icon: upload-cloud
