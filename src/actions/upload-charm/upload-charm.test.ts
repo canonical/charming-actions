@@ -46,11 +46,13 @@ describe('the upload charm action', () => {
       }));
       action.charmcraft.upload = jest.fn();
       action.tagger.tag = jest.fn();
-      action.artifacts.uploadLogs = jest.fn();
+      action.artifacts.uploadManifestAndLogs = jest.fn().mockResolvedValue([]);
 
       action.charmcraft.pack = jest.fn(() => charmcraftPackOutput);
 
       await action.run();
+
+      expect(action.artifacts.uploadManifestAndLogs).toHaveBeenCalledTimes(1);
 
       if (builtCharmPath) {
         const expectedPaths = builtCharmPath.split(',').map((p) => p.trim());

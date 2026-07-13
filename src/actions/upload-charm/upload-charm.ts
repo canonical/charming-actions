@@ -98,7 +98,14 @@ export class UploadCharmAction {
       core.error(error.stack);
     }
 
-    const result = await this.artifacts.uploadLogs();
-    core.info(result);
+    const artifactResults = await this.artifacts.uploadManifestAndLogs();
+    artifactResults.forEach(({ name, message, error }) => {
+      if (error) {
+        core.setFailed(`Failed to upload ${name}: ${error.message}`);
+        core.error(error.stack || error.message);
+      } else {
+        core.info(message!);
+      }
+    });
   }
 }
