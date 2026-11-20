@@ -17,7 +17,7 @@ of the following actions:
 >
 > To use these actions, start by adding a repository secret to your Github repository. In
 > the example below, it's called `CHARMCRAFT_TOKEN`, but can be anything you want.
-> See https://juju.is/docs/sdk/remote-env-auth for more information
+> See [remote environments](https://canonical.com/juju/docs/charmcraft/4/howto/manage-the-current-charmhub-user/#remote-environments) for more information
 > on how to generate the appropriate credentials. `GITHUB_TOKEN` does not need to be explicitly
 > added to the repository secrets as GitHub Actions will generate a context-bound token for
 > each workflow execution.
